@@ -1,0 +1,74 @@
+version: 0.1
+name: FinSolve RAG Metadata Schema
+last_updated: 2025-09-22
+
+# Common fields for all indexed resources (chunks, rows, aggregates)
+common:
+  id: {type: string, description: "stable unique id (e.g., hash of source_path + offsets or row_id)"}
+  owner_dept: {type: enum, values: [engineering, finance, marketing, hr, general]}
+  doc_type: {type: enum, values: [md, csv, aggregate]}
+  sensitivity: {type: enum, values: [general, internal, confidential, restricted], default: internal}
+  source_path: {type: string, description: "repository-relative path to the source file"}
+  title: {type: string, nullable: true, description: "document or section title if available"}
+  section_path: {type: string, nullable: true, description: "H1/H2/H3 path for Markdown chunks"}
+  year: {type: integer, nullable: true}
+  quarter: {type: enum, values: [Q1, Q2, Q3, Q4], nullable: true}
+  topics: {type: array[string], nullable: true}
+  allowed_roles: {type: array[string], description: "denormalized from policy for retrieval filtering"}
+  created_at: {type: string, format: datetime, description: "ingestion timestamp"}
+  updated_at: {type: string, format: datetime, description: "source last modified at ingestion"}
+  checksum: {type: string, description: "hash of source segment to detect drift"}
+
+# Markdown chunk schema (engineering/finance/marketing/general)
+chunk_md:
+  inherits: common
+  fields:
+    text: {type: string}
+    section_level: {type: integer, description: "depth of heading (1..n)"}
+    anchor: {type: string, nullable: true, description: "computed anchor id if present"}
+
+# HR CSV row schema (restricted)
+hr_row:
+  inherits: common
+  overrides:
+    owner_dept: {const: hr}
+    doc_type: {const: csv}
+    sensitivity: {const: restricted}
+  fields:
+    row_id: {type: string, description: "primary key from employee_id or synthetic key"}
+    columns: {type: object, description: "raw columns as key:value"}
+    pii_fields_present: {type: boolean, default: true}
+
+# HR aggregate schema (optional if hr_aggregate_mode enabled)
+hr_aggregate:
+  inherits: common
+  overrides:
+    owner_dept: {const: hr}
+    doc_type: {const: aggregate}
+    sensitivity: {const: internal}
+  fields:
+    agg_key: {type: object, description: "grouping keys, e.g., {department: 'Finance'}"}
+    metrics: {type: object, description: "computed stats, e.g., {avg_salary: 1234.56}"}
+    provenance: {type: object, description: "how the metric was computed (filters, date)"}
+
+# HR column sensitivity map (for awareness and future field-level masking)
+hr_column_sensitivity:
+  restricted: [email, date_of_birth, salary, manager_id]
+  internal: [employee_id, full_name, role, department, location, date_of_joining, leave_balance, leaves_taken, attendance_pct, performance_rating, last_review_date]
+
+# Extraction heuristics (applied during ingestion)
+extraction:
+  time:
+    patterns:
+      - regex: "\\bQ(1|2|3|4)\\b"   # quarter labels
+      - regex: "\\b(20[0-9]{2}|202[0-9])\\b"  # years 2000–2029
+  section_path:
+    rule: "concatenate heading chain H1→H2→H3 with '/'"
+  topics:
+    hints: [vendor_costs, software_subscriptions, ROI, CAC, DSO, cash_flow, SDLC, security, compliance, benefits, leave_policies]
+
+notes:
+  - allowed_roles is computed using docs/policy.yaml rules at ingestion time to simplify fast filtering.
+  - owner_dept is assigned from directory convention today; can later come from an external registry.
+  - For marketing_q1 file aliasing (“FinNova”→“FinSolve”), apply at query normalization only; do not alter stored text.
+

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinSolve Chat</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body data-user-role="{{ user.role }}">
+  <div class="container">
+    <h1>FinSolve Internal Chat</h1>
+
+    <section id="admin-panel" class="card hidden">
+      <h2>Admin</h2>
+      <div class="row">
+        <button id="btn-status" type="button">Refresh Status</button>
+        <button id="btn-reindex-sparse" type="button">Reindex (sparse)</button>
+        <button id="btn-reindex-dense" type="button">Reindex (dense)</button>
+      </div>
+      <pre id="admin-status" class="muted"></pre>
+    </section>
+
+    <form id="chat-form">
+      <label>Message
+        <textarea id="message" required rows="3" placeholder="Ask about strategy, KPIs, finance..." autofocus></textarea>
+      </label>
+      <div class="row">
+        <label>Top K
+          <input id="topk" type="number" value="5" min="1" max="20" />
+        </label>
+        <label>Reranker
+          <select id="reranker">
+            <option value="none">none</option>
+            <option value="simple">simple</option>
+            <option value="openai">openai (embeddings)</option>
+            <option value="openai_llm">openai_llm</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <button type="submit">Ask</button>
+      </div>
+    </form>
+
+    <div id="status"></div>
+
+    <section id="answer-section" class="card hidden">
+      <h2>Answer</h2>
+      <pre id="answer"></pre>
+      <div id="correlation" class="muted"></div>
+    </section>
+
+    <section id="citations-section" class="card hidden">
+      <h3>Citations</h3>
+      <ol id="citations"></ol>
+    </section>
+
+    <section id="metrics-section" class="card hidden">
+      <h3>Metrics</h3>
+      <pre id="metrics"></pre>
+    </section>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
+

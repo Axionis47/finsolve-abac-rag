@@ -1,0 +1,177 @@
+version: 0.1
+name: FinSolve RAG Chatbot ABAC Policy
+last_updated: 2025-09-22
+
+# Roles are constrained to those in the problem statement (no extras)
+roles:
+  - finance
+  - marketing
+  - hr
+  - engineering
+  - c_level
+  - employee
+
+# Actions we check with the PDP
+actions:
+  - retrieve_chunk      # retrieve text chunks for RAG context
+  - view_source         # expose human-readable citations
+  - view_row            # row-level access (HR CSV)
+  - view_masked_row     # masked row access (HR CSV, PII redacted)
+  - aggregate_query     # request for safe aggregates only
+
+# Resource attributes used for decisions (attached as metadata to chunks/rows)
+resource_attributes:
+  owner_dept: [engineering, finance, marketing, hr, general]
+  doc_type: [md, csv, aggregate]
+  sensitivity: [general, internal, confidential, restricted]
+  section_path: string
+  source_path: string
+  year: ["int", null]
+  quarter: [Q1, Q2, Q3, Q4, null]
+  row_id: ["string", null]
+  pii_fields_present: ["bool", null]
+
+# Global toggles (change via configuration, not code)
+flags:
+  hr_aggregate_mode: disabled   # disabled by default; if enabled, non‑HR can receive safe summaries only
+  hr_masked_rows_mode: disabled # disabled by default; if enabled, non‑HR can receive masked HR rows (PII redacted)
+
+# Default decision is deny unless a rule matches (least privilege)
+default: deny
+
+# Rules are evaluated top → bottom; first match wins
+rules:
+  # 0) C-Level: full access
+  - name: c_level_full_access
+    when:
+      all:
+        - eq: [subject.role, c_level]
+    effect: permit
+
+  # 1) General corpus is available to all roles
+  - name: general_docs_any_role
+    when:
+      all:
+        - eq: [resource.owner_dept, general]
+        - in: [action, [retrieve_chunk, view_source]]
+    effect: permit
+
+  # 2) Departmental access to internal documents (Markdown)
+  - name: same_department_internal_docs
+    when:
+      all:
+        - eq: [resource.doc_type, md]
+        - in: [resource.sensitivity, [general, internal]]
+        - eq: [subject.role, resource.owner_dept]
+        - in: [action, [retrieve_chunk, view_source]]
+    effect: permit
+
+  # 3) Employee role has access to general only (already covered by rule #1). Explicitly deny others for clarity.
+  - name: employee_non_general_deny
+    when:
+      all:
+        - eq: [subject.role, employee]
+        - ne: [resource.owner_dept, general]
+    effect: deny
+
+  # 4) Cross-department reads are denied by default
+  - name: cross_department_deny
+    when:
+      all:
+        - eq: [resource.doc_type, md]
+        - not_in: [subject.role, [c_level]]
+        - ne: [subject.role, resource.owner_dept]
+        - ne: [resource.owner_dept, general]
+    effect: deny
+
+  # 5) HR CSV: row-level access restricted to HR and C-Level
+  - name: hr_rows_hr_and_c_level_only
+    when:
+      all:
+        - eq: [resource.owner_dept, hr]
+        - eq: [resource.doc_type, csv]
+        - eq: [action, view_row]
+        - in: [subject.role, [hr, c_level]]
+    effect: permit
+
+  # 6) Non‑HR cannot view HR rows (explicit)
+  - name: non_hr_hr_rows_deny
+    when:
+      all:
+        - eq: [resource.owner_dept, hr]
+        - eq: [resource.doc_type, csv]
+        - eq: [action, view_row]
+        - not_in: [subject.role, [hr, c_level]]
+    effect: deny
+
+
+  # 6b) Optional: HR masked rows for non‑HR (only if flag enabled)
+  - name: hr_masked_rows_non_hr_if_enabled
+    when:
+      all:
+        - eq: [flags.hr_masked_rows_mode, enabled]
+        - eq: [resource.owner_dept, hr]
+        - eq: [resource.doc_type, csv]
+        - eq: [action, view_masked_row]
+        - not_in: [subject.role, [hr, c_level]]
+    effect: permit
+
+  # 6c) HR masked rows always permitted to HR and C-Level
+  - name: hr_masked_rows_hr_and_c_level
+    when:
+      all:
+        - eq: [resource.owner_dept, hr]
+        - eq: [resource.doc_type, csv]
+        - eq: [action, view_masked_row]
+        - in: [subject.role, [hr, c_level]]
+    effect: permit
+
+  # 7) Optional: HR aggregates for non‑HR (only if flag enabled)
+  - name: hr_aggregates_non_hr_if_enabled
+    when:
+      all:
+        - eq: [flags.hr_aggregate_mode, enabled]
+        - eq: [resource.owner_dept, hr]
+        - eq: [resource.doc_type, aggregate]
+        - in: [action, [retrieve_chunk, view_source, aggregate_query]]
+        - not_in: [subject.role, [hr, c_level]]
+    effect: permit
+
+  # 8) HR aggregates always permitted to HR and C-Level
+  - name: hr_aggregates_hr_and_c_level
+    when:
+      all:
+        - eq: [resource.owner_dept, hr]
+        - eq: [resource.doc_type, aggregate]
+        - in: [action, [retrieve_chunk, view_source, aggregate_query]]
+        - in: [subject.role, [hr, c_level]]
+    effect: permit
+
+  # 9) Confidential/restricted materials in Markdown (none currently) — deny unless same dept and explicit allow
+  - name: high_sensitivity_md_deny_by_default
+    when:
+      all:
+        - eq: [resource.doc_type, md]
+        - in: [resource.sensitivity, [confidential, restricted]]
+        - not_in: [subject.role, [c_level]]
+    effect: deny
+
+# Ingestion-time convenience: compute allowed_roles for fast filtering
+# This is a denormalization derived from the above rules.
+allowed_roles_computation:
+  - for resource.owner_dept == general:
+      allowed_roles: [finance, marketing, hr, engineering, c_level, employee]
+  - for resource.doc_type == md and resource.sensitivity in [general, internal]:
+      allowed_roles: [resource.owner_dept, c_level]
+  - for resource.doc_type == csv and resource.owner_dept == hr:
+      allowed_roles: [hr, c_level]
+  - for resource.doc_type == aggregate and resource.owner_dept == hr:
+      allowed_roles: [hr, c_level]  # plus non‑HR if hr_aggregate_mode is enabled at runtime
+
+notes:
+  - Ownership is determined by the source file’s department folder today; cross‑mentions
+    (e.g., finance discussing marketing spend) do not change owner_dept.
+  - HR CSV contains PII; treat entire row as restricted. Field‑level masking for non‑HR is not
+    used unless hr_aggregate_mode is enabled (then only precomputed aggregates are exposed).
+  - General docs are considered non‑sensitive internal information suitable for all roles.
+

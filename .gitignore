@@ -8,7 +8,18 @@ wheels/
 
 # Virtual environments
 .venv
-.idea/ 
+.idea/
 *.lock
 resources/vectorstore
 .env
+
+
+# Local data and caches
+.chroma/
+logs/
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+.vscode/
+.coverage
+coverage.xml
