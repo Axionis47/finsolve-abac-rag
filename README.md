@@ -127,35 +127,35 @@ Tests use monkeypatching for external calls, so they are stable and do not need 
 
 ---
 
-## E2E Retrieval Test Results (Live with OpenAI key)
+## E2E Retrieval Test Results (Live with my OpenAI key)
 
-These are quick end-to-end checks we ran locally using real embeddings and hybrid search. Language is simple and clear.
+I ran a few end-to-end checks locally using real embeddings and hybrid search.
 
-- How we tested
+- How I tested
   - Endpoint: POST /search/hybrid (dense + sparse + policy)
-  - OpenAI key set in env, dense search active
+  - I set OPENAI_API_KEY in env, so dense search was active
   - top_k = 3, no reranking (kept simple)
 
-- Results
+- What I saw
   1) Query: "marketing ROI 2024" as Bruce (marketing)
      - Sources came from marketing reports
      - Example: resources/data/marketing/market_report_q4_2024.md (Q4 overview)
-     - Policy: allowed (same_department_internal_docs)
+     - Policy: allowed
   2) Query: "Salary Structure" as Bruce (marketing)
      - Source: resources/data/general/employee_handbook.md (Salary Structure section)
-     - Policy: allowed (general_docs_any_role)
+     - Policy: allowed
   3) Query: "Q4 2024 revenue 2.6 billion" as Sam (finance)
      - Source: resources/data/finance/quarterly_financial_report.md (Q4 overview)
-     - Policy: allowed (same_department_internal_docs)
+     - Policy: allowed
   4) Query: "employee salary details" as Bruce (marketing)
      - Only general handbook sections returned (no HR CSV or HR-only docs)
-     - Confirms policy blocking HR-only content for non-HR roles
+     - Policy blocked HR-only content for non-HR roles
 
-- Performance (approx): dense_ms ~ 0.9–1.5s per query; total ~1.0–1.5s
+- Speed (rough): dense_ms about 0.9–1.5s per query
 
-- Conclusion
-  - System is retrieving the right information from the correct documents
-  - Policy (PDP) is working as expected for roles
+- My conclusion
+  - It is pulling the right information from the right documents
+  - Policy is working correctly for roles
 
 ## Common issues
 - If chat works but quality is low: maybe dense index is empty. Login as `Clark/chief` and click “Reindex (dense)” in Admin panel (need `OPENAI_API_KEY`).
