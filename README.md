@@ -157,6 +157,29 @@ I ran a few end-to-end checks locally using real embeddings and hybrid search.
   - It is pulling the right information from the right documents
   - Policy is working correctly for roles
 
+
+## Chat results I saw (Live with my OpenAI key)
+
+I also tried the chat endpoint end-to-end. These are short notes of what I saw.
+
+- marketing ROI 2024 (as Bruce/marketing)
+  - Answer talked about Q1 target ~3x ROI with ~$2M spend and Q4 focus with ~$2.5M spend, aiming to maximise ROI.
+  - Citations:
+    - resources/data/marketing/market_report_q4_2024.md (Q4 overview, conclusion)
+    - resources/data/marketing/marketing_report_q1_2024.md (Projections & Targets)
+
+- employee salary details (as Bruce/marketing)
+  - Answer listed salary components (Basic, HRA, Special Allowance, Conveyance, Bonus, Gratuity, PF, etc.).
+  - Citations:
+    - resources/data/general/employee_handbook.md (Salary Structure, Statutory Benefits, Payroll Schedule)
+
+- Q4 2024 revenue 2.6 billion (as Sam/finance)
+  - Answer said: “I don't know based on the available context.” (model was cautious)
+  - Citations still pointed to correct finance report sections:
+    - resources/data/finance/quarterly_financial_report.md (Q4 overview, Executive Summary, Q2 overview)
+
+Note: Retrieval and policy are correct. For the finance question, the model was conservative even with the right context. If needed, I can relax the generation prompt slightly so it extracts clear figures from cited context.
+
 ## Common issues
 - If chat works but quality is low: maybe dense index is empty. Login as `Clark/chief` and click “Reindex (dense)” in Admin panel (need `OPENAI_API_KEY`).
 - If embeddings or LLM calls fail: check `OPENAI_API_KEY` and internet access.
