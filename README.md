@@ -2,7 +2,7 @@
 
 This project is an internal chatbot for a company (FinSolve). It answers questions using your documents and follows strict access rules. We use an ABAC policy (Attribute Based Access Control) and a RAG pipeline (Retrieval Augmented Generation).
 
-If you just want to run and try, follow Quick Start below. Language is kept simple.
+If you just want to run and try, follow Quick Start below. 
 
 ---
 
