@@ -70,7 +70,7 @@ You can also keep it in a `.env` file at project root like:
 - Natasha / hrpass123 → hr
 - Clark / chief → c_level (admin panel visible)
 
-These are only for demo. In real life, use SSO/IdP.
+These are only for demo.
 
 ---
 
