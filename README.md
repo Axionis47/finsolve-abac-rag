@@ -178,7 +178,7 @@ I also tried the chat endpoint end-to-end. These are short notes of what I saw.
   - Citations still pointed to correct finance report sections:
     - resources/data/finance/quarterly_financial_report.md (Q4 overview, Executive Summary, Q2 overview)
 
-Note: Retrieval and policy are correct. For the finance question, the model was conservative even with the right context. If needed, I can relax the generation prompt slightly so it extracts clear figures from cited context.
+Note: Retrieval and policy are correct. For the finance question, the model was conservative even with the right context. If needed, we can relax the generation prompt slightly so it extracts clear figures from cited context.
 
 ## Common issues
 - If chat works but quality is low: maybe dense index is empty. Login as `Clark/chief` and click “Reindex (dense)” in Admin panel (need `OPENAI_API_KEY`).
