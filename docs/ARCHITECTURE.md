@@ -7,7 +7,16 @@ Status: complete and operational.
 
 - Dense (Chroma) chunks: 203 (persisted under `.chroma`)
 - Sparse (BM25) chunks: 203 (in-memory)
-- Tests: 28 passing
+- Tests: 31 passing
+
+---
+
+## In simple words (my note)
+- I built an internal chatbot that answers only from allowed company documents.
+- I use a clear policy (ABAC) so each role only sees what they should.
+- I combine two kinds of search: dense (vectors) + sparse (BM25) and then fuse.
+- I show citations, timings, and a correlation ID for transparency.
+- HR data is protected with extra rules and masking.
 
 ---
 

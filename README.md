@@ -1,14 +1,14 @@
 # FinSolve ABAC RAG (Simple Guide)
 
-This project is an internal chatbot for a company (FinSolve). It answers questions using your documents and follows strict access rules. We use an ABAC policy (Attribute Based Access Control) and a RAG pipeline (Retrieval Augmented Generation).
+I built an internal chatbot for a company (FinSolve). It answers questions from our documents and follows clear access rules. I use an ABAC policy (Attribute Based Access Control) and a RAG pipeline (Retrieval Augmented Generation).
 
-If you just want to run and try, follow Quick Start below. 
+If you just want to run it and try, follow Quick Start below. I kept the language simple.
 
 ---
 
-## What it can do
+## What I built it to do
 - Secure login (basic, for demo)
-- Finds best information using:
+- Find the best information using:
   - Dense search (Chroma + OpenAI embeddings)
   - Sparse search (BM25)
   - Fusion of both (RRF)

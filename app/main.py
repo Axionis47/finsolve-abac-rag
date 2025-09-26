@@ -1,3 +1,11 @@
+"""
+Simple overview (by me)
+- I built a FastAPI app that answers questions from company docs using a policy (ABAC) and RAG.
+- Every request goes through policy checks. I only pass allowed snippets to the LLM and I always cite sources.
+- I also expose small HR CSV endpoints with strict rules.
+This docstring is written in simple Indian English.
+"""
+
 from typing import Dict, Optional
 import os
 import time
@@ -278,6 +286,10 @@ def search_dense(req: SearchRequest, response: Response, user=Depends(authentica
 # Hybrid search endpoint (RRF over dense + sparse)
 @app.post("/search/hybrid")
 def search_hybrid(req: SearchRequest, response: Response, user=Depends(authenticate)):
+    """Hybrid search (dense + sparse + policy).
+    I return PDP-permitted snippets, metrics, and a correlation id.
+    Simple Indian English so it is easy to understand.
+    """
     cid = gen_correlation_id()
     response.headers["X-Correlation-ID"] = cid
     log_event(cid, "search_hybrid.start", {"query": req.query, "role": user["role"]})
@@ -452,6 +464,10 @@ def search(req: SearchRequest, user=Depends(authenticate)):
 # Chat endpoint: retrieval + PDP + LLM synthesis with citations
 @app.post("/chat")
 def chat(req: ChatRequest, response: Response, user=Depends(authenticate)):
+    """Chat endpoint.
+    I retrieve (dense+sparse), apply policy, and then ask the LLM to answer only from allowed context.
+    I always send citations and timings, with a correlation id.
+    """
     cid = gen_correlation_id()
     response.headers["X-Correlation-ID"] = cid
     log_event(cid, "chat.start", {"role": user["role"]})
