@@ -6,4 +6,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi[standard]>=0.115.12",
+    "openai>=1.40.0",
+    "chromadb>=0.5.4",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
 ]

@@ -90,10 +90,10 @@ def test_admin_status_and_forbidden(monkeypatch):
     monkeypatch.setattr("app.main.get_client", lambda *a, **k: object())
     monkeypatch.setattr("app.main.get_or_create_collection", lambda _client, name="kb_main": type("C", (), {"count": lambda self: 0})())
 
-    def fake_get_model_metadata(model_id: str):
-        return {"id": model_id}
+    def fake_get_model_metadata(api_key: str, model_id: str):
+        return (200, {"id": model_id})
 
-    monkeypatch.setattr("app.main.get_model_metadata", lambda *_args, **_kw: fake_get_model_metadata("text-embedding-3-small"))
+    monkeypatch.setattr("app.main.get_model_metadata", fake_get_model_metadata)
 
     res = client.get("/admin/status", headers=_basic_auth("Clark", "chief"))
     assert res.status_code == 200, res.text

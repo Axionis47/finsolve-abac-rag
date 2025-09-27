@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Dict, Any, Optional
-from .bm25 import BM25
+from .bm25 import BM25, tokenize
 
 
 def rerank_simple(query: str, items: List[Dict[str, Any]], top_k: Optional[int] = None) -> List[Dict[str, Any]]:
@@ -8,13 +8,15 @@ def rerank_simple(query: str, items: List[Dict[str, Any]], top_k: Optional[int] 
     Simple local reranker using BM25 over item["text"].
     Preserves only rank order among the provided items; does not fetch new items.
     """
+    if not items:
+        return items
     texts = [it.get("text", "") for it in items]
     bm = BM25(texts)
     # score only over provided items
-    q_tokens = bm.tokenize(query) if hasattr(bm, "tokenize") else None  # fallback guard
+    q_tokens = tokenize(query)
     scored = []
     for i in range(len(items)):
-        s = bm.score(q_tokens, i) if q_tokens is not None else 0.0
+        s = bm.score(q_tokens, i)
         scored.append((i, s))
     scored.sort(key=lambda x: x[1], reverse=True)
     order = [i for i, _ in scored]

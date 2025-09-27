@@ -174,8 +174,12 @@ def admin_status(response: Response, user=Depends(authenticate)):
         dense_count = 0
     # OpenAI health
     try:
-        meta = get_model_metadata(SETTINGS.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"))
-        openai = {"ok": True, "model": meta.get("id")}
+        status, payload = get_model_metadata(
+            SETTINGS.get("OPENAI_API_KEY", ""),
+            SETTINGS.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+        )
+        model_id = payload.get("id") if isinstance(payload, dict) else None
+        openai = {"ok": status == 200, "model": model_id, "status": status}
     except Exception as e:
         openai = {"ok": False, "error": str(e)[:120]}
     return {"sparse_count": sparse_count, "dense_count": dense_count, "persist_dir": persist_dir, "openai": openai, "correlation_id": cid}
@@ -299,13 +303,18 @@ def search_hybrid(req: SearchRequest, response: Response, user=Depends(authentic
         base_dir = req.base_dir or "resources/data"
         app.state.index = build_index(base_dir=base_dir)
 
-    # Dense candidates from Chroma
+    # Dense candidates from Chroma (graceful if no OPENAI key)
     persist_dir = req.persist_dir or SETTINGS.get("CHROMA_DB_DIR", ".chroma")
     t1 = time.perf_counter()
-    client = get_client(persist_dir)
-    col = get_or_create_collection(client, name="kb_main")
-    q_emb = embed_texts([req.query])[0]
-    dense_cands = chroma_query(col, q_emb, top_k=req.top_k, role=user["role"])  # server + client role filter
+    dense_cands = []
+    dense_skipped = False
+    try:
+        client = get_client(persist_dir)
+        col = get_or_create_collection(client, name="kb_main")
+        q_emb = embed_texts([req.query])[0]
+        dense_cands = chroma_query(col, q_emb, top_k=req.top_k, role=user["role"])  # server + client role filter
+    except Exception:
+        dense_skipped = True
     t2 = time.perf_counter()
 
     # Sparse candidates from in-memory BM25 on allowed subset
@@ -372,6 +381,7 @@ def search_hybrid(req: SearchRequest, response: Response, user=Depends(authentic
             "pdp_ms": (t5 - t4) * 1000,
             "rerank_ms": rerank_ms,
             "total_ms": (t5 - t0) * 1000,
+            "dense_skipped": dense_cands == [],
         },
         "correlation_id": cid,
     }
@@ -483,13 +493,22 @@ def chat(req: ChatRequest, response: Response, user=Depends(authenticate)):
     client = get_client(persist_dir)
     col = get_or_create_collection(client, name="kb_main")
 
-    # Embed query
+    # Embed query (graceful if no OPENAI key)
     t1 = time.perf_counter()
-    q_emb = embed_texts([req.message])[0]
+    q_emb = None
+    try:
+        q_emb = embed_texts([req.message])[0]
+    except Exception:
+        q_emb = None
     t2 = time.perf_counter()
 
     # Retrieve
-    dense_cands = chroma_query(col, q_emb, top_k=req.top_k, role=user["role"])  # role filter
+    dense_cands = []
+    if q_emb is not None:
+        try:
+            dense_cands = chroma_query(col, q_emb, top_k=req.top_k, role=user["role"])  # role filter
+        except Exception:
+            dense_cands = []
     allowed_subset = prefilter_by_allowed_roles(app.state.index, user["role"])  # for BM25
     sparse_cands = bm25_search(allowed_subset, req.message, top_k=req.top_k)
     t3 = time.perf_counter()

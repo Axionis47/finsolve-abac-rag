@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import ssl
 import urllib.request
+import urllib.error  # ensure HTTPError is available
 from typing import Tuple, Any
 
 
@@ -28,7 +29,7 @@ def get_model_metadata(api_key: str, model_id: str) -> Tuple[int, Any]:
                 return status, json.loads(body)
             except json.JSONDecodeError:
                 return status, body
-    except urllib.error.HTTPError as e:
+    except urllib.error.HTTPError as e:  # type: ignore[attr-defined]
         body = e.read().decode("utf-8", errors="ignore")
         try:
             return e.code, json.loads(body)
