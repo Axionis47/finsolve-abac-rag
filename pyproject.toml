@@ -12,6 +12,7 @@ dependencies = [
     "jinja2>=3.1",
     "diskcache>=5.6.0",
     "slowapi>=0.1.9",
+    "google-cloud-aiplatform>=1.38.0",
 ]
 
 [project.optional-dependencies]
