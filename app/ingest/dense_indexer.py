@@ -5,12 +5,16 @@ from typing import List, Dict, Any, Optional
 from app.ingest.discovery import discover_resources
 from app.ingest.chunker import chunk_markdown
 from app.ingest.allow_roles import compute_allowed_roles
-from app.services.embeddings import embed_texts
+from app.services.providers import embed_texts
 from app.vectorstore.chroma_store import get_client, get_or_create_collection, upsert_chunks
 
 
-def index_corpus_to_chroma(base_dir: str, persist_dir: Optional[str] = None,
-                           embedding_model: Optional[str] = None, api_key: Optional[str] = None) -> int:
+def index_corpus_to_chroma(base_dir: str, persist_dir: Optional[str] = None) -> int:
+    """
+    Index all markdown documents to ChromaDB using the configured embedding backend.
+
+    Uses the EMBEDDING_BACKEND env var to determine provider (vertex, openai, etc.)
+    """
     base = Path(base_dir)
     if not base.exists():
         return 0
@@ -39,7 +43,8 @@ def index_corpus_to_chroma(base_dir: str, persist_dir: Optional[str] = None,
         return 0
 
     texts = [c.get("text", "") for c in chunks]
-    embs = embed_texts(texts, model=embedding_model, api_key=api_key)
+    # Use provider abstraction - respects EMBEDDING_BACKEND env var
+    embs = embed_texts(texts, use_cache=True)
 
     client = get_client(persist_dir)
     col = get_or_create_collection(client, name="kb_main")

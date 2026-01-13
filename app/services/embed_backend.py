@@ -372,13 +372,30 @@ class VertexAIEmbeddingBackend(EmbeddingBackend):
 
         model = self._get_model()
 
-        # Vertex AI has batch limits (~250 texts), process in chunks
-        batch_size = 250
-        new_embeddings = []
+        # Vertex AI has token limits (~20k tokens per request), batch carefully
+        # Estimate ~4 chars per token, use conservative limit of ~15k tokens
+        MAX_TOKENS_PER_BATCH = 15000
+        CHARS_PER_TOKEN = 4
+        MAX_CHARS_PER_BATCH = MAX_TOKENS_PER_BATCH * CHARS_PER_TOKEN
 
-        for i in range(0, len(texts_to_embed), batch_size):
-            batch = texts_to_embed[i:i + batch_size]
-            embeddings_response = model.get_embeddings(batch)
+        new_embeddings = []
+        current_batch = []
+        current_chars = 0
+
+        for text in texts_to_embed:
+            text_chars = len(text)
+            # If adding this text would exceed limit, process current batch first
+            if current_batch and (current_chars + text_chars > MAX_CHARS_PER_BATCH or len(current_batch) >= 100):
+                embeddings_response = model.get_embeddings(current_batch)
+                new_embeddings.extend([e.values for e in embeddings_response])
+                current_batch = []
+                current_chars = 0
+            current_batch.append(text)
+            current_chars += text_chars
+
+        # Process remaining batch
+        if current_batch:
+            embeddings_response = model.get_embeddings(current_batch)
             new_embeddings.extend([e.values for e in embeddings_response])
 
         if cache:

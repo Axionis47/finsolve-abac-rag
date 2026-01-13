@@ -14,7 +14,7 @@ def basic_auth(user: str, password: str):
     return {"Authorization": f"Basic {token}"}
 
 
-def stub_embed_texts(texts, model=None, api_key=None):
+def stub_embed_texts(texts, use_cache=True, **kwargs):
     out = []
     for t in texts:
         s = sum(ord(c) for c in t) % 97
