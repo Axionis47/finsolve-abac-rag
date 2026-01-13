@@ -63,8 +63,12 @@ def generate_answer(query: str, snippets: List[Dict[str, Any]], *, model: str = 
 
         return text
     except Exception as e:
+        # Log the error for debugging
+        import logging
+        logging.error(f"LLM generation failed: {type(e).__name__}: {e}")
+
         # Fallback to extractive answer
         top = snippets[0]
         src = f"{top.get('source_path','')}#{top.get('section_path','')}".strip('#')
-        return f"Based on [1], {top.get('text','')[:200]}...\n\nCitations: [1] {src}"
+        return f"[LLM Error: {type(e).__name__}] Based on [1], {top.get('text','')[:200]}...\n\nCitations: [1] {src}"
 
