@@ -60,33 +60,46 @@ def is_complex_query(query: str) -> bool:
 def decompose_query(query: str, max_subqueries: int = 3) -> List[str]:
     """
     Use LLM to decompose a complex query into simpler sub-queries.
-    
+
     Returns a list of sub-queries that together can answer the original query.
+    Sub-queries include synonyms/related terms for better retrieval.
     """
     llm = get_llm()
-    
-    system_prompt = """You are a query decomposition assistant. Break down complex questions into simpler sub-questions.
 
-Rules:
+    system_prompt = """You are a query decomposition assistant for an HR/corporate document search system.
+Break down complex questions into simpler sub-questions optimized for keyword search.
+
+IMPORTANT RULES:
 1. Return 2-4 simple, focused sub-questions
 2. Each sub-question should be answerable independently
-3. Together they should provide all information needed for the original question
+3. Include SYNONYMS and RELATED TERMS in each sub-question for better search matching
 4. Return ONLY a JSON array of strings, no explanation
-5. Keep sub-questions concise (under 15 words each)
+5. Keep sub-questions concise but include key search terms
+
+Common synonym mappings to include:
+- vacation → leave, PTO, time off, annual leave, privilege leave
+- benefits → insurance, EPF, gratuity, wellness, compensation
+- salary → pay, wages, compensation, payroll
+- rules → policy, guidelines, procedures
+- sick days → sick leave, medical leave
+
+Example:
+Query: "Compare employee vacation policy with benefits"
+Output: ["What are the employee leave policies including vacation PTO annual leave sick leave?", "What employee benefits are offered including health insurance EPF gratuity wellness?"]
 
 Example:
 Query: "Compare Q3 revenue to Q2 and explain the marketing impact"
-Output: ["What was the revenue in Q2?", "What was the revenue in Q3?", "What was the marketing spend and strategy in Q2 and Q3?"]"""
+Output: ["What was the revenue income sales in Q2?", "What was the revenue income sales in Q3?", "What marketing spend budget campaigns occurred in Q2 and Q3?"]"""
 
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Decompose this query into sub-questions:\n\n{query}"}
+        {"role": "user", "content": f"Decompose this query into search-optimized sub-questions:\n\n{query}"}
     ]
-    
+
     try:
         response = llm.generate(messages, temperature=0.1)
         text = response.text.strip()
-        
+
         # Parse JSON array from response
         # Handle cases where LLM wraps in markdown code blocks
         if "```" in text:
@@ -94,15 +107,15 @@ Output: ["What was the revenue in Q2?", "What was the revenue in Q3?", "What was
             if text.startswith("json"):
                 text = text[4:]
             text = text.strip()
-        
+
         sub_queries = json.loads(text)
-        
+
         if isinstance(sub_queries, list) and all(isinstance(q, str) for q in sub_queries):
             # Limit number of sub-queries
             return sub_queries[:max_subqueries]
     except Exception as e:
         logger.warning(f"Query decomposition failed: {e}, falling back to original query")
-    
+
     # Fallback: return original query
     return [query]
 
