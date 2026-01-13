@@ -40,6 +40,8 @@ class ChatRequest(BaseModel):
     base_dir: Optional[str] = None
     rerank: bool = False
     reranker: Optional[str] = None
+    multihop: bool = False  # Enable multi-hop RAG for complex queries
+    multihop_auto: bool = True  # Auto-detect if query needs multi-hop
 
 
 def _retrieve_context(request: Request, message: str, user: dict, top_k: int, 
@@ -122,19 +124,43 @@ def _retrieve_context(request: Request, message: str, user: dict, top_k: int,
 
 @router.post("/chat")
 def chat(req: ChatRequest, request: Request, response: Response, user=Depends(authenticate)):
-    """Chat endpoint with RAG retrieval and LLM synthesis."""
+    """Chat endpoint with RAG retrieval and LLM synthesis.
+
+    Supports multi-hop RAG for complex queries that require information from multiple sources.
+    Enable with `multihop=true` in the request body.
+    """
     cid = gen_correlation_id()
     response.headers["X-Correlation-ID"] = cid
-    log_event(cid, "chat.start", {"role": user["role"]})
+    log_event(cid, "chat.start", {"role": user["role"], "multihop": req.multihop})
 
     t0 = time.perf_counter()
     persist_dir = req.persist_dir or SETTINGS.get("CHROMA_DB_DIR", ".chroma")
     base_dir = req.base_dir or "resources/data"
 
     t1 = time.perf_counter()
-    context_snippets, citations = _retrieve_context(
-        request, req.message, user, req.top_k, persist_dir, base_dir, req.rerank, req.reranker
-    )
+    multihop_metrics = None
+
+    if req.multihop:
+        # Multi-hop RAG for complex queries
+        from app.services.multihop import multihop_query
+
+        # Create a retrieve function that wraps _retrieve_context
+        def retrieve_fn(query: str):
+            return _retrieve_context(
+                request, query, user, req.top_k, persist_dir, base_dir, req.rerank, req.reranker
+            )
+
+        context_snippets, citations, multihop_metrics = multihop_query(
+            retrieve_fn,
+            req.message,
+            top_k=req.top_k,
+            auto_detect=req.multihop_auto,
+        )
+    else:
+        # Standard single-hop retrieval
+        context_snippets, citations = _retrieve_context(
+            request, req.message, user, req.top_k, persist_dir, base_dir, req.rerank, req.reranker
+        )
     t2 = time.perf_counter()
 
     # Generate answer
@@ -157,7 +183,12 @@ def chat(req: ChatRequest, request: Request, response: Response, user=Depends(au
         },
         "correlation_id": cid,
     }
-    log_event(cid, "chat.end", {"citations": len(citations), "metrics": resp["metrics"]})
+
+    # Add multi-hop metrics if used
+    if multihop_metrics:
+        resp["multihop"] = multihop_metrics
+
+    log_event(cid, "chat.end", {"citations": len(citations), "metrics": resp["metrics"], "multihop": req.multihop})
     return resp
 
 
