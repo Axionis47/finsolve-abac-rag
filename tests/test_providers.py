@@ -77,7 +77,7 @@ class TestBackendFactory:
         monkeypatch.setenv("VERTEX_PROJECT", "test-project")
         backend = get_llm_backend("vertex", project="test-project")
         assert isinstance(backend, VertexAIBackend)
-        assert backend.model == "gemini-1.5-flash"  # default
+        assert backend.model == "gemini-2.0-flash-001"  # default
 
     def test_get_embedding_backend_openai(self, monkeypatch):
         """Test getting OpenAI embedding backend."""

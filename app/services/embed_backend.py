@@ -454,7 +454,7 @@ def get_llm_backend(backend_type: str = None, **kwargs):
         return VertexAIBackend(
             project=kwargs.get("project") or os.getenv("VERTEX_PROJECT", os.getenv("GCP_PROJECT", "")),
             location=kwargs.get("location") or os.getenv("VERTEX_LOCATION", "us-central1"),
-            model=kwargs.get("model") or os.getenv("VERTEX_MODEL", "gemini-1.5-flash"),
+            model=kwargs.get("model") or os.getenv("VERTEX_MODEL", "gemini-2.0-flash-001"),
         )
     else:
         raise ValueError(f"Unknown LLM backend: {backend_type}")

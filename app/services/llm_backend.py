@@ -193,11 +193,16 @@ class VertexAIBackend(LLMBackend):
     Environment variables:
     - VERTEX_PROJECT: GCP project ID
     - VERTEX_LOCATION: GCP region (default: us-central1)
-    - VERTEX_MODEL: Model name (default: gemini-1.5-flash)
+    - VERTEX_MODEL: Model name (default: gemini-2.0-flash-001)
+
+    Available models:
+    - gemini-2.0-flash-001 (fast, recommended)
+    - gemini-1.5-flash-002
+    - gemini-1.5-pro-002 (higher quality)
     """
 
     def __init__(self, project: Optional[str] = None, location: str = "us-central1",
-                 model: str = "gemini-1.5-flash"):
+                 model: str = "gemini-2.0-flash-001"):
         self.project = project or os.getenv("VERTEX_PROJECT", os.getenv("GCP_PROJECT", ""))
         self.location = location
         self.model = model
