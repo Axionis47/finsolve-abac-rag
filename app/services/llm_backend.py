@@ -138,16 +138,16 @@ class VLLMBackend(LLMBackend):
 
 class OllamaBackend(LLMBackend):
     """Ollama backend for local CPU/GPU inference."""
-    
+
     def __init__(self, base_url: str = "http://localhost:11434",
                  model: str = "llama3.2:3b"):
         self.base_url = base_url.rstrip("/")
         self.model = model
-    
+
     def generate(self, messages: List[Dict[str, str]], **kwargs) -> LLMResponse:
         import time
         t0 = time.perf_counter()
-        
+
         url = f"{self.base_url}/api/chat"
         payload = {
             "model": kwargs.get("model", self.model),
@@ -155,14 +155,14 @@ class OllamaBackend(LLMBackend):
             "stream": False,
             "options": {"temperature": kwargs.get("temperature", 0.2)},
         }
-        
+
         req = urllib.request.Request(url, method="POST",
                                       data=json.dumps(payload).encode("utf-8"))
         req.add_header("Content-Type", "application/json")
-        
+
         with urllib.request.urlopen(req, timeout=120) as resp:
             body = json.loads(resp.read().decode("utf-8"))
-        
+
         return LLMResponse(
             text=body["message"]["content"].strip(),
             model=body.get("model", self.model),
@@ -170,13 +170,111 @@ class OllamaBackend(LLMBackend):
             completion_tokens=body.get("eval_count", 0),
             latency_ms=(time.perf_counter() - t0) * 1000,
         )
-    
+
     def health_check(self) -> bool:
         try:
             url = f"{self.base_url}/api/tags"
             req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=5) as resp:
                 return resp.status == 200
+        except Exception:
+            return False
+
+
+class VertexAIBackend(LLMBackend):
+    """
+    Google Vertex AI backend for Gemini models.
+
+    Requires:
+    - google-cloud-aiplatform package
+    - GCP project with Vertex AI API enabled
+    - Authentication via GOOGLE_APPLICATION_CREDENTIALS or gcloud CLI
+
+    Environment variables:
+    - VERTEX_PROJECT: GCP project ID
+    - VERTEX_LOCATION: GCP region (default: us-central1)
+    - VERTEX_MODEL: Model name (default: gemini-1.5-flash)
+    """
+
+    def __init__(self, project: Optional[str] = None, location: str = "us-central1",
+                 model: str = "gemini-1.5-flash"):
+        self.project = project or os.getenv("VERTEX_PROJECT", os.getenv("GCP_PROJECT", ""))
+        self.location = location
+        self.model = model
+        self._client = None
+
+    def _get_client(self):
+        """Lazy initialization of Vertex AI client."""
+        if self._client is None:
+            try:
+                import vertexai
+                from vertexai.generative_models import GenerativeModel
+
+                vertexai.init(project=self.project, location=self.location)
+                self._client = GenerativeModel(self.model)
+            except ImportError:
+                raise RuntimeError(
+                    "google-cloud-aiplatform package not installed. "
+                    "Install with: pip install google-cloud-aiplatform"
+                )
+        return self._client
+
+    def generate(self, messages: List[Dict[str, str]], **kwargs) -> LLMResponse:
+        import time
+        t0 = time.perf_counter()
+
+        model = self._get_client()
+
+        # Convert OpenAI-style messages to Vertex AI format
+        # Gemini expects a flat conversation history
+        system_prompt = ""
+        conversation = []
+
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+
+            if role == "system":
+                system_prompt = content
+            elif role == "user":
+                conversation.append(content)
+            elif role == "assistant":
+                conversation.append(content)
+
+        # Combine system prompt with first user message if present
+        if system_prompt and conversation:
+            conversation[0] = f"{system_prompt}\n\n{conversation[0]}"
+
+        # For simple use case, join all messages
+        full_prompt = "\n\n".join(conversation) if conversation else system_prompt
+
+        generation_config = {
+            "temperature": kwargs.get("temperature", 0.2),
+            "max_output_tokens": kwargs.get("max_tokens", 2048),
+        }
+
+        response = model.generate_content(
+            full_prompt,
+            generation_config=generation_config,
+        )
+
+        # Extract usage metadata
+        usage = getattr(response, "usage_metadata", None)
+        prompt_tokens = getattr(usage, "prompt_token_count", 0) if usage else 0
+        completion_tokens = getattr(usage, "candidates_token_count", 0) if usage else 0
+
+        return LLMResponse(
+            text=response.text.strip() if response.text else "",
+            model=self.model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            latency_ms=(time.perf_counter() - t0) * 1000,
+        )
+
+    def health_check(self) -> bool:
+        try:
+            self._get_client()
+            return True
         except Exception:
             return False
 

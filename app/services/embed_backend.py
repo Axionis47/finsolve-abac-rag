@@ -288,6 +288,125 @@ class TEIBackend(EmbeddingBackend):
             return False
 
 
+class VertexAIEmbeddingBackend(EmbeddingBackend):
+    """
+    Google Vertex AI embedding backend using text-embedding models.
+
+    Requires:
+    - google-cloud-aiplatform package
+    - GCP project with Vertex AI API enabled
+    - Authentication via GOOGLE_APPLICATION_CREDENTIALS or gcloud CLI
+
+    Environment variables:
+    - VERTEX_PROJECT: GCP project ID
+    - VERTEX_LOCATION: GCP region (default: us-central1)
+    - VERTEX_EMBEDDING_MODEL: Model name (default: text-embedding-005)
+
+    Available models:
+    - text-embedding-005 (768 dimensions, latest)
+    - text-embedding-004 (768 dimensions)
+    - textembedding-gecko@003 (768 dimensions)
+    - text-multilingual-embedding-002 (768 dimensions)
+    """
+
+    DIMENSIONS = {
+        "text-embedding-005": 768,
+        "text-embedding-004": 768,
+        "textembedding-gecko@003": 768,
+        "textembedding-gecko@002": 768,
+        "textembedding-gecko@001": 768,
+        "text-multilingual-embedding-002": 768,
+    }
+
+    def __init__(self, project: str = None, location: str = "us-central1",
+                 model: str = "text-embedding-005"):
+        self.project = project or os.getenv("VERTEX_PROJECT", os.getenv("GCP_PROJECT", ""))
+        self.location = location
+        self.model_name = model
+        self._dimension = self.DIMENSIONS.get(model, 768)
+        self._model = None
+
+    @property
+    def dimension(self) -> int:
+        return self._dimension
+
+    def _get_model(self):
+        """Lazy initialization of Vertex AI embedding model."""
+        if self._model is None:
+            try:
+                import vertexai
+                from vertexai.language_models import TextEmbeddingModel
+
+                vertexai.init(project=self.project, location=self.location)
+                self._model = TextEmbeddingModel.from_pretrained(self.model_name)
+            except ImportError:
+                raise RuntimeError(
+                    "google-cloud-aiplatform package not installed. "
+                    "Install with: pip install google-cloud-aiplatform"
+                )
+        return self._model
+
+    def embed(self, texts: List[str], use_cache: bool = True, **kwargs) -> EmbeddingResponse:
+        cache = get_cache() if use_cache else None
+        cached_hits = {}
+        texts_to_embed = []
+        text_indices = []
+
+        if cache:
+            cached_hits = cache.get_embeddings_batch(texts, self.model_name)
+            for i, text in enumerate(texts):
+                if i not in cached_hits:
+                    texts_to_embed.append(text)
+                    text_indices.append(i)
+        else:
+            texts_to_embed = texts
+            text_indices = list(range(len(texts)))
+
+        if not texts_to_embed:
+            return EmbeddingResponse(
+                embeddings=[cached_hits[i] for i in range(len(texts))],
+                model=self.model_name,
+                cached_count=len(texts),
+                computed_count=0,
+            )
+
+        model = self._get_model()
+
+        # Vertex AI has batch limits (~250 texts), process in chunks
+        batch_size = 250
+        new_embeddings = []
+
+        for i in range(0, len(texts_to_embed), batch_size):
+            batch = texts_to_embed[i:i + batch_size]
+            embeddings_response = model.get_embeddings(batch)
+            new_embeddings.extend([e.values for e in embeddings_response])
+
+        if cache:
+            cache.set_embeddings_batch(texts_to_embed, self.model_name, new_embeddings)
+
+        result = [None] * len(texts)
+        for i, emb in cached_hits.items():
+            result[i] = emb
+        for idx, emb in zip(text_indices, new_embeddings):
+            result[idx] = emb
+
+        return EmbeddingResponse(
+            embeddings=result,
+            model=self.model_name,
+            cached_count=len(cached_hits),
+            computed_count=len(new_embeddings),
+        )
+
+    def health_check(self) -> bool:
+        try:
+            model = self._get_model()
+            # Small test embedding
+            model.get_embeddings(["test"])
+            return True
+        except Exception:
+            return False
+
+
 # ============================================================================
 # Backend Factory
 # ============================================================================
@@ -297,7 +416,7 @@ def get_llm_backend(backend_type: str = None, **kwargs):
     Factory function to get the appropriate LLM backend.
 
     Args:
-        backend_type: "openai", "vllm", or "ollama"
+        backend_type: "openai", "vllm", "ollama", or "vertex"
         **kwargs: Backend-specific configuration
 
     Environment variables:
@@ -306,8 +425,11 @@ def get_llm_backend(backend_type: str = None, **kwargs):
         VLLM_MODEL: Model name for vLLM
         OLLAMA_BASE_URL: Ollama server URL (default: http://localhost:11434)
         OLLAMA_MODEL: Model name for Ollama
+        VERTEX_PROJECT: GCP project ID (for vertex backend)
+        VERTEX_LOCATION: GCP region (default: us-central1)
+        VERTEX_MODEL: Model name for Vertex AI (default: gemini-1.5-flash)
     """
-    from app.services.llm_backend import OpenAIBackend, VLLMBackend, OllamaBackend
+    from app.services.llm_backend import OpenAIBackend, VLLMBackend, OllamaBackend, VertexAIBackend
     from app.utils.config import get_settings
 
     backend_type = backend_type or os.getenv("LLM_BACKEND", "openai")
@@ -328,6 +450,12 @@ def get_llm_backend(backend_type: str = None, **kwargs):
             base_url=kwargs.get("base_url") or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
             model=kwargs.get("model") or os.getenv("OLLAMA_MODEL", "llama3.2:3b"),
         )
+    elif backend_type == "vertex":
+        return VertexAIBackend(
+            project=kwargs.get("project") or os.getenv("VERTEX_PROJECT", os.getenv("GCP_PROJECT", "")),
+            location=kwargs.get("location") or os.getenv("VERTEX_LOCATION", "us-central1"),
+            model=kwargs.get("model") or os.getenv("VERTEX_MODEL", "gemini-1.5-flash"),
+        )
     else:
         raise ValueError(f"Unknown LLM backend: {backend_type}")
 
@@ -337,13 +465,16 @@ def get_embedding_backend(backend_type: str = None, **kwargs):
     Factory function to get the appropriate embedding backend.
 
     Args:
-        backend_type: "openai", "local", or "tei"
+        backend_type: "openai", "local", "tei", or "vertex"
         **kwargs: Backend-specific configuration
 
     Environment variables:
         EMBEDDING_BACKEND: Default backend type
         LOCAL_EMBEDDING_MODEL: Model for local embeddings
         TEI_BASE_URL: TEI server URL
+        VERTEX_PROJECT: GCP project ID (for vertex backend)
+        VERTEX_LOCATION: GCP region (default: us-central1)
+        VERTEX_EMBEDDING_MODEL: Model for Vertex AI (default: text-embedding-005)
     """
     from app.utils.config import get_settings
 
@@ -364,6 +495,12 @@ def get_embedding_backend(backend_type: str = None, **kwargs):
         return TEIBackend(
             base_url=kwargs.get("base_url") or os.getenv("TEI_BASE_URL", "http://localhost:8080"),
             model=kwargs.get("model") or os.getenv("TEI_MODEL", "BAAI/bge-small-en-v1.5"),
+        )
+    elif backend_type == "vertex":
+        return VertexAIEmbeddingBackend(
+            project=kwargs.get("project") or os.getenv("VERTEX_PROJECT", os.getenv("GCP_PROJECT", "")),
+            location=kwargs.get("location") or os.getenv("VERTEX_LOCATION", "us-central1"),
+            model=kwargs.get("model") or os.getenv("VERTEX_EMBEDDING_MODEL", "text-embedding-005"),
         )
     else:
         raise ValueError(f"Unknown embedding backend: {backend_type}")
