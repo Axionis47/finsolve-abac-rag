@@ -1,11 +1,21 @@
 from __future__ import annotations
 from typing import List, Dict, Any, Optional
 import json
+import os
 import ssl
 import urllib.request
 from datetime import timezone, datetime
 
-OPENAI_API_BASE = "https://api.openai.com/v1"
+from app.services.cache import get_cache, hash_context
+
+# Dynamically select API base based on backend
+def _get_api_base() -> str:
+    backend = os.getenv("LLM_BACKEND", "openai")
+    if backend == "vllm":
+        return os.getenv("VLLM_BASE_URL", "http://localhost:8000/v1")
+    elif backend == "ollama":
+        return os.getenv("OLLAMA_BASE_URL", "http://localhost:11434") + "/v1"
+    return "https://api.openai.com/v1"
 
 
 def _build_chat_prompt(query: str, snippets: List[Dict[str, Any]]) -> list:
@@ -28,10 +38,12 @@ def _build_chat_prompt(query: str, snippets: List[Dict[str, Any]]) -> list:
     ]
 
 
-def generate_answer(query: str, snippets: List[Dict[str, Any]], *, model: str, api_key: str) -> str:
+def generate_answer(query: str, snippets: List[Dict[str, Any]], *, model: str, api_key: str,
+                    use_cache: bool = True) -> str:
     """
     Call OpenAI chat completions to synthesize an answer from snippets.
     If api_key is empty, return a local fallback answer.
+    Uses persistent cache to avoid re-generating identical responses.
     """
     if not api_key:
         # Local fallback: lightweight extractive response
@@ -41,7 +53,16 @@ def generate_answer(query: str, snippets: List[Dict[str, Any]], *, model: str, a
         src = f"{top.get('source_path','')}#{top.get('section_path','')}".strip('#')
         return f"Based on [1], {top.get('text','')[:200]}...\n\nCitations: [1] {src}"
 
-    url = f"{OPENAI_API_BASE}/chat/completions"
+    # Check cache first
+    cache = get_cache() if use_cache else None
+    context_hash = hash_context(snippets)
+
+    if cache:
+        cached_response = cache.get_llm_response(query, context_hash, model)
+        if cached_response is not None:
+            return cached_response
+
+    url = f"{_get_api_base()}/chat/completions"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",
@@ -62,6 +83,11 @@ def generate_answer(query: str, snippets: List[Dict[str, Any]], *, model: str, a
             body = resp.read().decode("utf-8")
             data = json.loads(body)
             text = data["choices"][0]["message"]["content"].strip()
+
+            # Cache the successful response
+            if cache:
+                cache.set_llm_response(query, context_hash, model, text)
+
             return text
     except Exception:
         return "I don't know based on the available context."

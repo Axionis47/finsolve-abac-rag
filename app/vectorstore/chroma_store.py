@@ -31,13 +31,14 @@ def get_or_create_collection(client, name: str = "kb_main"):
 
 
 def make_chunk_id(source_path: str, section_path: str, text: str) -> str:
-    h = hashlib.md5()
+    """Generate a unique chunk ID using SHA256 (more secure than MD5)."""
+    h = hashlib.sha256()
     h.update(source_path.encode("utf-8"))
     h.update(b"|")
     h.update(section_path.encode("utf-8"))
     h.update(b"|")
     h.update(text.encode("utf-8"))
-    return h.hexdigest()
+    return h.hexdigest()[:32]  # Truncate to 32 chars for compatibility
 
 
 def _roles_to_flags(roles: List[str]) -> Dict[str, Any]:

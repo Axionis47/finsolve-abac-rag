@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 import base64
 from pathlib import Path
+import pytest
 
 from app.main import app
 from app.ingest.runner import build_index
@@ -45,13 +46,26 @@ Budget planning for next quarter.
     return base
 
 
+# Skip these tests if chromadb is not installed
+try:
+    import chromadb
+    HAS_CHROMADB = True
+except ImportError:
+    HAS_CHROMADB = False
+
+
+@pytest.mark.skipif(not HAS_CHROMADB, reason="chromadb not installed")
 def test_hybrid_search_authorization(tmp_path, monkeypatch):
-    # Monkeypatch embeddings for both indexer and main
+    # Monkeypatch embeddings in indexer and routes
     import app.ingest.dense_indexer as dense_indexer
-    import app.main as main_mod
+    import app.routes.chat as chat_mod
+    import app.routes.search as search_mod
+    import app.services.reranker_openai as reranker_mod
 
     monkeypatch.setattr(dense_indexer, "embed_texts", stub_embed_texts)
-    monkeypatch.setattr(main_mod, "embed_texts", stub_embed_texts)
+    monkeypatch.setattr(chat_mod, "embed_texts", stub_embed_texts)
+    monkeypatch.setattr(search_mod, "embed_texts", stub_embed_texts)
+    monkeypatch.setattr(reranker_mod, "embed_texts", stub_embed_texts)
 
     base_dir = str(setup_temp_corpus(tmp_path))
     chroma_dir = str(tmp_path / ".chroma")

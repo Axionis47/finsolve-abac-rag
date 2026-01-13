@@ -1,0 +1,121 @@
+# =============================================================================
+# Docker Compose for Self-Hosted RAG System
+# =============================================================================
+#
+# Profiles:
+#   - default: Just the FastAPI app (uses OpenAI)
+#   - local:   App + Ollama (CPU inference, no GPU needed)
+#   - gpu:     App + vLLM + TEI (requires NVIDIA GPU)
+#
+# Usage:
+#   docker compose up                    # Default (OpenAI)
+#   docker compose --profile local up    # With Ollama
+#   docker compose --profile gpu up      # With vLLM (requires GPU)
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # FastAPI Application
+  # ===========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_BACKEND=${LLM_BACKEND:-openai}
+      - EMBEDDING_BACKEND=${EMBEDDING_BACKEND:-openai}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - VLLM_BASE_URL=http://vllm:8000/v1
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - TEI_BASE_URL=http://tei:80
+      - CHROMA_DB_DIR=/data/chroma
+      - LLM_CACHE_DIR=/data/cache
+    volumes:
+      - ./resources/data:/app/resources/data:ro
+      - app-data:/data
+    depends_on:
+      - ollama  # Will be ignored if not using local profile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # Ollama - Local CPU/GPU Inference (profile: local)
+  # ===========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["local"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    # Pull model on startup
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        /bin/ollama serve &
+        sleep 5
+        ollama pull llama3.2:3b
+        wait
+
+  # ===========================================================================
+  # vLLM - GPU Inference Server (profile: gpu)
+  # ===========================================================================
+  vllm:
+    image: vllm/vllm-openai:latest
+    profiles: ["gpu"]
+    ports:
+      - "8001:8000"
+    volumes:
+      - huggingface-cache:/root/.cache/huggingface
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command:
+      - --model=hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4
+      - --quantization=awq
+      - --max-model-len=8192
+      - --gpu-memory-utilization=0.90
+      - --enable-prefix-caching
+      - --enable-chunked-prefill
+      - --trust-remote-code
+
+  # ===========================================================================
+  # Text Embeddings Inference - GPU Embeddings (profile: gpu)
+  # ===========================================================================
+  tei:
+    image: ghcr.io/huggingface/text-embeddings-inference:latest
+    profiles: ["gpu"]
+    ports:
+      - "8080:80"
+    volumes:
+      - tei-models:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command:
+      - --model-id=BAAI/bge-small-en-v1.5
+      - --port=80
+
+volumes:
+  app-data:
+  ollama-models:
+  huggingface-cache:
+  tei-models:
+

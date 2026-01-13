@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 import base64
 from pathlib import Path
+import pytest
 
 from app.main import app
 
@@ -31,14 +32,26 @@ def setup_corpus(tmp_path: Path):
     return base
 
 
+# Skip these tests if chromadb is not installed
+try:
+    import chromadb
+    HAS_CHROMADB = True
+except ImportError:
+    HAS_CHROMADB = False
+
+
+@pytest.mark.skipif(not HAS_CHROMADB, reason="chromadb not installed")
 def test_openai_llm_reranker_path(tmp_path, monkeypatch):
-    # Monkeypatch embeddings to avoid external calls
+    # Monkeypatch embeddings in indexer and routes
     import app.ingest.dense_indexer as dense_indexer
-    import app.main as main_mod
+    import app.routes.chat as chat_mod
+    import app.routes.search as search_mod
     import app.services.reranker_openai as rr_openai
 
     monkeypatch.setattr(dense_indexer, "embed_texts", stub_embed_texts)
-    monkeypatch.setattr(main_mod, "embed_texts", stub_embed_texts)
+    monkeypatch.setattr(chat_mod, "embed_texts", stub_embed_texts)
+    monkeypatch.setattr(search_mod, "embed_texts", stub_embed_texts)
+    monkeypatch.setattr(rr_openai, "embed_texts", stub_embed_texts)
 
     base_dir = str(setup_corpus(tmp_path))
     chroma_dir = str(tmp_path / ".chroma")
@@ -61,12 +74,17 @@ def test_openai_llm_reranker_path(tmp_path, monkeypatch):
     base_results = r0.json()["results"]
     assert len(base_results) >= 2
 
-    # Monkeypatch the llm reranker to reverse order
+    # Monkeypatch the llm reranker to reverse order - must patch in routes module too
     def reverse_llm(query, items, top_k=None, **kwargs):
         ordered = list(reversed(items))
         return ordered[:top_k] if top_k else ordered
 
     monkeypatch.setattr(rr_openai, "openai_llm_rerank", reverse_llm)
+    # Also patch in routes.search and routes.chat where it's imported
+    import app.routes.search as search_mod
+    import app.routes.chat as chat_mod
+    monkeypatch.setattr(search_mod, "openai_llm_rerank", reverse_llm)
+    monkeypatch.setattr(chat_mod, "openai_llm_rerank", reverse_llm)
 
     r1 = client.post(
         "/search/hybrid",

@@ -16,6 +16,7 @@ resources/vectorstore
 
 # Local data and caches
 .chroma/
+.llm_cache/
 logs/
 .pytest_cache/
 .mypy_cache/

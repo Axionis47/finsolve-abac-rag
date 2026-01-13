@@ -1,10 +1,11 @@
 from fastapi.testclient import TestClient
 import base64
-import os
 
 from app.main import app
+from app.utils.config import get_settings
 
 client = TestClient(app)
+SETTINGS = get_settings()
 
 
 def basic_auth(user: str, password: str):
@@ -12,20 +13,18 @@ def basic_auth(user: str, password: str):
     return {"Authorization": f"Basic {token}"}
 
 
-def test_masked_rows_denied_when_disabled(monkeypatch):
-    import app.main as main_mod
+def test_masked_rows_denied_when_disabled():
     # Ensure flag disabled
-    main_mod.SETTINGS["HR_MASKED_ROWS_MODE"] = "disabled"
+    SETTINGS["HR_MASKED_ROWS_MODE"] = "disabled"
 
     r = client.get("/hr/rows_masked", headers=basic_auth("Bruce", "securepass"))
     assert r.status_code == 403
     assert "X-Correlation-ID" in r.headers
 
 
-def test_masked_rows_permitted_when_enabled(monkeypatch):
-    import app.main as main_mod
+def test_masked_rows_permitted_when_enabled():
     # Enable flag
-    main_mod.SETTINGS["HR_MASKED_ROWS_MODE"] = "enabled"
+    SETTINGS["HR_MASKED_ROWS_MODE"] = "enabled"
 
     r = client.get("/hr/rows_masked", headers=basic_auth("Bruce", "securepass"))
     assert r.status_code == 200, r.text

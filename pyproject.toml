@@ -1,7 +1,7 @@
 [project]
 name = "ds-rpc-01"
 version = "0.1.0"
-description = "Starter project for the RPC-01: Internal Chatbot with Role Based Access Control"
+description = "FinSolve ABAC RAG Chatbot - Internal chatbot with role-based access control"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -10,4 +10,27 @@ dependencies = [
     "chromadb>=0.5.4",
     "pyyaml>=6.0",
     "jinja2>=3.1",
+    "diskcache>=5.6.0",
+    "slowapi>=0.1.9",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.24.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+exclude = ["tests*", "docs*", "resources*", "static*", "templates*", "logs*", "scripts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
