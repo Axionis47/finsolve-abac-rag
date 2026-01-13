@@ -1,0 +1,89 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Manual trigger
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  SERVICE_NAME: finsolve-rag-chatbot
+  REPOSITORY: finsolve-rag
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Create Artifact Registry repository (if not exists)
+        run: |
+          gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
+            --location=${{ env.REGION }} 2>/dev/null || \
+          gcloud artifacts repositories create ${{ env.REPOSITORY }} \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --description="FinSolve RAG Chatbot images"
+
+      - name: Build and Push Docker image
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          docker build -t $IMAGE .
+          docker push $IMAGE
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image=${{ env.IMAGE }} \
+            --region=${{ env.REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --memory=2Gi \
+            --cpu=2 \
+            --min-instances=0 \
+            --max-instances=10 \
+            --timeout=300 \
+            --set-env-vars="LLM_BACKEND=vertex" \
+            --set-env-vars="EMBEDDING_BACKEND=vertex" \
+            --set-env-vars="VERTEX_PROJECT=${{ env.PROJECT_ID }}" \
+            --set-env-vars="VERTEX_LOCATION=${{ env.REGION }}" \
+            --set-env-vars="CHROMA_DB_DIR=.chroma_db"
+
+      - name: Get Service URL
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.REGION }} \
+            --format='value(status.url)')
+          echo "🚀 Deployed to: $URL"
+          echo "SERVICE_URL=$URL" >> $GITHUB_OUTPUT
+
+      - name: Health Check
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.REGION }} \
+            --format='value(status.url)')
+          echo "Testing health endpoint..."
+          curl -s --retry 5 --retry-delay 10 "$URL/health" | jq .
+

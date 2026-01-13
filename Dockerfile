@@ -24,13 +24,17 @@ COPY templates/ templates/
 COPY static/ static/
 COPY docs/ docs/
 
+# Copy pre-indexed ChromaDB data (if exists)
+COPY .chroma_db/ .chroma_db/
+
 # Create data directories
-RUN mkdir -p /data/chroma /data/cache logs/audit
+RUN mkdir -p logs/audit
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV HOST=0.0.0.0
 ENV PORT=8000
+ENV CHROMA_DB_DIR=.chroma_db
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

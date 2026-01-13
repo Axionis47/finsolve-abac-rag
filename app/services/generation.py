@@ -1,21 +1,7 @@
 from __future__ import annotations
-from typing import List, Dict, Any, Optional
-import json
-import os
-import ssl
-import urllib.request
-from datetime import timezone, datetime
+from typing import List, Dict, Any
 
 from app.services.cache import get_cache, hash_context
-
-# Dynamically select API base based on backend
-def _get_api_base() -> str:
-    backend = os.getenv("LLM_BACKEND", "openai")
-    if backend == "vllm":
-        return os.getenv("VLLM_BASE_URL", "http://localhost:8000/v1")
-    elif backend == "ollama":
-        return os.getenv("OLLAMA_BASE_URL", "http://localhost:11434") + "/v1"
-    return "https://api.openai.com/v1"
 
 
 def _build_chat_prompt(query: str, snippets: List[Dict[str, Any]]) -> list:
@@ -38,57 +24,47 @@ def _build_chat_prompt(query: str, snippets: List[Dict[str, Any]]) -> list:
     ]
 
 
-def generate_answer(query: str, snippets: List[Dict[str, Any]], *, model: str, api_key: str,
+def generate_answer(query: str, snippets: List[Dict[str, Any]], *, model: str = None, api_key: str = None,  # noqa: ARG001
                     use_cache: bool = True) -> str:
     """
-    Call OpenAI chat completions to synthesize an answer from snippets.
-    If api_key is empty, return a local fallback answer.
-    Uses persistent cache to avoid re-generating identical responses.
+    Generate an answer using the configured LLM backend (Vertex AI, OpenAI, etc.)
+
+    Uses the provider abstraction which respects LLM_BACKEND env var.
+    The model and api_key parameters are kept for backward compatibility but ignored
+    when using non-OpenAI backends.
     """
-    if not api_key:
-        # Local fallback: lightweight extractive response
-        if not snippets:
-            return "I don't know based on the available context."
-        top = snippets[0]
-        src = f"{top.get('source_path','')}#{top.get('section_path','')}".strip('#')
-        return f"Based on [1], {top.get('text','')[:200]}...\n\nCitations: [1] {src}"
+    _ = model, api_key  # Silence unused warnings; kept for backward compat
+    from app.services.providers import get_llm
+
+    if not snippets:
+        return "I don't know based on the available context."
 
     # Check cache first
     cache = get_cache() if use_cache else None
+    llm = get_llm()
+    model_name = getattr(llm, 'model', 'unknown')
     context_hash = hash_context(snippets)
 
     if cache:
-        cached_response = cache.get_llm_response(query, context_hash, model)
+        cached_response = cache.get_llm_response(query, context_hash, model_name)
         if cached_response is not None:
             return cached_response
 
-    url = f"{_get_api_base()}/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}",
-    }
-    payload = {
-        "model": model,
-        "messages": _build_chat_prompt(query, snippets),
-        "temperature": 0.2,
-    }
-
-    req = urllib.request.Request(url, method="POST", data=json.dumps(payload).encode("utf-8"))
-    for k, v in headers.items():
-        req.add_header(k, v)
-    context = ssl.create_default_context()
+    # Build messages and generate
+    messages = _build_chat_prompt(query, snippets)
 
     try:
-        with urllib.request.urlopen(req, context=context) as resp:
-            body = resp.read().decode("utf-8")
-            data = json.loads(body)
-            text = data["choices"][0]["message"]["content"].strip()
+        response = llm.generate(messages, temperature=0.2)
+        text = response.text.strip()
 
-            # Cache the successful response
-            if cache:
-                cache.set_llm_response(query, context_hash, model, text)
+        # Cache the successful response
+        if cache:
+            cache.set_llm_response(query, context_hash, model_name, text)
 
-            return text
-    except Exception:
-        return "I don't know based on the available context."
+        return text
+    except Exception as e:
+        # Fallback to extractive answer
+        top = snippets[0]
+        src = f"{top.get('source_path','')}#{top.get('section_path','')}".strip('#')
+        return f"Based on [1], {top.get('text','')[:200]}...\n\nCitations: [1] {src}"
 
