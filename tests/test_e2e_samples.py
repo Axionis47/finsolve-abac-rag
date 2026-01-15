@@ -18,7 +18,7 @@ def test_e2e_chat_marketing_simple(monkeypatch):
     def fake_embed_texts(texts, model=None, api_key=None):
         return [[0.01] * 16 for _ in texts]
 
-    def fake_generate_answer(query, snippets, model: str, api_key: str):
+    def fake_generate_answer(query, snippets, model: str = None, api_key: str = None, pf=None):
         if not snippets:
             return f"NO_CONTEXT for: {query}\n\nCitations: []"
         src = f"{snippets[0].get('source_path','')}#{snippets[0].get('section_path','')}".rstrip('#')
@@ -53,7 +53,7 @@ def test_e2e_chat_marketing_hr_query(monkeypatch):
     def fake_embed_texts(texts, model=None, api_key=None):
         return [[0.02] * 16 for _ in texts]
 
-    def fake_generate_answer(query, snippets, model: str, api_key: str):
+    def fake_generate_answer(query, snippets, model: str = None, api_key: str = None, pf=None):
         if not snippets:
             return f"NO_CONTEXT for: {query}\n\nCitations: []"
         src = f"{snippets[0].get('source_path','')}#{snippets[0].get('section_path','')}".rstrip('#')

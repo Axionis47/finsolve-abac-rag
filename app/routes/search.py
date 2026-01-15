@@ -1,9 +1,9 @@
 """
-Search routes (sparse, dense, hybrid).
+Search routes (sparse, dense, hybrid) with policy-safe caching.
 """
 from __future__ import annotations
 import time
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel
@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from app.routes.deps import authenticate, get_pdp, get_index, set_index
 from app.utils.config import get_settings
 from app.utils.audit import gen_correlation_id, log_event
-# Rate limiting removed - use middleware instead if needed
 
 from app.policy.pdp import PDP
 from app.ingest.runner import build_index
@@ -23,6 +22,9 @@ from app.retrieval.rerank import rerank
 from app.services.reranker_openai import openai_embedding_rerank, openai_llm_rerank
 from app.vectorstore.chroma_store import get_client, get_or_create_collection, query as chroma_query
 from app.services.embeddings import embed_texts
+
+# Policy-safe caching imports
+from app.cache import get_rag_cache, compute_pf_for_subject
 
 router = APIRouter(prefix="/search", tags=["search"])
 SETTINGS = get_settings()
@@ -197,8 +199,16 @@ def _get_rerank_kwargs(backend: str) -> Dict:
     return kwargs
 
 
-def _filter_by_pdp(candidates, pdp: PDP, role: str):
-    """Filter candidates by PDP authorization."""
+def _filter_by_pdp(candidates: List[Dict[str, Any]], pdp: PDP, role: str) -> List[Dict[str, Any]]:
+    """
+    Filter candidates by PDP authorization with decision caching.
+
+    Uses policy-safe caching scoped by Policy Fingerprint to cache
+    individual policy decisions.
+    """
+    rag_cache = get_rag_cache()
+    pf = compute_pf_for_subject({"role": role})
+
     results = []
     for c in candidates:
         res_md = {
@@ -206,14 +216,26 @@ def _filter_by_pdp(candidates, pdp: PDP, role: str):
             "doc_type": c.get("doc_type"),
             "sensitivity": c.get("sensitivity"),
         }
-        d = pdp.evaluate(subject={"role": role}, resource=res_md, action="retrieve_chunk")
-        if d.effect == "permit":
+
+        # Cache the policy decision
+        def compute_decision(res=res_md, r=role):
+            d = pdp.evaluate(subject={"role": r}, resource=res, action="retrieve_chunk")
+            return {"effect": d.effect, "rule": d.rule}
+
+        decision, _ = rag_cache.get_decision(
+            pf=pf,
+            resource=res_md,
+            action="retrieve_chunk",
+            compute_fn=compute_decision,
+        )
+
+        if decision["effect"] == "permit":
             results.append({
                 "text": c.get("text"),
                 "source_path": c.get("source_path"),
                 "section_path": c.get("section_path"),
                 **res_md,
-                "decision": {"effect": d.effect, "rule": d.rule},
+                "decision": decision,
             })
     return results
 

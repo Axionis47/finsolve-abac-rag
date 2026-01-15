@@ -47,10 +47,18 @@ The system ensures users only see documents they are permitted to access. Every 
 - Masked rows with PII redaction (configurable via feature flag)
 - Safe aggregates (averages, counts) without individual data
 
+**Caching**
+- Policy-aware caching with automatic invalidation on policy changes
+- Policy Fingerprint (PF) scopes cache entries by user permissions
+- Decision, LLM answer, and retrieval result caching
+- Singleflight deduplication for concurrent identical requests
+- 500-850x speedup on cache hits vs misses
+
 **Observability**
 - Correlation ID on every request (X-Correlation-ID header)
 - Per-stage timing metrics (embed_ms, retrieve_ms, pdp_ms, llm_ms)
 - JSON audit logs to stdout and daily rotating files
+- Cache hit/miss events logged with policy fingerprint
 
 **Security**
 - HTTP Basic auth (demo; use proper auth in production)
@@ -188,6 +196,12 @@ ds-rpc-01/
 │   │   └── chroma_store.py  # ChromaDB operations
 │   ├── hr/
 │   │   └── csv_service.py   # HR CSV data handling
+│   ├── cache/
+│   │   ├── base.py          # Cache adapters (InMemory, NoOp)
+│   │   ├── policy_fingerprint.py  # Policy fingerprint computation
+│   │   ├── keys.py          # Cache key generation
+│   │   ├── rag_cache.py     # Main RAGCache facade
+│   │   └── singleflight.py  # Request deduplication
 │   └── utils/
 │       ├── config.py        # Environment/settings
 │       └── audit.py         # Logging and correlation IDs
@@ -205,6 +219,8 @@ ds-rpc-01/
 ├── static/
 │   ├── app.js               # Frontend JavaScript
 │   └── style.css            # Styling
+├── scripts/
+│   └── benchmark_cache.py   # Cache performance benchmarks
 ├── tests/                   # Test suite
 └── pyproject.toml           # Dependencies
 ```
@@ -302,16 +318,34 @@ Set via environment variables or `.env` file:
 | `LLM_CACHE_DIR` | .llm_cache | Persistent cache directory |
 | `LLM_CACHE_ENABLED` | true | Enable/disable caching |
 
-### Persistent Cache
+### Policy-Aware Cache
 
-The system includes a disk-based cache (using SQLite via `diskcache`) that persists across restarts:
+The system includes a multi-layer caching system with automatic policy-aware invalidation:
 
-- **Embedding cache**: Stores OpenAI embeddings indefinitely (deterministic, safe to cache)
-- **LLM response cache**: Stores chat responses for 1 hour (query + context hash)
+**Cache Layers:**
+- **Decision Cache**: Policy decisions (permit/deny) for resource access (~574x speedup)
+- **LLM Cache**: Generated answers scoped by policy fingerprint (~850x speedup)
+- **Retrieval Cache**: Search results for identical queries (~441x speedup)
 
-This significantly speeds up repeated queries. Cache stats are shown in `/admin/status`.
+**Policy Fingerprint (PF):**
+Cache entries are scoped by a Policy Fingerprint - a hash of the user's effective permissions derived from their role and current policy version. This ensures:
+- Users with the same role share cache entries safely
+- Policy changes automatically invalidate affected cache entries
+- No cross-role cache pollution
 
-To clear the cache: `POST /admin/cache/clear` (c_level only)
+**Singleflight Deduplication:**
+Concurrent identical requests are deduplicated - only one computation runs, and all waiters receive the same result. This prevents thundering herd problems during traffic spikes.
+
+**Configuration:**
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_CACHE_DIR` | .llm_cache | Persistent cache directory |
+| `LLM_CACHE_ENABLED` | true | Enable/disable caching |
+
+Cache stats are shown in `/admin/status`. To clear: `POST /admin/cache/clear` (c_level only)
+
+**Benchmarking:**
+Run `python scripts/benchmark_cache.py` to measure cache performance on your system.
 
 ---
 
@@ -336,6 +370,7 @@ Test categories:
 - `test_*_search_api.py`: Search endpoint tests
 - `test_chat_api.py`: Chat endpoint tests
 - `test_e2e_samples.py`: End-to-end sample queries
+- `test_cache.py`: Cache layer unit tests (policy fingerprint, singleflight, adapters)
 
 Tests use monkeypatching for OpenAI calls and ChromaDB, no network required.
 

@@ -1,5 +1,5 @@
 """
-Chat routes with streaming support.
+Chat routes with streaming support and policy-safe caching.
 """
 from __future__ import annotations
 import json
@@ -7,7 +7,7 @@ import os
 import ssl
 import time
 import urllib.request
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import StreamingResponse
@@ -16,7 +16,6 @@ from pydantic import BaseModel
 from app.routes.deps import authenticate, get_pdp, get_index, set_index
 from app.utils.config import get_settings
 from app.utils.audit import gen_correlation_id, log_event
-# Rate limiting removed - use middleware instead if needed
 
 from app.policy.pdp import PDP
 from app.ingest.runner import build_index
@@ -28,6 +27,9 @@ from app.services.reranker_openai import openai_embedding_rerank, openai_llm_rer
 from app.vectorstore.chroma_store import get_client, get_or_create_collection, query as chroma_query
 from app.services.embeddings import embed_texts
 from app.services.generation import generate_answer
+
+# Policy-safe caching imports
+from app.cache import get_rag_cache, compute_pf_for_subject
 
 router = APIRouter(tags=["chat"])
 SETTINGS = get_settings()
@@ -94,18 +96,34 @@ def _retrieve_context(request: Request, message: str, user: dict, top_k: int,
             )
         fused = rerank(message, fused, backend=backend, top_k=top_k, **kwargs)
 
-    # PDP filtering
+    # PDP filtering with decision caching
     pdp: PDP = get_pdp(request)
-    context_snippets = []
-    citations = []
+    rag_cache = get_rag_cache()
+    pf = compute_pf_for_subject({"role": user["role"]})
+
+    context_snippets: List[Dict[str, Any]] = []
+    citations: List[Dict[str, Any]] = []
+
     for c in fused:
         res_md = {
             "owner_dept": c.get("owner_dept"),
             "doc_type": c.get("doc_type"),
             "sensitivity": c.get("sensitivity"),
         }
-        d = pdp.evaluate(subject={"role": user["role"]}, resource=res_md, action="retrieve_chunk")
-        if d.effect == "permit":
+
+        # Cache the policy decision (scoped by Policy Fingerprint)
+        def compute_decision(res=res_md, role=user["role"]):
+            d = pdp.evaluate(subject={"role": role}, resource=res, action="retrieve_chunk")
+            return {"effect": d.effect, "rule": d.rule}
+
+        decision, _ = rag_cache.get_decision(
+            pf=pf,
+            resource=res_md,
+            action="retrieve_chunk",
+            compute_fn=compute_decision,
+        )
+
+        if decision["effect"] == "permit":
             context_snippets.append({
                 "text": c.get("text"),
                 "source_path": c.get("source_path"),
@@ -114,7 +132,7 @@ def _retrieve_context(request: Request, message: str, user: dict, top_k: int,
             citations.append({
                 "source_path": c.get("source_path"),
                 "section_path": c.get("section_path"),
-                "rule": d.rule,
+                "rule": decision["rule"],
             })
         if len(context_snippets) >= top_k:
             break
@@ -163,13 +181,15 @@ def chat(req: ChatRequest, request: Request, response: Response, user=Depends(au
         )
     t2 = time.perf_counter()
 
-    # Generate answer
+    # Generate answer with policy-safe caching
     t_llm0 = time.perf_counter()
+    pf = compute_pf_for_subject({"role": user["role"]})
     answer = generate_answer(
         req.message,
         context_snippets,
         model=SETTINGS.get("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
         api_key=SETTINGS.get("OPENAI_API_KEY", ""),
+        pf=pf,  # Policy Fingerprint for safe LLM caching
     )
     t_llm1 = time.perf_counter()
 

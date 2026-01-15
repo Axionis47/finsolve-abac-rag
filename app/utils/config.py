@@ -51,6 +51,32 @@ def get_settings() -> Dict[str, str]:
             "AUDIT_LOG_DIR": os.getenv("AUDIT_LOG_DIR", os.path.join("logs", "audit")),
             "HOST": os.getenv("HOST", "127.0.0.1"),
             "PORT": os.getenv("PORT", "8000"),
+            # Cache settings
+            "CACHE_ENABLED": os.getenv("CACHE_ENABLED", "true"),
+            "CACHE_BACKEND": os.getenv("CACHE_BACKEND", "memory"),
+            "CACHE_REDIS_URL": os.getenv("CACHE_REDIS_URL", "redis://localhost:6379/0"),
+            # Cache epochs for invalidation
+            "CACHE_POLICY_EPOCH": os.getenv("CACHE_POLICY_EPOCH", "1"),
+            "CACHE_ENTITLEMENT_EPOCH": os.getenv("CACHE_ENTITLEMENT_EPOCH", "1"),
+            "CACHE_ACL_EPOCH": os.getenv("CACHE_ACL_EPOCH", "1"),
+            "CACHE_INDEX_EPOCH": os.getenv("CACHE_INDEX_EPOCH", "1"),
+            # Cache TTLs (in seconds)
+            "CACHE_TTL_RETRIEVAL": os.getenv("CACHE_TTL_RETRIEVAL", "3600"),
+            "CACHE_TTL_DECISION": os.getenv("CACHE_TTL_DECISION", "3600"),
+            "CACHE_TTL_LLM": os.getenv("CACHE_TTL_LLM", "3600"),
         }
     return _settings
+
+
+def get_cache_ttl(cache_type: str) -> int:
+    """Get TTL for a specific cache type."""
+    settings = get_settings()
+    ttl_key = f"CACHE_TTL_{cache_type.upper()}"
+    return int(settings.get(ttl_key, "3600"))
+
+
+def is_cache_enabled() -> bool:
+    """Check if caching is enabled."""
+    settings = get_settings()
+    return settings.get("CACHE_ENABLED", "true").lower() in ("true", "1", "yes")
 
