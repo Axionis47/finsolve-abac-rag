@@ -21,7 +21,7 @@ from app.retrieval.hybrid import rrf_fuse
 from app.retrieval.rerank import rerank
 from app.services.reranker_openai import openai_embedding_rerank, openai_llm_rerank
 from app.vectorstore.chroma_store import get_client, get_or_create_collection, query as chroma_query
-from app.services.embeddings import embed_texts
+from app.services.providers import embed_texts
 
 # Policy-safe caching imports
 from app.cache import get_rag_cache, compute_pf_for_subject
@@ -81,20 +81,20 @@ def search_dense(req: SearchRequest, request: Request, response: Response, user=
     t2 = time.perf_counter()
     candidates = chroma_query(col, q_emb, top_k=req.top_k, role=user["role"])
 
-    # Optional rerank
+    # PDP post-check BEFORE rerank so the reranker never sees denied chunks
+    pdp: PDP = get_pdp(request)
+    t3 = time.perf_counter()
+    results = _filter_by_pdp(candidates, pdp, user["role"])
+    t4 = time.perf_counter()
+
+    # Optional rerank on already-filtered results
     rerank_ms = 0.0
     if req.rerank:
         t_rr0 = time.perf_counter()
         backend = req.reranker or "simple"
         kwargs = _get_rerank_kwargs(backend)
-        candidates = rerank(req.query, candidates, backend=backend, top_k=req.top_k, **kwargs)
+        results = rerank(req.query, results, backend=backend, top_k=req.top_k, **kwargs)
         rerank_ms = (time.perf_counter() - t_rr0) * 1000
-
-    # PDP post-check
-    pdp: PDP = get_pdp(request)
-    t3 = time.perf_counter()
-    results = _filter_by_pdp(candidates, pdp, user["role"])
-    t4 = time.perf_counter()
 
     resp = {
         "count": len(results),
@@ -148,20 +148,20 @@ def search_hybrid(req: SearchRequest, request: Request, response: Response, user
 
     fused = rrf_fuse(dense_cands, sparse_cands, k=60, top_k=req.top_k)
 
-    # Optional rerank
+    # PDP post-check BEFORE rerank
+    pdp: PDP = get_pdp(request)
+    t4 = time.perf_counter()
+    results = _filter_by_pdp(fused, pdp, user["role"])
+    t5 = time.perf_counter()
+
+    # Optional rerank on already-filtered results
     rerank_ms = 0.0
     if req.rerank:
         t_rr0 = time.perf_counter()
         backend = req.reranker or "simple"
         kwargs = _get_rerank_kwargs(backend)
-        fused = rerank(req.query, fused, backend=backend, top_k=req.top_k, **kwargs)
+        results = rerank(req.query, results, backend=backend, top_k=req.top_k, **kwargs)
         rerank_ms = (time.perf_counter() - t_rr0) * 1000
-
-    # PDP post-check
-    pdp: PDP = get_pdp(request)
-    t4 = time.perf_counter()
-    results = _filter_by_pdp(fused, pdp, user["role"])
-    t5 = time.perf_counter()
 
     resp = {
         "count": len(results),
@@ -204,7 +204,8 @@ def _filter_by_pdp(candidates: List[Dict[str, Any]], pdp: PDP, role: str) -> Lis
     Filter candidates by PDP authorization with decision caching.
 
     Uses policy-safe caching scoped by Policy Fingerprint to cache
-    individual policy decisions.
+    individual policy decisions. Internal policy details (rule names,
+    access tiers, full_row PII) are stripped from the response.
     """
     rag_cache = get_rag_cache()
     pf = compute_pf_for_subject({"role": role})
@@ -217,10 +218,9 @@ def _filter_by_pdp(candidates: List[Dict[str, Any]], pdp: PDP, role: str) -> Lis
             "sensitivity": c.get("sensitivity"),
         }
 
-        # Cache the policy decision
         def compute_decision(res=res_md, r=role):
             d = pdp.evaluate(subject={"role": r}, resource=res, action="retrieve_chunk")
-            return {"effect": d.effect, "rule": d.rule}
+            return {"effect": d.effect}
 
         decision, _ = rag_cache.get_decision(
             pf=pf,
@@ -235,7 +235,6 @@ def _filter_by_pdp(candidates: List[Dict[str, Any]], pdp: PDP, role: str) -> Lis
                 "source_path": c.get("source_path"),
                 "section_path": c.get("section_path"),
                 **res_md,
-                "decision": decision,
             })
     return results
 

@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-config
+  namespace: rag-chatbot
+  labels:
+    app.kubernetes.io/name: rag-chatbot
+    app.kubernetes.io/component: config
+data:
+  # LLM Backend Configuration
+  LLM_BACKEND: "anthropic"
+
+  # Embedding Backend Configuration
+  EMBEDDING_BACKEND: "vertex"
+  VERTEX_LOCATION: "us-central1"
+  VERTEX_EMBEDDING_MODEL: "text-embedding-005"
+
+  # ChromaDB Configuration
+  CHROMA_DB_DIR: "/data/chroma"
+
+  # Cache Configuration
+  CACHE_ENABLED: "true"
+  CACHE_BACKEND: "redis"
+  CACHE_REDIS_URL: "redis://redis:6379/0"
+
+  # HR Feature Flags
+  HR_AGGREGATE_MODE: "disabled"
+  HR_MASKED_ROWS_MODE: "disabled"
+
+  # Application Settings
+  HOST: "0.0.0.0"
+  PORT: "8000"
+  ENABLE_DOCS: "true"
+
+  # Logging
+  AUDIT_LOG_DIR: "/data/logs/audit"

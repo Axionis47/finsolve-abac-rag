@@ -84,11 +84,14 @@ def make_decision_key(
     
     Key format: decision:{pf_hash}:{resource_hash}:{action}
     """
-    # Only include policy-relevant resource attributes
+    # Include all policy-relevant resource attributes.
+    # agg_type is needed because aggregate sub-types may have different
+    # access rules (e.g., headcount vs salary aggregates).
     relevant_attrs = {
         "owner_dept": resource.get("owner_dept"),
         "doc_type": resource.get("doc_type"),
         "sensitivity": resource.get("sensitivity"),
+        "agg_type": resource.get("agg_type"),
     }
     resource_hash = _hash(relevant_attrs)
     return f"decision:{pf.hash}:{resource_hash}:{action}"

@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-chatbot
+  namespace: rag-chatbot
+  labels:
+    app.kubernetes.io/name: rag-chatbot
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  selector:
+    app: rag-chatbot
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-chatbot-headless
+  namespace: rag-chatbot
+  labels:
+    app.kubernetes.io/name: rag-chatbot
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: rag-chatbot
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000

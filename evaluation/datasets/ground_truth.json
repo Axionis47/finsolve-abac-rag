@@ -1,0 +1,209 @@
+{
+  "version": "1.0",
+  "description": "Ground truth dataset for RAGAS evaluation of ABAC RAG Chatbot",
+  "created": "2025-01-27",
+  "questions": [
+    {
+      "id": "gt_001",
+      "question": "What is the company vacation policy?",
+      "ground_truth": "Employees receive 15-21 days of annual leave depending on tenure. Leave is considered a privilege and must be approved in advance.",
+      "ground_truth_contexts": ["employee_handbook.md#Leave-Policies"],
+      "applicable_roles": ["employee", "engineering", "marketing", "finance", "hr", "c_level"],
+      "source_files": ["general/employee_handbook.md"],
+      "category": "hr_policy"
+    },
+    {
+      "id": "gt_002",
+      "question": "What benefits does the company offer?",
+      "ground_truth": "The company provides health insurance and retirement plans for all employees.",
+      "ground_truth_contexts": ["employee_handbook.md#Benefits"],
+      "applicable_roles": ["employee", "engineering", "marketing", "finance", "hr", "c_level"],
+      "source_files": ["general/employee_handbook.md"],
+      "category": "hr_policy"
+    },
+    {
+      "id": "gt_003",
+      "question": "What was the Q4 2024 revenue?",
+      "ground_truth": "Total revenue for Q4 2024 was $10M with operating expenses of $6M.",
+      "ground_truth_contexts": ["quarterly_financial_report.md#Revenue", "quarterly_financial_report.md#Q4"],
+      "applicable_roles": ["finance", "c_level"],
+      "source_files": ["finance/quarterly_financial_report.md"],
+      "category": "finance"
+    },
+    {
+      "id": "gt_004",
+      "question": "What is the company's architecture approach?",
+      "ground_truth": "The system uses a microservices architecture with RESTful APIs and JSON payloads.",
+      "ground_truth_contexts": ["engineering_master_doc.md#Architecture", "engineering_master_doc.md#APIs"],
+      "applicable_roles": ["engineering", "c_level"],
+      "source_files": ["engineering/engineering_master_doc.md"],
+      "category": "engineering"
+    },
+    {
+      "id": "gt_005",
+      "question": "What is the marketing growth strategy?",
+      "ground_truth": "The marketing strategy focuses on digital channels and partnerships with an expected ROI of 150%.",
+      "ground_truth_contexts": ["marketing_report_2024.md#Growth-Strategy", "marketing_report_2024.md#ROI"],
+      "applicable_roles": ["marketing", "c_level"],
+      "source_files": ["marketing/marketing_report_2024.md"],
+      "category": "marketing"
+    },
+    {
+      "id": "gt_006",
+      "question": "Compare Q2 and Q3 financial performance",
+      "ground_truth": "This requires comparing revenue and expenses across Q2 and Q3 from the financial reports.",
+      "ground_truth_contexts": ["quarterly_financial_report.md#Q2", "quarterly_financial_report.md#Q3"],
+      "applicable_roles": ["finance", "c_level"],
+      "source_files": ["finance/quarterly_financial_report.md"],
+      "category": "finance",
+      "is_complex": true,
+      "requires_multihop": true
+    },
+    {
+      "id": "gt_007",
+      "question": "What is the dress code policy?",
+      "ground_truth": "The employee handbook contains dress code guidelines for the workplace.",
+      "ground_truth_contexts": ["employee_handbook.md#Dress-Code"],
+      "applicable_roles": ["employee", "engineering", "marketing", "finance", "hr", "c_level"],
+      "source_files": ["general/employee_handbook.md"],
+      "category": "hr_policy"
+    },
+    {
+      "id": "gt_008",
+      "question": "What are the performance review criteria?",
+      "ground_truth": "Performance reviews evaluate employees on multiple criteria as defined in HR policies.",
+      "ground_truth_contexts": ["employee_handbook.md#Performance-Reviews"],
+      "applicable_roles": ["employee", "engineering", "marketing", "finance", "hr", "c_level"],
+      "source_files": ["general/employee_handbook.md"],
+      "category": "hr_policy"
+    },
+    {
+      "id": "gt_009",
+      "question": "What is the relationship between marketing campaigns and revenue growth?",
+      "ground_truth": "Marketing campaigns drive customer acquisition which contributes to revenue growth.",
+      "ground_truth_contexts": ["marketing_report_2024.md#Campaign-Results", "quarterly_financial_report.md#Revenue"],
+      "applicable_roles": ["c_level"],
+      "source_files": ["marketing/marketing_report_2024.md", "finance/quarterly_financial_report.md"],
+      "category": "cross_department",
+      "is_complex": true,
+      "requires_multihop": true
+    },
+    {
+      "id": "gt_010",
+      "question": "What are the onboarding procedures for new employees?",
+      "ground_truth": "New employee onboarding includes orientation, training, and role-specific setup as defined in the employee handbook.",
+      "ground_truth_contexts": ["employee_handbook.md#Onboarding"],
+      "applicable_roles": ["employee", "engineering", "marketing", "finance", "hr", "c_level"],
+      "source_files": ["general/employee_handbook.md"],
+      "category": "hr_policy"
+    },
+    {
+      "id": "gt_011",
+      "question": "What are the company's API design standards?",
+      "ground_truth": "The company uses RESTful APIs with JSON payloads following standard conventions.",
+      "ground_truth_contexts": ["engineering_master_doc.md#APIs", "engineering_master_doc.md#Standards"],
+      "applicable_roles": ["engineering", "c_level"],
+      "source_files": ["engineering/engineering_master_doc.md"],
+      "category": "engineering"
+    },
+    {
+      "id": "gt_012",
+      "question": "What is the customer acquisition cost trend?",
+      "ground_truth": "Customer acquisition cost trends are tracked in marketing reports and financial summaries.",
+      "ground_truth_contexts": ["marketing_report_2024.md#CAC", "financial_summary.md#CAC"],
+      "applicable_roles": ["marketing", "finance", "c_level"],
+      "source_files": ["marketing/marketing_report_2024.md", "finance/financial_summary.md"],
+      "category": "cross_department",
+      "is_complex": true
+    },
+    {
+      "id": "gt_013",
+      "question": "What is the remote work policy?",
+      "ground_truth": "Remote work policies are outlined in the employee handbook covering work from home guidelines.",
+      "ground_truth_contexts": ["employee_handbook.md#Remote-Work"],
+      "applicable_roles": ["employee", "engineering", "marketing", "finance", "hr", "c_level"],
+      "source_files": ["general/employee_handbook.md"],
+      "category": "hr_policy"
+    },
+    {
+      "id": "gt_014",
+      "question": "What is the budget allocation across departments?",
+      "ground_truth": "Budget allocation details are in the financial reports broken down by department.",
+      "ground_truth_contexts": ["quarterly_financial_report.md#Budget", "financial_summary.md#Allocation"],
+      "applicable_roles": ["finance", "c_level"],
+      "source_files": ["finance/quarterly_financial_report.md", "finance/financial_summary.md"],
+      "category": "finance"
+    },
+    {
+      "id": "gt_015",
+      "question": "What marketing channels have the highest ROI?",
+      "ground_truth": "Digital channels and partnerships show the highest ROI according to marketing reports.",
+      "ground_truth_contexts": ["marketing_report_2024.md#ROI", "marketing_report_2024.md#Channels"],
+      "applicable_roles": ["marketing", "c_level"],
+      "source_files": ["marketing/marketing_report_2024.md"],
+      "category": "marketing"
+    },
+    {
+      "id": "gt_016",
+      "question": "How does engineering team structure support the architecture?",
+      "ground_truth": "The engineering team is organized to support the microservices architecture with dedicated teams per service.",
+      "ground_truth_contexts": ["engineering_master_doc.md#Team-Structure", "engineering_master_doc.md#Architecture"],
+      "applicable_roles": ["engineering", "c_level"],
+      "source_files": ["engineering/engineering_master_doc.md"],
+      "category": "engineering"
+    },
+    {
+      "id": "gt_017",
+      "question": "What are the employee exit procedures?",
+      "ground_truth": "Exit procedures include knowledge transfer, equipment return, and exit interviews as per HR policy.",
+      "ground_truth_contexts": ["employee_handbook.md#Exit-Procedures"],
+      "applicable_roles": ["hr", "c_level"],
+      "source_files": ["general/employee_handbook.md"],
+      "category": "hr_policy"
+    },
+    {
+      "id": "gt_018",
+      "question": "What is the company's data security policy?",
+      "ground_truth": "Data security policies cover handling of sensitive information, access controls, and compliance requirements.",
+      "ground_truth_contexts": ["employee_handbook.md#Security", "engineering_master_doc.md#Security"],
+      "applicable_roles": ["engineering", "hr", "c_level"],
+      "source_files": ["general/employee_handbook.md", "engineering/engineering_master_doc.md"],
+      "category": "security",
+      "is_complex": true
+    },
+    {
+      "id": "gt_019",
+      "question": "What are the quarterly trends in operating expenses?",
+      "ground_truth": "Operating expenses are tracked quarterly showing trends in spending across departments.",
+      "ground_truth_contexts": ["quarterly_financial_report.md#Expenses", "quarterly_financial_report.md#Trends"],
+      "applicable_roles": ["finance", "c_level"],
+      "source_files": ["finance/quarterly_financial_report.md"],
+      "category": "finance"
+    },
+    {
+      "id": "gt_020",
+      "question": "What vendor partnerships drive marketing success?",
+      "ground_truth": "Strategic vendor partnerships contribute to marketing campaign success and ROI improvements.",
+      "ground_truth_contexts": ["marketing_report_2024.md#Vendors", "marketing_report_2024.md#Partnerships"],
+      "applicable_roles": ["marketing", "c_level"],
+      "source_files": ["marketing/marketing_report_2024.md"],
+      "category": "marketing"
+    }
+  ],
+  "roles": [
+    {"name": "employee", "description": "Basic employee with access to general documents"},
+    {"name": "engineering", "description": "Engineering team member with access to technical docs"},
+    {"name": "marketing", "description": "Marketing team member with access to marketing reports"},
+    {"name": "finance", "description": "Finance team member with access to financial data"},
+    {"name": "hr", "description": "HR team member with access to HR policies and employee data"},
+    {"name": "c_level", "description": "Executive with access to all documents"}
+  ],
+  "categories": [
+    {"name": "hr_policy", "description": "Human resources policies and procedures"},
+    {"name": "finance", "description": "Financial reports and data"},
+    {"name": "engineering", "description": "Technical documentation"},
+    {"name": "marketing", "description": "Marketing reports and campaigns"},
+    {"name": "cross_department", "description": "Questions requiring multiple department data"},
+    {"name": "security", "description": "Security policies and procedures"}
+  ]
+}

@@ -283,3 +283,108 @@ class VertexAIBackend(LLMBackend):
         except Exception:
             return False
 
+
+class AnthropicBackend(LLMBackend):
+    """
+    Anthropic Claude API backend.
+
+    Requires:
+    - anthropic package
+    - ANTHROPIC_API_KEY environment variable
+
+    Environment variables:
+    - ANTHROPIC_API_KEY: API key for Anthropic
+    - ANTHROPIC_MODEL: Model name (default: claude-sonnet-4-20250514)
+
+    Available models:
+    - claude-sonnet-4-20250514 (balanced, recommended)
+    - claude-opus-4-20250514 (highest quality)
+    - claude-3-5-sonnet-20241022 (fast, efficient)
+    - claude-3-5-haiku-20241022 (fastest)
+    """
+
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514"):
+        self.api_key = api_key
+        self.model = model
+        self._client = None
+
+    def _get_client(self):
+        """Lazy initialization of Anthropic client."""
+        if self._client is None:
+            try:
+                import anthropic
+                self._client = anthropic.Anthropic(api_key=self.api_key)
+            except ImportError:
+                raise RuntimeError(
+                    "anthropic package not installed. "
+                    "Install with: pip install anthropic"
+                )
+        return self._client
+
+    def generate(self, messages: List[Dict[str, str]], **kwargs) -> LLMResponse:
+        import time
+        t0 = time.perf_counter()
+
+        client = self._get_client()
+
+        # Convert OpenAI-style messages to Anthropic format
+        # Anthropic expects system prompt separately
+        system_prompt = ""
+        anthropic_messages = []
+
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+
+            if role == "system":
+                system_prompt = content
+            elif role == "user":
+                anthropic_messages.append({"role": "user", "content": content})
+            elif role == "assistant":
+                anthropic_messages.append({"role": "assistant", "content": content})
+
+        # Ensure messages alternate between user and assistant
+        # If first message isn't from user, we need to handle it
+        if anthropic_messages and anthropic_messages[0]["role"] != "user":
+            anthropic_messages.insert(0, {"role": "user", "content": "Hello"})
+
+        # If no messages, add a placeholder
+        if not anthropic_messages:
+            anthropic_messages = [{"role": "user", "content": system_prompt or "Hello"}]
+            system_prompt = ""
+
+        # Build API call parameters - only include system if it has a value
+        api_params = {
+            "model": kwargs.get("model", self.model),
+            "max_tokens": kwargs.get("max_tokens", 2048),
+            "messages": anthropic_messages,
+            "temperature": kwargs.get("temperature", 0.2),
+        }
+        if system_prompt:
+            api_params["system"] = system_prompt
+
+        response = client.messages.create(**api_params)
+
+        # Extract text from response
+        text = ""
+        for block in response.content:
+            if hasattr(block, "text"):
+                text += block.text
+
+        return LLMResponse(
+            text=text.strip(),
+            model=response.model,
+            prompt_tokens=response.usage.input_tokens,
+            completion_tokens=response.usage.output_tokens,
+            latency_ms=(time.perf_counter() - t0) * 1000,
+        )
+
+    def health_check(self) -> bool:
+        try:
+            client = self._get_client()
+            # Simple health check - just verify client can be created
+            # A full health check would make an API call, but that costs money
+            return client is not None
+        except Exception:
+            return False
+

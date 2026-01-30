@@ -433,7 +433,7 @@ def get_llm_backend(backend_type: str = None, **kwargs):
     Factory function to get the appropriate LLM backend.
 
     Args:
-        backend_type: "openai", "vllm", "ollama", or "vertex"
+        backend_type: "openai", "vllm", "ollama", "vertex", or "anthropic"
         **kwargs: Backend-specific configuration
 
     Environment variables:
@@ -445,8 +445,10 @@ def get_llm_backend(backend_type: str = None, **kwargs):
         VERTEX_PROJECT: GCP project ID (for vertex backend)
         VERTEX_LOCATION: GCP region (default: us-central1)
         VERTEX_MODEL: Model name for Vertex AI (default: gemini-1.5-flash)
+        ANTHROPIC_API_KEY: API key for Anthropic
+        ANTHROPIC_MODEL: Model name for Anthropic (default: claude-sonnet-4-20250514)
     """
-    from app.services.llm_backend import OpenAIBackend, VLLMBackend, OllamaBackend, VertexAIBackend
+    from app.services.llm_backend import OpenAIBackend, VLLMBackend, OllamaBackend, VertexAIBackend, AnthropicBackend
     from app.utils.config import get_settings
 
     backend_type = backend_type or os.getenv("LLM_BACKEND", "openai")
@@ -472,6 +474,11 @@ def get_llm_backend(backend_type: str = None, **kwargs):
             project=kwargs.get("project") or os.getenv("VERTEX_PROJECT", os.getenv("GCP_PROJECT", "")),
             location=kwargs.get("location") or os.getenv("VERTEX_LOCATION", "us-central1"),
             model=kwargs.get("model") or os.getenv("VERTEX_MODEL", "gemini-2.0-flash-001"),
+        )
+    elif backend_type == "anthropic":
+        return AnthropicBackend(
+            api_key=kwargs.get("api_key") or settings.get("ANTHROPIC_API_KEY", ""),
+            model=kwargs.get("model") or settings.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
         )
     else:
         raise ValueError(f"Unknown LLM backend: {backend_type}")

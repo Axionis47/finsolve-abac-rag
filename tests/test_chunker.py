@@ -79,12 +79,13 @@ def test_chunk_markdown_empty_input():
 
 
 def test_chunk_markdown_no_headings():
-    """Markdown without headings still returns chunks."""
+    """Markdown without headings still returns chunks with filename-based section."""
     md = "Just some plain text without any headings."
     chunks = chunk_markdown(md, source_path="/tmp/plain.md")
     assert len(chunks) == 1
     assert chunks[0]["text"] == "Just some plain text without any headings."
-    assert chunks[0]["section_path"] == ""
+    # Preamble content gets a section_path derived from the filename
+    assert chunks[0]["section_path"] == "Plain"
 
 
 def test_chunk_markdown_preserves_source_path():

@@ -435,3 +435,108 @@ export CACHE_ACL_EPOCH=2
 # After index rebuild
 export CACHE_INDEX_EPOCH=2
 ```
+
+---
+
+## Performance Benchmarks
+
+Benchmarks run on local development machine (Apple M-series, Python 3.12).
+
+### Cache Hit vs Miss Latency
+
+| Cache Type | Miss Latency | Hit Latency | Speedup | Latency Reduction |
+|------------|--------------|-------------|---------|-------------------|
+| Decision | 1.53 ms | 0.004 ms | **391x** | 99.7% |
+| LLM Answer | 56.5 ms | 0.04 ms | **1400x** | 99.9% |
+| Retrieval | 26.5 ms | 0.07 ms | **380x** | 99.7% |
+
+### Singleflight Deduplication
+
+- 20 concurrent identical requests → 1 actual computation
+- **95% deduplication rate**
+- Prevents cache stampedes on cold start
+
+### When Caching Provides Maximum Benefit
+
+✓ Repeated queries (normalize to maximize hits)
+✓ Users with same roles (share PF-scoped caches)
+✓ Stable policies (infrequent epoch bumps)
+✓ Burst traffic patterns (singleflight shines)
+✓ Read-heavy workloads (low write invalidation)
+
+### When Caching Provides Minimal Benefit
+
+✗ Every query is unique
+✗ Every user has different role
+✗ Frequent policy changes (epoch bumps)
+✗ Write-heavy workloads (constant invalidation)
+✗ Cold start (cache empty)
+
+---
+
+## Production Features
+
+### LRU Eviction with Memory Bounds
+
+The in-memory cache uses LRU (Least Recently Used) eviction with configurable limits:
+
+```python
+# Default: 10,000 entries, 100MB max memory
+InMemoryAdapter(max_size=10000, max_memory_mb=100.0)
+```
+
+### Redis Backend (Production)
+
+For multi-node deployments, use Redis:
+
+```bash
+export CACHE_BACKEND=redis
+export CACHE_REDIS_URL=redis://localhost:6379/0
+```
+
+Features:
+- **Connection pooling** (10 connections by default)
+- **Circuit breaker** (5 failures → 30s recovery)
+- **Compression** for values > 1KB
+- **Health checks** with latency monitoring
+
+### Prometheus Metrics
+
+If `prometheus_client` is installed, the following metrics are exported:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `rag_cache_hits_total` | Counter | Total cache hits by type |
+| `rag_cache_misses_total` | Counter | Total cache misses by type |
+| `rag_cache_evictions_total` | Counter | Total evictions by reason |
+| `rag_cache_operation_seconds` | Histogram | Operation latency |
+| `rag_cache_entries` | Gauge | Current entry count |
+| `rag_cache_memory_bytes` | Gauge | Current memory usage |
+| `rag_cache_hit_rate` | Gauge | Current hit rate (0-1) |
+
+### Distributed Cache Invalidation
+
+For multi-node deployments, epoch changes propagate via Redis pub/sub:
+
+```python
+from app.cache import get_epoch_manager
+
+# Bump epoch (broadcasts to all nodes)
+manager = get_epoch_manager()
+manager.bump_epoch("policy")  # All nodes invalidate policy cache
+```
+
+### Load Testing
+
+Two load testing options are provided:
+
+1. **Locust-based** (for detailed analysis):
+   ```bash
+   pip install locust
+   locust -f scripts/load_test.py --host=http://localhost:8000
+   ```
+
+2. **Simple standalone** (no dependencies):
+   ```bash
+   python3 scripts/simple_load_test.py --users 10 --duration 30
+   ```

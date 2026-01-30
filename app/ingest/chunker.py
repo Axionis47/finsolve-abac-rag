@@ -1,5 +1,9 @@
 from __future__ import annotations
+import os
+import re
 from typing import Dict, List, Optional
+
+from app.ingest.metadata_extractor import extract_temporal_metadata, extract_topics
 
 # Rough token estimation: ~4 chars per token for English
 CHARS_PER_TOKEN = 4
@@ -64,13 +68,15 @@ def split_text_recursive(
         # Add overlap between chunks for context continuity
         if overlap_tokens > 0 and len(chunks) > 1:
             overlap_chars = overlap_tokens * CHARS_PER_TOKEN
-            overlapped = []
-            for i, chunk in enumerate(chunks):
-                if i > 0 and len(chunks[i - 1]) > overlap_chars:
-                    # Prepend end of previous chunk
-                    prefix = chunks[i - 1][-overlap_chars:]
-                    chunk = prefix + " " + chunk
-                overlapped.append(chunk)
+            overlapped = [chunks[0]]
+            for i in range(1, len(chunks)):
+                prev = chunks[i - 1]
+                if len(prev) > overlap_chars:
+                    # Prepend end of previous chunk as context
+                    prefix = prev[-overlap_chars:]
+                    overlapped.append(prefix + " " + chunks[i])
+                else:
+                    overlapped.append(chunks[i])
             chunks = overlapped
 
         return [c for c in chunks if c]
@@ -90,12 +96,19 @@ def chunk_markdown(
     Heading-aware chunker for Markdown with token limits.
 
     - Starts a new chunk on headings (lines that start with one or more '# ')
-    - Tracks fenced code blocks (```), does not treat headings inside fences as headings
+    - Tracks fenced code blocks, does not treat headings inside fences as headings
+    - Includes heading text in chunk body so embeddings and BM25 see it
     - Builds section_path as a breadcrumb from H1..Hn
     - Recursively splits chunks that exceed max_tokens
+    - Extracts temporal metadata per chunk (not just per document)
 
-    Returns list of dicts: {"text": str, "section_path": str, "source_path": str}
+    Returns list of dicts: {"text": str, "section_path": str, "source_path": str,
+                           "year": str|None, "quarter": str|None, "topics": list}
     """
+    # Extract document-level temporal metadata (used as fallback)
+    filename = os.path.basename(source_path)
+    doc_temporal = extract_temporal_metadata(text, filename)
+
     lines = text.splitlines()
     raw_chunks: List[Dict] = []
     in_code = False
@@ -104,10 +117,15 @@ def chunk_markdown(
     cur_lines: List[str] = []
 
     def flush():
-        if cur_lines:
+        body = "\n".join(cur_lines).strip()
+        if body:
             section = " > ".join([h for h in headings if h]) or ""
+            # Use filename stem as fallback section for preamble content
+            if not section:
+                stem = os.path.splitext(filename)[0].replace("_", " ").replace("-", " ")
+                section = stem.title()
             raw_chunks.append({
-                "text": "\n".join(cur_lines).strip(),
+                "text": body,
                 "section_path": section,
                 "source_path": source_path,
             })
@@ -140,7 +158,8 @@ def chunk_markdown(
                 headings[level-1] = title
                 for j in range(level, len(headings)):
                     headings[j] = ""
-                # Do not include the heading line itself in chunk text
+                # Include heading text in chunk body so embeddings see it
+                cur_lines.append(title)
                 continue
 
         # Regular content line
@@ -168,5 +187,29 @@ def chunk_markdown(
         else:
             final_chunks.append(chunk)
 
-    return final_chunks
+    # Enrich all chunks with temporal metadata and topics
+    for chunk in final_chunks:
+        # Chunk-level temporal extraction (from the chunk's own text)
+        chunk_temporal = extract_temporal_metadata(chunk["text"], filename)
+        chunk["temporal_refs"] = chunk_temporal["mentioned_quarters"]
 
+        # Use chunk-level quarter when available. If the chunk itself mentions
+        # a specific quarter, use that. Otherwise check the section_path
+        # breadcrumb (e.g., "Q2 - April to June"). Fall back to document-level
+        # only as a last resort.
+        chunk_quarter = chunk_temporal["primary_quarter"]
+        if not chunk_quarter:
+            sp_match = re.search(r'\bQ([1-4])\b', chunk.get("section_path", ""))
+            if sp_match:
+                chunk_quarter = f"Q{sp_match.group(1)}"
+        if not chunk_quarter:
+            chunk_quarter = doc_temporal["primary_quarter"]
+        chunk["quarter"] = chunk_quarter
+
+        # Same for year: prefer chunk-level, fall back to document-level
+        chunk["year"] = chunk_temporal["primary_year"] or doc_temporal["primary_year"]
+
+        # Extract topics from chunk text
+        chunk["topics"] = extract_topics(chunk["text"])
+
+    return final_chunks

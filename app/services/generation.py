@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Dict, Any, Optional
 
-from app.services.cache import get_cache, hash_context
+from app.services.cache import hash_context
 from app.cache import get_rag_cache, PolicyFingerprint
 
 
@@ -60,67 +60,47 @@ def generate_answer(
     model_name = getattr(llm, 'model', 'unknown')
     context_hash = hash_context(snippets)
 
-    # Use policy-safe RAG cache if PF is provided, otherwise fall back to old cache
-    if use_cache and pf is not None:
-        rag_cache = get_rag_cache()
+    # Determine which PF to use for caching
+    effective_pf = pf
+    if use_cache and effective_pf is None:
+        import logging
+        logging.warning("generate_answer called without PolicyFingerprint; using fallback PF")
+        effective_pf = PolicyFingerprint(role="unknown")
 
-        def do_generation():
-            messages = _build_chat_prompt(query, snippets)
-            response = llm.generate(messages, temperature=0.2)
-            return response.text.strip()
+    def _do_generation():
+        messages = _build_chat_prompt(query, snippets)
+        response = llm.generate(messages, temperature=0.2)
+        return response.text.strip()
 
+    # If caching disabled, generate directly
+    if not use_cache:
         try:
-            answer, _ = rag_cache.get_llm_answer(
-                pf=pf,
-                query=query,
-                context_hash=context_hash,
-                model=model_name,
-                compute_fn=do_generation,
-            )
-            return answer
+            return _do_generation()
         except Exception as e:
-            # Fall through to error handling below
             import logging
             import traceback
-            error_msg = f"LLM generation failed: {type(e).__name__}: {e}"
-            logging.error(error_msg)
-            logging.error(f"Full traceback:\n{traceback.format_exc()}")
-
+            logging.error("LLM generation failed: %s: %s", type(e).__name__, e)
+            logging.error("Full traceback:\n%s", traceback.format_exc())
             top = snippets[0]
             src = f"{top.get('source_path','')}#{top.get('section_path','')}".strip('#')
             return f"[LLM Error: {type(e).__name__}: {str(e)[:100]}] Based on [1], {top.get('text','')[:200]}...\n\nCitations: [1] {src}"
 
-    # Legacy caching path (without PF - less safe but backward compatible)
-    cache = get_cache() if use_cache else None
-
-    if cache:
-        cached_response = cache.get_llm_response(query, context_hash, model_name)
-        if cached_response is not None:
-            return cached_response
-
-    # Build messages and generate
-    messages = _build_chat_prompt(query, snippets)
-
+    # Use policy-safe RAG cache scoped by PF
+    rag_cache = get_rag_cache()
     try:
-        response = llm.generate(messages, temperature=0.2)
-        text = response.text.strip()
-
-        # Cache the successful response
-        if cache:
-            cache.set_llm_response(query, context_hash, model_name, text)
-
-        return text
+        answer, _ = rag_cache.get_llm_answer(
+            pf=effective_pf,
+            query=query,
+            context_hash=context_hash,
+            model=model_name,
+            compute_fn=_do_generation,
+        )
+        return answer
     except Exception as e:
-        # Log the error for debugging with full traceback
         import logging
         import traceback
-        error_msg = f"LLM generation failed: {type(e).__name__}: {e}"
-        logging.error(error_msg)
-        logging.error(f"Full traceback:\n{traceback.format_exc()}")
-        print(f"ERROR: {error_msg}", flush=True)
-        print(f"Traceback:\n{traceback.format_exc()}", flush=True)
-
-        # Fallback to extractive answer
+        logging.error("LLM generation failed: %s: %s", type(e).__name__, e)
+        logging.error("Full traceback:\n%s", traceback.format_exc())
         top = snippets[0]
         src = f"{top.get('source_path','')}#{top.get('section_path','')}".strip('#')
         return f"[LLM Error: {type(e).__name__}: {str(e)[:100]}] Based on [1], {top.get('text','')[:200]}...\n\nCitations: [1] {src}"

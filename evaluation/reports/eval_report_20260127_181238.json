@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-01-27T23:12:38.263214",
+  "summary": {
+    "access_control_accuracy": 0.59,
+    "avg_context_precision": 0.0,
+    "avg_faithfulness": 0.0,
+    "avg_answer_relevance": 0.1575,
+    "multihop_beneficial": false
+  },
+  "access_control": {
+    "total_tests": 100,
+    "correct": 59,
+    "accuracy": 0.59,
+    "by_role": {
+      "engineering": {
+        "total": 20,
+        "correct": 10,
+        "accuracy": 0.5
+      },
+      "marketing": {
+        "total": 20,
+        "correct": 10,
+        "accuracy": 0.5
+      },
+      "finance": {
+        "total": 20,
+        "correct": 11,
+        "accuracy": 0.55
+      },
+      "hr": {
+        "total": 20,
+        "correct": 8,
+        "accuracy": 0.4
+      },
+      "c_level": {
+        "total": 20,
+        "correct": 20,
+        "accuracy": 1.0
+      }
+    }
+  },
+  "retrieval_quality": {
+    "total_tests": 20,
+    "valid_results": 20,
+    "metrics": {
+      "context_precision": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "context_recall": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "faithfulness": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "answer_relevance": {
+        "mean": 0.1575,
+        "min": 0.0,
+        "max": 0.75
+      }
+    },
+    "avg_latency_ms": 5.167185308528133
+  },
+  "multihop_analysis": {
+    "total_comparisons": 4,
+    "avg_latency_overhead_ms": 0.3941982431570068,
+    "comparisons_with_improvement": 0,
+    "avg_quality_improvement": 0.0
+  },
+  "category_breakdown": {
+    "hr_policy": {
+      "total": 7,
+      "valid": 7,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.14285714285714285
+    },
+    "finance": {
+      "total": 4,
+      "valid": 4,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.2875
+    },
+    "engineering": {
+      "total": 3,
+      "valid": 3,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.19999999999999998
+    },
+    "marketing": {
+      "total": 3,
+      "valid": 3,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.13333333333333333
+    },
+    "cross_department": {
+      "total": 2,
+      "valid": 2,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.0
+    },
+    "security": {
+      "total": 1,
+      "valid": 1,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.0
+    }
+  }
+}

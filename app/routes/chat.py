@@ -25,7 +25,7 @@ from app.retrieval.hybrid import rrf_fuse
 from app.retrieval.rerank import rerank
 from app.services.reranker_openai import openai_embedding_rerank, openai_llm_rerank
 from app.vectorstore.chroma_store import get_client, get_or_create_collection, query as chroma_query
-from app.services.embeddings import embed_texts
+from app.services.providers import embed_texts
 from app.services.generation import generate_answer
 
 # Policy-safe caching imports
@@ -78,7 +78,36 @@ def _retrieve_context(request: Request, message: str, user: dict, top_k: int,
 
     fused = rrf_fuse(dense_cands, sparse_cands, k=60, top_k=top_k)
 
-    # Optional rerank
+    # PDP filtering BEFORE reranking so the reranker never sees
+    # chunks the user is not permitted to access.
+    pdp: PDP = get_pdp(request)
+    rag_cache = get_rag_cache()
+    pf = compute_pf_for_subject({"role": user["role"]})
+
+    permitted: List[Dict[str, Any]] = []
+
+    for c in fused:
+        res_md = {
+            "owner_dept": c.get("owner_dept"),
+            "doc_type": c.get("doc_type"),
+            "sensitivity": c.get("sensitivity"),
+        }
+
+        def compute_decision(res=res_md, role=user["role"]):
+            d = pdp.evaluate(subject={"role": role}, resource=res, action="retrieve_chunk")
+            return {"effect": d.effect}
+
+        decision, _ = rag_cache.get_decision(
+            pf=pf,
+            resource=res_md,
+            action="retrieve_chunk",
+            compute_fn=compute_decision,
+        )
+
+        if decision["effect"] == "permit":
+            permitted.append(c)
+
+    # Optional rerank on already-filtered candidates
     if do_rerank:
         backend = reranker or "simple"
         kwargs = {}
@@ -94,48 +123,22 @@ def _retrieve_context(request: Request, message: str, user: dict, top_k: int,
                 model=SETTINGS.get("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
                 api_key=SETTINGS.get("OPENAI_API_KEY", ""),
             )
-        fused = rerank(message, fused, backend=backend, top_k=top_k, **kwargs)
+        permitted = rerank(message, permitted, backend=backend, top_k=top_k, **kwargs)
 
-    # PDP filtering with decision caching
-    pdp: PDP = get_pdp(request)
-    rag_cache = get_rag_cache()
-    pf = compute_pf_for_subject({"role": user["role"]})
-
+    # Build context snippets and citations (no internal rule names exposed)
     context_snippets: List[Dict[str, Any]] = []
     citations: List[Dict[str, Any]] = []
 
-    for c in fused:
-        res_md = {
-            "owner_dept": c.get("owner_dept"),
-            "doc_type": c.get("doc_type"),
-            "sensitivity": c.get("sensitivity"),
-        }
-
-        # Cache the policy decision (scoped by Policy Fingerprint)
-        def compute_decision(res=res_md, role=user["role"]):
-            d = pdp.evaluate(subject={"role": role}, resource=res, action="retrieve_chunk")
-            return {"effect": d.effect, "rule": d.rule}
-
-        decision, _ = rag_cache.get_decision(
-            pf=pf,
-            resource=res_md,
-            action="retrieve_chunk",
-            compute_fn=compute_decision,
-        )
-
-        if decision["effect"] == "permit":
-            context_snippets.append({
-                "text": c.get("text"),
-                "source_path": c.get("source_path"),
-                "section_path": c.get("section_path"),
-            })
-            citations.append({
-                "source_path": c.get("source_path"),
-                "section_path": c.get("section_path"),
-                "rule": decision["rule"],
-            })
-        if len(context_snippets) >= top_k:
-            break
+    for c in permitted[:top_k]:
+        context_snippets.append({
+            "text": c.get("text"),
+            "source_path": c.get("source_path"),
+            "section_path": c.get("section_path"),
+        })
+        citations.append({
+            "source_path": c.get("source_path"),
+            "section_path": c.get("section_path"),
+        })
 
     return context_snippets, citations
 

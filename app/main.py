@@ -10,10 +10,14 @@ A FastAPI application that provides:
 Routes are organized into modules for maintainability.
 """
 from __future__ import annotations
+import asyncio
+import logging
 import os
+from contextlib import asynccontextmanager
 from typing import Dict
 
 from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from slowapi import _rate_limit_exceeded_handler
@@ -30,11 +34,50 @@ from app.routes.search import router as search_router
 from app.routes.chat import router as chat_router
 from app.routes.admin import router as admin_router
 from app.routes.hr import router as hr_router
+from app.routes.metrics import router as metrics_router
+from app.routes.evaluation import router as evaluation_router
 from app.routes.deps import authenticate
 
-# Load environment
+# Load environment and reset any cached providers/settings
 load_env(override=False)
+from app.utils.config import reset_settings
+from app.services.providers import reset_providers
+reset_settings()  # Clear settings singleton to pick up .env values
+reset_providers()  # Clear provider cache to use fresh settings
 SETTINGS = get_settings()
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Active request tracking for graceful shutdown
+_active_requests = 0
+_shutdown_event = asyncio.Event()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager for graceful startup/shutdown."""
+    # Startup
+    logger.info("Application starting up...")
+    yield
+    # Shutdown
+    logger.info("Initiating graceful shutdown...")
+    _shutdown_event.set()
+
+    # Wait for active requests to complete (max 30s)
+    shutdown_timeout = 30
+    for i in range(shutdown_timeout * 2):
+        if _active_requests == 0:
+            logger.info("All requests completed, shutting down")
+            break
+        if i % 10 == 0:
+            logger.info(f"Waiting for {_active_requests} active requests...")
+        await asyncio.sleep(0.5)
+    else:
+        logger.warning(f"Shutdown timeout: {_active_requests} requests still active")
+
+    logger.info("Shutdown complete")
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -42,11 +85,37 @@ app = FastAPI(
     description="Internal chatbot with attribute-based access control",
     version="2.0.0",
     docs_url="/docs" if os.getenv("ENABLE_DOCS", "true").lower() == "true" else None,
+    lifespan=lifespan,
 )
 
 # Add rate limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS configuration
+# Set CORS_ORIGINS env var to comma-separated list of allowed origins
+# Example: CORS_ORIGINS=https://app.example.com,https://admin.example.com
+cors_origins = os.getenv("CORS_ORIGINS", "")
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[origin.strip() for origin in cors_origins.split(",") if origin.strip()],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+# Request tracking middleware for graceful shutdown
+@app.middleware("http")
+async def track_requests(request: Request, call_next):
+    global _active_requests
+    _active_requests += 1
+    try:
+        response = await call_next(request)
+        return response
+    finally:
+        _active_requests -= 1
 
 
 # Security headers middleware
@@ -78,6 +147,8 @@ app.include_router(search_router)
 app.include_router(chat_router)
 app.include_router(admin_router)
 app.include_router(hr_router)
+app.include_router(metrics_router)
+app.include_router(evaluation_router)
 
 
 # Health check endpoints

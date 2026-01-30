@@ -45,6 +45,9 @@ def get_settings() -> Dict[str, str]:
             "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
             "OPENAI_EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
             "OPENAI_CHAT_MODEL": os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
+            # Anthropic settings
+            "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY", ""),
+            "ANTHROPIC_MODEL": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
             "CHROMA_DB_DIR": os.getenv("CHROMA_DB_DIR", ".chroma"),
             "HR_AGGREGATE_MODE": os.getenv("HR_AGGREGATE_MODE", "disabled"),
             "HR_MASKED_ROWS_MODE": os.getenv("HR_MASKED_ROWS_MODE", "disabled"),
@@ -79,4 +82,13 @@ def is_cache_enabled() -> bool:
     """Check if caching is enabled."""
     settings = get_settings()
     return settings.get("CACHE_ENABLED", "true").lower() in ("true", "1", "yes")
+
+
+def reset_settings() -> None:
+    """Reset the settings singleton to reload from environment.
+
+    Useful for testing when environment variables change.
+    """
+    global _settings
+    _settings = None
 

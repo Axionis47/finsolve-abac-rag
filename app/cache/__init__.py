@@ -39,6 +39,8 @@ from app.cache.keys import (
 )
 from app.cache.singleflight import Singleflight, get_singleflight
 from app.cache.rag_cache import RAGCache, get_rag_cache, reset_rag_cache
+from app.cache.metrics import CacheMetrics, get_metrics, reset_metrics
+from app.cache.invalidation import EpochManager, get_epoch_manager, reset_epoch_manager
 
 __all__ = [
     # Base adapters
@@ -68,5 +70,13 @@ __all__ = [
     "RAGCache",
     "get_rag_cache",
     "reset_rag_cache",
+    # Metrics
+    "CacheMetrics",
+    "get_metrics",
+    "reset_metrics",
+    # Distributed invalidation
+    "EpochManager",
+    "get_epoch_manager",
+    "reset_epoch_manager",
 ]
 

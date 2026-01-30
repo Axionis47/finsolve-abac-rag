@@ -36,13 +36,29 @@ class Epochs:
         }
 
 
+def _parse_epoch(env_var: str, default: str = "1") -> int:
+    """Parse and validate an epoch value from an environment variable."""
+    raw = os.environ.get(env_var, default)
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        import logging
+        logging.warning("Invalid epoch value for %s=%r, using default %s", env_var, raw, default)
+        return int(default)
+    if value < 0:
+        import logging
+        logging.warning("Negative epoch value for %s=%d, using 0", env_var, value)
+        return 0
+    return value
+
+
 def get_epochs() -> Epochs:
-    """Load epochs from environment variables."""
+    """Load epochs from environment variables with validation."""
     return Epochs(
-        policy=int(os.environ.get("CACHE_POLICY_EPOCH", "1")),
-        entitlement=int(os.environ.get("CACHE_ENTITLEMENT_EPOCH", "1")),
-        acl=int(os.environ.get("CACHE_ACL_EPOCH", "1")),
-        index=int(os.environ.get("CACHE_INDEX_EPOCH", "1")),
+        policy=_parse_epoch("CACHE_POLICY_EPOCH"),
+        entitlement=_parse_epoch("CACHE_ENTITLEMENT_EPOCH"),
+        acl=_parse_epoch("CACHE_ACL_EPOCH"),
+        index=_parse_epoch("CACHE_INDEX_EPOCH"),
     )
 
 

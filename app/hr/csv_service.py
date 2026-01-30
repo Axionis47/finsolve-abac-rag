@@ -7,6 +7,8 @@ DEFAULT_HR_CSV = os.path.join("resources", "data", "hr", "hr_data.csv")
 
 
 def load_hr_rows(csv_path: str = DEFAULT_HR_CSV, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
+    if limit <= 0:
+        return []
     rows: List[Dict[str, Any]] = []
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -42,21 +44,25 @@ def compute_safe_aggregates(csv_path: str = DEFAULT_HR_CSV) -> Dict[str, Any]:
             dept = row.get("department") or "Unknown"
             count_by_dept[dept] = count_by_dept.get(dept, 0) + 1
 
-            # salary
-            try:
-                sal = float(row.get("salary") or 0.0)
-                salary_sum[dept] = salary_sum.get(dept, 0.0) + sal
-                salary_count[dept] = salary_count.get(dept, 0) + 1
-            except Exception:
-                pass
+            # salary - skip rows where column is missing or empty
+            raw_salary = row.get("salary")
+            if raw_salary is not None and raw_salary != "":
+                try:
+                    sal = float(raw_salary)
+                    salary_sum[dept] = salary_sum.get(dept, 0.0) + sal
+                    salary_count[dept] = salary_count.get(dept, 0) + 1
+                except (ValueError, TypeError):
+                    pass
 
-            # performance rating
-            try:
-                rating = float(row.get("performance_rating") or 0.0)
-                rating_sum[dept] = rating_sum.get(dept, 0.0) + rating
-                rating_count[dept] = rating_count.get(dept, 0) + 1
-            except Exception:
-                pass
+            # performance rating - skip rows where column is missing or empty
+            raw_rating = row.get("performance_rating")
+            if raw_rating is not None and raw_rating != "":
+                try:
+                    rating = float(raw_rating)
+                    rating_sum[dept] = rating_sum.get(dept, 0.0) + rating
+                    rating_count[dept] = rating_count.get(dept, 0) + 1
+                except (ValueError, TypeError):
+                    pass
 
     avg_salary_by_dept = {d: (salary_sum[d] / salary_count[d]) for d in salary_sum if salary_count.get(d, 0) > 0}
     avg_rating_by_dept = {d: (rating_sum[d] / rating_count[d]) for d in rating_sum if rating_count.get(d, 0) > 0}
@@ -76,9 +82,9 @@ def mask_row(row: Dict[str, Any], level: str = "strict") -> Dict[str, Any]:
     Levels may be extended later; currently 'strict' masks common PII.
     """
     pii_fields = {
-        "name", "first_name", "last_name", "email", "phone", "address",
-        "ssn", "national_id", "dob", "date_of_birth", "employee_id",
-        "personal_email", "personal_phone",
+        "name", "full_name", "first_name", "last_name", "email", "phone",
+        "address", "ssn", "national_id", "dob", "date_of_birth",
+        "employee_id", "personal_email", "personal_phone",
     }
     masked = dict(row)
     for k in list(masked.keys()):

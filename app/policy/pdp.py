@@ -1,7 +1,10 @@
 from __future__ import annotations
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 import os
+
+logger = logging.getLogger(__name__)
 
 try:
     import yaml  # type: ignore
@@ -41,8 +44,18 @@ class PDP:
             if when is None:
                 continue
             if self._eval_when(when, ctx):
-                return Decision(effect=rule.get("effect", self.default), rule=rule.get("name"))
-        return Decision(effect=self.default, rule=None)
+                decision = Decision(effect=rule.get("effect", self.default), rule=rule.get("name"))
+                logger.debug(
+                    "PDP decision: role=%s action=%s resource=%s effect=%s rule=%s",
+                    (subject or {}).get("role"), action, resource, decision.effect, decision.rule,
+                )
+                return decision
+        decision = Decision(effect=self.default, rule=None)
+        logger.debug(
+            "PDP default: role=%s action=%s resource=%s effect=%s",
+            (subject or {}).get("role"), action, resource, decision.effect,
+        )
+        return decision
 
     def _eval_when(self, when: Dict[str, Any], ctx: Dict[str, Any]) -> bool:
         # Support: all: [ {op: [left, right]}, ... ]

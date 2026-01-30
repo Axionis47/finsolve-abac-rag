@@ -28,21 +28,22 @@ def _verify_password(password: str, stored: str) -> bool:
     return _hash_password(password, salt) == stored
 
 
-# User database - in production, use a real database
+# User database - plaintext for demo, use hashed passwords in production
+# Format: username -> {password, role}
 users_db: Dict[str, Dict[str, str]] = {
-    "Tony": {"password": _hash_password("password123"), "role": "engineering"},
-    "Bruce": {"password": _hash_password("securepass"), "role": "marketing"},
-    "Sam": {"password": _hash_password("financepass"), "role": "finance"},
-    "Peter": {"password": _hash_password("pete123"), "role": "engineering"},
-    "Sid": {"password": _hash_password("sidpass123"), "role": "marketing"},
-    "Natasha": {"password": _hash_password("hrpass123"), "role": "hr"},
-    "Clark": {"password": _hash_password("chief"), "role": "c_level"},
+    "tony": {"password": "password123", "role": "engineering"},
+    "bruce": {"password": "securepass", "role": "marketing"},
+    "sam": {"password": "financepass", "role": "finance"},
+    "peter": {"password": "pete123", "role": "engineering"},
+    "sid": {"password": "sidpass123", "role": "marketing"},
+    "natasha": {"password": "hrpass123", "role": "hr"},
+    "clark": {"password": "chief", "role": "c_level"},
 }
 
 
 def authenticate(credentials: HTTPBasicCredentials = Depends(security)) -> Dict[str, str]:
-    """Authentication dependency that returns user info."""
-    username = credentials.username
+    """Authentication dependency that returns user info (case-insensitive username)."""
+    username = credentials.username.lower()
     password = credentials.password
     user = users_db.get(username)
     if not user or not _verify_password(password, user["password"]):
@@ -67,10 +68,15 @@ def set_index(request: Request, index):
 
 def authorize(request: Request, action: str, resource: Dict[str, str], user: Dict[str, str]):
     """Check authorization via PDP."""
+    import logging
     from app.policy.pdp import PDP
     pdp: PDP = get_pdp(request)
     decision = pdp.evaluate(subject={"role": user["role"]}, resource=resource, action=action)
     if decision.effect != "permit":
-        raise HTTPException(status_code=403, detail={"decision": decision.effect, "rule": decision.rule})
-    return {"decision": decision.effect, "rule": decision.rule}
+        logging.info(
+            "PDP deny: user=%s role=%s action=%s resource=%s rule=%s",
+            user.get("username"), user["role"], action, resource, decision.rule,
+        )
+        raise HTTPException(status_code=403, detail="Access denied")
+    return decision
 

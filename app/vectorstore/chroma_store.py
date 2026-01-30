@@ -61,6 +61,21 @@ def upsert_chunks(collection, chunks: List[Dict[str, Any]], embeddings: List[Lis
             "owner_dept": c.get("owner_dept"),
             "doc_type": c.get("doc_type"),
             "sensitivity": c.get("sensitivity"),
+            # Temporal metadata for filtering
+            "year": c.get("year") or "",
+            "quarter": c.get("quarter") or "",
+            "temporal_refs": ",".join(c.get("temporal_refs", [])) if c.get("temporal_refs") else "",
+            # Topics for enhanced retrieval
+            "topics": ",".join(c.get("topics", [])) if c.get("topics") else "",
+            # Access tier metadata (for tiered access control)
+            "full_access_roles": c.get("full_access_roles", ""),
+            "masked_access_roles": c.get("masked_access_roles", ""),
+            "aggregate_access_roles": c.get("aggregate_access_roles", ""),
+            # Masked text for limited access views
+            "masked_text": c.get("masked_text", ""),
+            # HR-specific fields
+            "row_id": c.get("row_id", ""),
+            "agg_type": c.get("agg_type", ""),
             **_roles_to_flags(list(roles)),
         }
         metadatas.append(md)

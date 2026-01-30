@@ -7,9 +7,12 @@ This prevents thundering herd problems.
 """
 from __future__ import annotations
 
+import logging
 import threading
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, TypeVar
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
@@ -35,28 +38,36 @@ class Singleflight:
         result = sf.do("my-key", lambda: expensive_operation())
     """
 
-    def __init__(self):
+    DEFAULT_TIMEOUT = 30.0  # seconds
+
+    def __init__(self, timeout: float = DEFAULT_TIMEOUT):
         self._in_flight: Dict[str, _InFlight] = {}
         self._lock = threading.Lock()
         self._dedup_count = 0
+        self._timeout_count = 0
+        self._timeout = timeout
 
-    def do(self, key: str, fn: Callable[[], T]) -> T:
+    def do(self, key: str, fn: Callable[[], T], timeout: Optional[float] = None) -> T:
         """
         Execute fn() for key, deduplicating concurrent calls.
-        
+
         If another caller is already computing for this key,
         wait for their result instead of computing again.
-        
+        Waits at most `timeout` seconds before falling back to direct execution.
+
         Args:
             key: Unique identifier for this computation
             fn: Function to call if no computation is in progress
-            
+            timeout: Max seconds to wait for an in-flight result (default: instance timeout)
+
         Returns:
             Result of fn() (possibly from another caller)
-            
+
         Raises:
             Exception: If fn() raises an exception
         """
+        wait_timeout = timeout if timeout is not None else self._timeout
+
         with self._lock:
             if key in self._in_flight:
                 # Someone else is computing, wait for them
@@ -70,8 +81,12 @@ class Singleflight:
                 flight.waiters = 0
 
         if flight.waiters > 0:
-            # Wait for the computing thread
-            flight.lock.wait()
+            # Wait for the computing thread with timeout
+            completed = flight.lock.wait(timeout=wait_timeout)
+            if not completed:
+                self._timeout_count += 1
+                logger.warning("Singleflight timeout for key=%s after %.1fs, executing directly", key[:30], wait_timeout)
+                return fn()
             if flight.error is not None:
                 raise flight.error
             return flight.result
@@ -107,6 +122,7 @@ class Singleflight:
         """Return singleflight statistics."""
         return {
             "dedup_count": self._dedup_count,
+            "timeout_count": self._timeout_count,
             "in_flight": self.in_flight_count,
         }
 

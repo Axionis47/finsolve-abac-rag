@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-01-27T23:26:40.034604",
+  "summary": {
+    "access_control_accuracy": 0.59,
+    "avg_context_precision": 0.0,
+    "avg_faithfulness": 0.0,
+    "avg_answer_relevance": 0.6775,
+    "multihop_beneficial": false
+  },
+  "access_control": {
+    "total_tests": 100,
+    "correct": 59,
+    "accuracy": 0.59,
+    "by_role": {
+      "engineering": {
+        "total": 20,
+        "correct": 10,
+        "accuracy": 0.5
+      },
+      "marketing": {
+        "total": 20,
+        "correct": 10,
+        "accuracy": 0.5
+      },
+      "finance": {
+        "total": 20,
+        "correct": 11,
+        "accuracy": 0.55
+      },
+      "hr": {
+        "total": 20,
+        "correct": 8,
+        "accuracy": 0.4
+      },
+      "c_level": {
+        "total": 20,
+        "correct": 20,
+        "accuracy": 1.0
+      }
+    }
+  },
+  "retrieval_quality": {
+    "total_tests": 20,
+    "valid_results": 20,
+    "metrics": {
+      "context_precision": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "context_recall": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "faithfulness": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "answer_relevance": {
+        "mean": 0.6775,
+        "min": 0.3333333333333333,
+        "max": 0.8333333333333334
+      }
+    },
+    "avg_latency_ms": 6.333302156417631
+  },
+  "multihop_analysis": {
+    "total_comparisons": 4,
+    "avg_latency_overhead_ms": 9597.19317726558,
+    "comparisons_with_improvement": 0,
+    "avg_quality_improvement": 0.0
+  },
+  "category_breakdown": {
+    "hr_policy": {
+      "total": 7,
+      "valid": 7,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.6309523809523808
+    },
+    "finance": {
+      "total": 4,
+      "valid": 4,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.7625
+    },
+    "engineering": {
+      "total": 3,
+      "valid": 3,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.5611111111111111
+    },
+    "marketing": {
+      "total": 3,
+      "valid": 3,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.6888888888888888
+    },
+    "cross_department": {
+      "total": 2,
+      "valid": 2,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.7916666666666667
+    },
+    "security": {
+      "total": 1,
+      "valid": 1,
+      "avg_precision": 0.0,
+      "avg_recall": 0.0,
+      "avg_faithfulness": 0.0,
+      "avg_relevance": 0.75
+    }
+  }
+}
