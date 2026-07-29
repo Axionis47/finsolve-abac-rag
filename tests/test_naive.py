@@ -183,6 +183,7 @@ def test_a_hit_carries_what_the_policy_replay_and_the_metrics_need() -> None:
 def test_available_modes_lists_naive() -> None:
     assert available_modes() == sorted(available_modes())
     assert "naive" in available_modes()
+    # Each later rung adds its own mode here; test_bm25.py pins the full list.
 
 
 def test_build_retriever_builds_the_naive_mode() -> None:
@@ -194,11 +195,15 @@ def test_build_retriever_builds_the_naive_mode() -> None:
 
 
 def test_build_retriever_names_the_known_modes_when_asked_for_a_bad_one() -> None:
-    """The message is what the CLI shows a person who mistyped `--mode`."""
+    """The message is what the CLI shows a person who mistyped `--mode`.
+
+    The bad name is one no rung will ever add, so this test does not have to be
+    edited every time a real mode lands.
+    """
     with pytest.raises(KeyError) as caught:
-        build_retriever("bm25", IndexBundle(chunks=CORPUS))
+        build_retriever("telepathy", IndexBundle(chunks=CORPUS))
 
     message = str(caught.value)
-    assert "bm25" in message
+    assert "telepathy" in message
     for mode in available_modes():
         assert mode in message

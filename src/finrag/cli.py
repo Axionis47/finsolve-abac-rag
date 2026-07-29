@@ -37,7 +37,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("ingest", help="chunk the corpus and write artifacts/chunks.jsonl")
+    subparsers.add_parser(
+        "ingest", help="chunk the corpus, write artifacts/chunks.jsonl and the BM25 index"
+    )
     subparsers.add_parser("graph", help="build the knowledge graph (not wired up yet)")
 
     eval_parser = subparsers.add_parser("eval", help="score a retrieval mode on the gold set")
@@ -172,6 +174,7 @@ def command_pending(name: str) -> int:
 def print_stats(stats: IngestStats) -> None:
     """Print the ingest summary as two small tables."""
     print(f"Wrote {stats.n_chunks} chunks to {stats.chunks_path}")
+    print(f"Wrote a BM25 index of {stats.n_indexed} chunks to {stats.bm25_dir}")
     print()
     _print_counts("By doc type", stats.by_doc_type)
     print()
