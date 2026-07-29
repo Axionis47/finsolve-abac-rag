@@ -13,6 +13,7 @@ dependencies = [
     "pyyaml",
     "numpy",
     "bm25s",
+    "neo4j>=6.2.0",
 ]
 
 [project.scripts]
