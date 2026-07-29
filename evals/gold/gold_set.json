@@ -1,0 +1,1515 @@
+{
+  "version": "2.0",
+  "questions": [
+    {
+      "id": "T1-01",
+      "tier": "T1",
+      "question": "How many sign-ups did the InstantPay launch achieve in Q1 2024, against the 50,000 sign-up target?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q1_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q1_2024#q1-strategic-objectives"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "52,000 sign-ups, which beat the 50,000 target by 4 percent.",
+      "answer_source": [
+        "marketing/marketing_report_q1_2024#q1-strategic-objectives"
+      ],
+      "tags": [
+        "lexical",
+        "instantpay-signups"
+      ],
+      "notes": "Straight term lookup. Both numbers sit in one sentence of the objectives section."
+    },
+    {
+      "id": "T1-02",
+      "tier": "T1",
+      "question": "What are the Recovery Time Objective (RTO) and Recovery Point Objective (RPO) in the disaster recovery plan?",
+      "role": "engineering",
+      "applicable_roles": [
+        "engineering",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "gold_sections": [
+        "engineering/engineering_master_doc#2-system-architecture--2-5-resilience-and-fault-tolerance--2-5-3-disaster-recovery"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "RTO of 4 hours and RPO of 15 minutes.",
+      "answer_source": [
+        "engineering/engineering_master_doc#2-system-architecture--2-5-resilience-and-fault-tolerance--2-5-3-disaster-recovery"
+      ],
+      "tags": [
+        "lexical",
+        "rto-rpo",
+        "paraphrase-twin"
+      ],
+      "notes": "Positive control for the T2 paraphrase twin T2-02. Same section, full document vocabulary."
+    },
+    {
+      "id": "T1-03",
+      "tier": "T1",
+      "question": "What was FinSolve Technologies' total revenue for 2024?",
+      "role": "finance",
+      "applicable_roles": [
+        "finance",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#2024-annual-summary"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "$9.4 billion, a 28 percent year over year increase.",
+      "answer_source": [
+        "finance/quarterly_financial_report#2024-annual-summary"
+      ],
+      "tags": [
+        "lexical",
+        "annual-revenue"
+      ],
+      "notes": "The four quarterly revenue lines ($2.1B, $2.3B, $2.4B, $2.6B) are the in-document distractors."
+    },
+    {
+      "id": "T1-04",
+      "tier": "T1",
+      "question": "According to the quarterly financial report, what was the gross margin in Q1 2024?",
+      "role": "finance",
+      "applicable_roles": [
+        "finance",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-financial-overview"
+      ],
+      "distractor_docs": [
+        "finance/financial_summary"
+      ],
+      "gold_answer": "58 percent.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-financial-overview"
+      ],
+      "tags": [
+        "lexical",
+        "gross-margin",
+        "source-pinned"
+      ],
+      "notes": "The question names the owning document because financial_summary reports a 60 percent annual gross margin."
+    },
+    {
+      "id": "T1-05",
+      "tier": "T1",
+      "question": "Which tool is used for load testing, and how many concurrent users is the load test targeted at?",
+      "role": "engineering",
+      "applicable_roles": [
+        "engineering",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "gold_sections": [
+        "engineering/engineering_master_doc#6-testing-and-quality-assurance--6-1-testing-strategy--6-1-2-specialized-testing"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "JMeter, targeted at 2,000 concurrent users.",
+      "answer_source": [
+        "engineering/engineering_master_doc#6-testing-and-quality-assurance--6-1-testing-strategy--6-1-2-specialized-testing"
+      ],
+      "tags": [
+        "lexical",
+        "load-testing"
+      ],
+      "notes": "The technology matrix lists many other tool names, so the rare term JMeter carries the retrieval."
+    },
+    {
+      "id": "T1-06",
+      "tier": "T1",
+      "question": "How many days of sick leave do employees get per year?",
+      "role": "employee",
+      "applicable_roles": [
+        "finance",
+        "marketing",
+        "hr",
+        "engineering",
+        "c_level",
+        "employee"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "general/employee_handbook"
+      ],
+      "gold_sections": [
+        "general/employee_handbook#leave-policies--types-of-leave"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "12 days a year, non cumulative, with a medical certificate needed for more than 2 days.",
+      "answer_source": [
+        "general/employee_handbook#leave-policies--types-of-leave"
+      ],
+      "tags": [
+        "lexical",
+        "sick-leave",
+        "general-corpus"
+      ],
+      "notes": "Asked as employee, so it doubles as a positive control that the general corpus is open to every role."
+    },
+    {
+      "id": "T1-07",
+      "tier": "T1",
+      "question": "What is the reward for a successful employee referral, and when is it paid out?",
+      "role": "employee",
+      "applicable_roles": [
+        "finance",
+        "marketing",
+        "hr",
+        "engineering",
+        "c_level",
+        "employee"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "general/employee_handbook"
+      ],
+      "gold_sections": [
+        "general/employee_handbook#miscellaneous--employee-referral-program"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "₹10,000, paid after the new hire completes 6 months.",
+      "answer_source": [
+        "general/employee_handbook#miscellaneous--employee-referral-program"
+      ],
+      "tags": [
+        "lexical",
+        "referral-reward",
+        "general-corpus"
+      ],
+      "notes": "Very short target section, so a retriever that favours long chunks will miss it."
+    },
+    {
+      "id": "T1-08",
+      "tier": "T1",
+      "question": "According to the 2024 annual marketing report, what was the customer acquisition cost (CAC) per new customer?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "$150 per new customer, down from $180 in 2023.",
+      "answer_source": [
+        "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024"
+      ],
+      "tags": [
+        "lexical",
+        "cac",
+        "source-pinned"
+      ],
+      "notes": "The question names the annual report because the four quarterlies state a cost per acquisition of $11.11 to $13.33."
+    },
+    {
+      "id": "T2-01",
+      "tier": "T2",
+      "question": "By how much did buyer attrition shrink during the festive stretch, set against the previous three months?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_sections": [
+        "marketing/market_report_q4_2024#q4-strategic-objectives"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_answer": "Churn fell 8 percent compared with Q3.",
+      "answer_source": [
+        "marketing/market_report_q4_2024#q4-strategic-objectives"
+      ],
+      "tags": [
+        "paraphrase",
+        "attrition-holiday"
+      ],
+      "notes": "The word attrition appears nowhere in the corpus, and the target section says churn, holiday season and Q3."
+    },
+    {
+      "id": "T2-02",
+      "tier": "T2",
+      "question": "If our main server hall burned to the ground, how long before customers could pay again, and how much of their latest activity would vanish?",
+      "role": "engineering",
+      "applicable_roles": [
+        "engineering",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "gold_sections": [
+        "engineering/engineering_master_doc#2-system-architecture--2-5-resilience-and-fault-tolerance--2-5-3-disaster-recovery"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "Up to 4 hours to restore service (RTO) and up to 15 minutes of lost activity (RPO).",
+      "answer_source": [
+        "engineering/engineering_master_doc#2-system-architecture--2-5-resilience-and-fault-tolerance--2-5-3-disaster-recovery"
+      ],
+      "tags": [
+        "paraphrase",
+        "rto-rpo",
+        "paraphrase-twin"
+      ],
+      "notes": "Paraphrase twin of T1-02. The T1 minus T2 gap on this pair isolates lexical matching from semantic matching."
+    },
+    {
+      "id": "T2-03",
+      "tier": "T2",
+      "question": "What percentage of a worker's core wage is put aside for retirement savings, and does the firm match that amount?",
+      "role": "employee",
+      "applicable_roles": [
+        "finance",
+        "marketing",
+        "hr",
+        "engineering",
+        "c_level",
+        "employee"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "general/employee_handbook"
+      ],
+      "gold_sections": [
+        "general/employee_handbook#employee-onboarding-benefits--employee-benefits--statutory-benefits",
+        "general/employee_handbook#compensation-payroll--salary-structure"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "12 percent from the employer and 12 percent from the employee, into the Employees' Provident Fund (EPF).",
+      "answer_source": [
+        "general/employee_handbook#employee-onboarding-benefits--employee-benefits--statutory-benefits",
+        "general/employee_handbook#compensation-payroll--salary-structure"
+      ],
+      "tags": [
+        "paraphrase",
+        "epf-contribution",
+        "general-corpus"
+      ],
+      "notes": "Two sections state the same 12 percent figure, so either one counts as a section hit."
+    },
+    {
+      "id": "T2-04",
+      "tier": "T2",
+      "question": "Which three nations were named as fresh territory in the April to June plan?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q2_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q2_2024#q2-marketing-overview"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_answer": "Indonesia, Thailand and Vietnam.",
+      "answer_source": [
+        "marketing/marketing_report_q2_2024#q2-marketing-overview"
+      ],
+      "tags": [
+        "paraphrase",
+        "sea-countries"
+      ],
+      "notes": "Avoids Southeast, Asia, market and expansion, and dates the quarter by month names the marketing doc never uses."
+    },
+    {
+      "id": "T2-05",
+      "tier": "T2",
+      "question": "How long may a new mother stay at home on her full wage after giving birth?",
+      "role": "employee",
+      "applicable_roles": [
+        "finance",
+        "marketing",
+        "hr",
+        "engineering",
+        "c_level",
+        "employee"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "general/employee_handbook"
+      ],
+      "gold_sections": [
+        "general/employee_handbook#leave-policies--types-of-leave"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "26 weeks of maternity leave for the first two children, and 12 weeks for later children.",
+      "answer_source": [
+        "general/employee_handbook#leave-policies--types-of-leave"
+      ],
+      "tags": [
+        "paraphrase",
+        "maternity-leave",
+        "general-corpus"
+      ],
+      "notes": "Same gold section as the T1 sick leave probe, reached without the words leave, maternity or weeks."
+    },
+    {
+      "id": "T2-06",
+      "tier": "T2",
+      "question": "What share of each build cycle do the coders reserve for cleaning up shortcuts they took earlier?",
+      "role": "engineering",
+      "applicable_roles": [
+        "engineering",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "gold_sections": [
+        "engineering/engineering_master_doc#8-monitoring-and-maintenance--8-3-maintenance-procedures--8-3-3-technical-debt-management"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "20 percent of sprint capacity is dedicated to technical debt.",
+      "answer_source": [
+        "engineering/engineering_master_doc#8-monitoring-and-maintenance--8-3-maintenance-procedures--8-3-3-technical-debt-management"
+      ],
+      "tags": [
+        "paraphrase",
+        "technical-debt"
+      ],
+      "notes": "Three line target section buried in a 756 line document, with no shared content word."
+    },
+    {
+      "id": "T2-07",
+      "tier": "T2",
+      "question": "During the July to September stretch, how many people joined the points scheme and what share of them cashed in their perks?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q3_2024#campaign-highlights--customer-retention"
+      ],
+      "distractor_docs": [
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "40,000 customers enrolled in the loyalty program, and 55 percent redeemed rewards by quarter end.",
+      "answer_source": [
+        "marketing/marketing_report_q3_2024#campaign-highlights--customer-retention"
+      ],
+      "tags": [
+        "paraphrase",
+        "loyalty-enrolment"
+      ],
+      "notes": "Q4 states the same shape of fact with different numbers (50,000 enrolled, 60 percent redeemed), so the month names carry the disambiguation."
+    },
+    {
+      "id": "T2-08",
+      "tier": "T2",
+      "question": "Which two outside firms stand guard against traffic-flood attacks and screen hostile visitor calls before they reach us?",
+      "role": "engineering",
+      "applicable_roles": [
+        "engineering",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "gold_sections": [
+        "engineering/engineering_master_doc#2-system-architecture--2-3-key-components--2-3-5-infrastructure",
+        "engineering/engineering_master_doc#5-security-and-compliance--5-1-security-architecture--5-1-3-network-security"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "Cloudflare for DDoS mitigation and AWS WAF for web application protection at the perimeter.",
+      "answer_source": [
+        "engineering/engineering_master_doc#5-security-and-compliance--5-1-security-architecture--5-1-3-network-security",
+        "engineering/engineering_master_doc#2-system-architecture--2-3-key-components--2-3-5-infrastructure"
+      ],
+      "tags": [
+        "paraphrase",
+        "ddos-protection"
+      ],
+      "notes": "Two sections in one document state the pair, so either one counts as a section hit."
+    },
+    {
+      "id": "T3-01",
+      "tier": "T3",
+      "question": "According to the Q1 2024 marketing report, what was the marketing spend for that quarter?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q1_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q1_2024#q1-projections-targets",
+        "marketing/marketing_report_q1_2024#q1-marketing-overview"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "$2 million.",
+      "answer_source": [
+        "marketing/marketing_report_q1_2024#q1-projections-targets"
+      ],
+      "tags": [
+        "temporal",
+        "spend-collision",
+        "source-pinned"
+      ],
+      "notes": "Q3 reports the identical $2 million figure, so only the quarter tells the two apart. Finance reports $500 million for the same quarter, which is why the question names the marketing report."
+    },
+    {
+      "id": "T3-02",
+      "tier": "T3",
+      "question": "According to the Q3 2024 marketing report, what was the marketing spend for that quarter?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q3_2024#q3-projections-targets",
+        "marketing/marketing_report_q3_2024#q3-marketing-overview"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "$2 million.",
+      "answer_source": [
+        "marketing/marketing_report_q3_2024#q3-projections-targets"
+      ],
+      "tags": [
+        "temporal",
+        "spend-collision",
+        "source-pinned"
+      ],
+      "notes": "Collision twin of T3-01. Same value, different quarter. Finance reports $600 million for Q3."
+    },
+    {
+      "id": "T3-03",
+      "tier": "T3",
+      "question": "In Q1 2024, which activity produced 500,000 impressions, and in which cities did it take place?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q1_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q1_2024#campaign-highlights--brand-awareness"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_answer": "Event sponsorships, through conference activations in London and Berlin.",
+      "answer_source": [
+        "marketing/marketing_report_q1_2024#campaign-highlights--brand-awareness"
+      ],
+      "tags": [
+        "temporal",
+        "impressions-collision"
+      ],
+      "notes": "Q3 reports the same 500,000 impressions from influencer marketing, and Q2 reports 600,000 from influencers."
+    },
+    {
+      "id": "T3-04",
+      "tier": "T3",
+      "question": "In Q3 2024, which activity produced 500,000 impressions, and how many influencers took part?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q3_2024#campaign-highlights--latin-american-expansion"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "gold_answer": "Influencer marketing with 25 regional influencers, which also drove 50,000 website visits.",
+      "answer_source": [
+        "marketing/marketing_report_q3_2024#campaign-highlights--latin-american-expansion"
+      ],
+      "tags": [
+        "temporal",
+        "impressions-collision"
+      ],
+      "notes": "Collision twin of T3-03. Same 500,000 figure, different quarter and different activity."
+    },
+    {
+      "id": "T3-05",
+      "tier": "T3",
+      "question": "What email open rate did the Q1 2024 InstantPay email campaign achieve?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q1_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q1_2024#campaign-highlights--instantpay-launch"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "A 30 percent open rate, with a 5 percent conversion rate.",
+      "answer_source": [
+        "marketing/marketing_report_q1_2024#campaign-highlights--instantpay-launch"
+      ],
+      "tags": [
+        "temporal",
+        "email-open-collision"
+      ],
+      "notes": "Q3 reports the same 30 percent open rate for loyalty email. Q2 reports 28 percent and Q4 reports 35 percent."
+    },
+    {
+      "id": "T3-06",
+      "tier": "T3",
+      "question": "What email open rate did the Q3 2024 loyalty-focused email campaigns achieve?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q3_2024#campaign-highlights--digital-marketing"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "A 30 percent open rate, with a 4.5 percent conversion rate.",
+      "answer_source": [
+        "marketing/marketing_report_q3_2024#campaign-highlights--digital-marketing"
+      ],
+      "tags": [
+        "temporal",
+        "email-open-collision"
+      ],
+      "notes": "Collision twin of T3-05. The email marketing line sits under Digital Marketing in Q3, not under Customer Retention."
+    },
+    {
+      "id": "T3-07",
+      "tier": "T3",
+      "question": "How many qualified leads came out of the two fintech conferences sponsored in Q1 2024?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q1_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q1_2024#q1-strategic-objectives"
+      ],
+      "distractor_docs": [
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "200 qualified leads, from conferences in London and Berlin.",
+      "answer_source": [
+        "marketing/marketing_report_q1_2024#q1-strategic-objectives"
+      ],
+      "tags": [
+        "temporal",
+        "leads-collision"
+      ],
+      "notes": "Q4 reports 300 qualified leads from two industry conferences, a near identical sentence one quarter apart."
+    },
+    {
+      "id": "T3-08",
+      "tier": "T3",
+      "question": "How many qualified leads came out of the two industry conferences sponsored in Q4 2024?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_sections": [
+        "marketing/market_report_q4_2024#campaign-highlights--b2b-initiatives"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q1_2024"
+      ],
+      "gold_answer": "300 qualified leads.",
+      "answer_source": [
+        "marketing/market_report_q4_2024#campaign-highlights--b2b-initiatives"
+      ],
+      "tags": [
+        "temporal",
+        "leads-collision"
+      ],
+      "notes": "Collision twin of T3-07."
+    },
+    {
+      "id": "T3-09",
+      "tier": "T3",
+      "question": "According to the quarterly financial report, what was cash flow from operations in Q2 2024?",
+      "role": "finance",
+      "applicable_roles": [
+        "finance",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--cash-flow-analysis"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "$350 million, up 12 percent year over year.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--cash-flow-analysis"
+      ],
+      "tags": [
+        "temporal",
+        "cash-flow"
+      ],
+      "notes": "The distractors are three sibling sections inside the same document: $300 million in Q1, $400 million in Q3 and $450 million in Q4. Doc level recall cannot separate them, so this question is scored mainly by its section hit."
+    },
+    {
+      "id": "T3-10",
+      "tier": "T3",
+      "question": "According to the Q3 2024 marketing report, what conversion rate was achieved, and how did it compare with the target?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q3_2024#performance-analysis"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "13.8 percent achieved against a 14.0 percent target, marginally below.",
+      "answer_source": [
+        "marketing/marketing_report_q3_2024#performance-analysis"
+      ],
+      "tags": [
+        "temporal",
+        "conversion-rate"
+      ],
+      "notes": "All four quarterlies carry a Performance Analysis section with the same four bullet shapes."
+    },
+    {
+      "id": "T4-01",
+      "tier": "T4",
+      "question": "The Q4 2024 financial report names aggressive digital campaigns as the mitigation for North America market saturation. What did those campaigns actually deliver?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q4-october-to-december-2024--risks-mitigation",
+        "marketing/market_report_q4_2024#q4-strategic-objectives",
+        "marketing/market_report_q4_2024#campaign-highlights--b2b-initiatives"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "Finance flags revenue growth pressure in North America from market saturation and names aggressive digital marketing campaigns as the mitigation. Only the Q4 marketing report quantifies the result: a 20 percent rise in website traffic against Q3, 10 new enterprise contracts worth $1.2 million in annual recurring revenue, and 300 qualified leads from two industry conferences.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q4-october-to-december-2024--risks-mitigation",
+        "marketing/market_report_q4_2024#q4-strategic-objectives",
+        "marketing/market_report_q4_2024#campaign-highlights--b2b-initiatives"
+      ],
+      "tags": [
+        "multihop",
+        "na-saturation"
+      ],
+      "notes": "The bridge carries almost no shared vocabulary: finance says saturation and mitigation, marketing says traffic, contracts and leads. A lexical retriever should fail the second hop."
+    },
+    {
+      "id": "T4-02",
+      "tier": "T4",
+      "question": "Finance books between $45 million and $55 million of software subscriptions every quarter of 2024. Which platforms and tools does that spend pay for?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "engineering/engineering_master_doc"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+        "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown",
+        "engineering/engineering_master_doc#3-technology-stack--3-1-comprehensive-technology-matrix"
+      ],
+      "distractor_docs": [
+        "finance/financial_summary"
+      ],
+      "gold_answer": "Software subscriptions run $45 million in Q1, $47 million in Q2, $50 million in Q3 and $55 million in Q4. The engineering technology matrix names what that buys, including AWS, Kubernetes, PostgreSQL 15, MongoDB 6.0, Redis 7.0, Jenkins, GitHub Actions, ArgoCD, Prometheus, Grafana and the ELK Stack.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+        "engineering/engineering_master_doc#3-technology-stack--3-1-comprehensive-technology-matrix"
+      ],
+      "tags": [
+        "multihop",
+        "software-subscriptions"
+      ],
+      "notes": "Finance never names a tool and engineering never names a cost, so this only resolves across the folder boundary. financial_summary is a distractor because it reports software subscriptions as $25 million for the whole year."
+    },
+    {
+      "id": "T4-03",
+      "tier": "T4",
+      "question": "Finance flagged in Q2 2024 that influencer marketing might underperform against expected ROI. What ROI did marketing report for that quarter, and what was the target?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--risks-mitigation",
+        "marketing/marketing_report_q2_2024#q2-benchmarks",
+        "marketing/marketing_report_q2_2024#performance-analysis"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_answer": "Marketing reported a preliminary ROI of 2.3x against a 2.4x target, so the risk was borne out. Finance's mitigation was to shift to performance-based influencer contracts.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--risks-mitigation",
+        "marketing/marketing_report_q2_2024#q2-benchmarks",
+        "marketing/marketing_report_q2_2024#performance-analysis"
+      ],
+      "tags": [
+        "multihop",
+        "influencer-roi"
+      ],
+      "notes": "The evidence hop needs two sections of the marketing doc: the target lives in Benchmarks and the actual in Performance Analysis."
+    },
+    {
+      "id": "T4-04",
+      "tier": "T4",
+      "question": "The annual financial summary reports days sales outstanding of 45 days against a 30 day industry benchmark. Which quarter names that as a risk, and what was done about it?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/financial_summary",
+        "finance/quarterly_financial_report"
+      ],
+      "gold_sections": [
+        "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024",
+        "finance/quarterly_financial_report#q3-july-to-september-2024--risks-mitigation"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "Q3 2024 names high DSO as a risk to cash flow, and the mitigation was improved invoicing and collection practices to speed up receivables.",
+      "answer_source": [
+        "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024",
+        "finance/quarterly_financial_report#q3-july-to-september-2024--risks-mitigation"
+      ],
+      "tags": [
+        "multihop",
+        "dso-risk"
+      ],
+      "notes": "Both hops sit in the finance folder but in different documents, so this tests cross-document bridging without a role change."
+    },
+    {
+      "id": "T4-05",
+      "tier": "T4",
+      "question": "In Q3 2024 finance put 35 percent of $130 million of vendor services behind loyalty and retention. What did the loyalty programme return?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+        "marketing/marketing_report_q3_2024#campaign-highlights--customer-retention",
+        "marketing/marketing_report_q3_2024#q3-strategic-objectives"
+      ],
+      "distractor_docs": [
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "That is $45.5 million. Marketing enrolled 40,000 customers in the loyalty program with 55 percent redeeming rewards by quarter end, and reported a 10 percent rise in repeat purchases against Q2.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+        "marketing/marketing_report_q3_2024#campaign-highlights--customer-retention"
+      ],
+      "tags": [
+        "multihop",
+        "loyalty-spend"
+      ],
+      "notes": "Q4 also runs a loyalty program with 50,000 enrolled and 60 percent redeeming, so the quarter has to survive both hops."
+    },
+    {
+      "id": "T4-06",
+      "tier": "T4",
+      "question": "Finance credits part of Q2 2024 revenue growth to early traction in Southeast Asia. What customer numbers did marketing report for that region, and what drove them?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+        "marketing/marketing_report_q2_2024#performance-analysis",
+        "marketing/marketing_report_q2_2024#campaign-highlights--influencer-partnerships"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_answer": "Finance reports Q2 revenue of $2.3 billion, up 25 percent year over year, helped by early traction in Southeast Asia. Marketing acquired 190,000 new customers in the quarter with 55 percent from Southeast Asia, and 20 regional influencers contributed 40,000 sign-ups.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+        "marketing/marketing_report_q2_2024#performance-analysis",
+        "marketing/marketing_report_q2_2024#campaign-highlights--influencer-partnerships"
+      ],
+      "tags": [
+        "multihop",
+        "sea-traction"
+      ],
+      "notes": "Three sections across two folders. Marketing never mentions revenue in billions and finance never mentions customer counts."
+    },
+    {
+      "id": "T4-07",
+      "tier": "T4",
+      "question": "What was the Q2 2024 marketing spend?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "retrieve_both",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+        "marketing/marketing_report_q2_2024#q2-marketing-overview",
+        "marketing/marketing_report_q2_2024#q2-projections-targets"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "The corpus contradicts itself. The quarterly financial report says $550 million for Q2 2024; the Q2 marketing report says $2.5 million. A correct answer surfaces both figures with their sources rather than picking one.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+        "marketing/marketing_report_q2_2024#q2-projections-targets"
+      ],
+      "tags": [
+        "multihop",
+        "ambiguous",
+        "contradiction",
+        "spend-contradiction"
+      ],
+      "notes": "Deliberately does not name an owning document. Scored only on whether both conflicting sources come back, which is why the role is c_level."
+    },
+    {
+      "id": "T4-08",
+      "tier": "T4",
+      "question": "In which year was FinSolve Technologies founded?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "retrieve_both",
+      "gold_docs": [
+        "engineering/engineering_master_doc",
+        "general/employee_handbook"
+      ],
+      "gold_sections": [
+        "engineering/engineering_master_doc#1-introduction--1-1-company-overview",
+        "general/employee_handbook#welcome-introduction--company-overview"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "The corpus contradicts itself. The engineering document says founded in 2018; the employee handbook says founded in 2016. A correct answer surfaces both with their sources.",
+      "answer_source": [
+        "engineering/engineering_master_doc#1-introduction--1-1-company-overview",
+        "general/employee_handbook#welcome-introduction--company-overview"
+      ],
+      "tags": [
+        "multihop",
+        "ambiguous",
+        "contradiction",
+        "founding-year"
+      ],
+      "notes": "The two sources sit in different folders with different visibility, so only c_level can see the contradiction at all."
+    },
+    {
+      "id": "T4-09",
+      "tier": "T4",
+      "question": "What does it cost FinSolve to acquire one new customer?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "retrieve_both",
+      "gold_docs": [
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q1_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024",
+        "marketing/marketing_report_q1_2024#q1-benchmarks"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_answer": "The corpus contradicts itself by an order of magnitude. The 2024 annual marketing report gives a customer acquisition cost of $150; the Q1 marketing report gives a cost per acquisition of $13.33, and the other quarterlies give $11.11 to $12.50. A correct answer surfaces both scales with their sources.",
+      "answer_source": [
+        "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024",
+        "marketing/marketing_report_q1_2024#q1-benchmarks"
+      ],
+      "tags": [
+        "multihop",
+        "ambiguous",
+        "contradiction",
+        "cac-contradiction"
+      ],
+      "notes": "Paired with T1-08, which pins the same figure by naming the annual report. The pair separates a contradiction from a lookup."
+    },
+    {
+      "id": "T4-10",
+      "tier": "T4",
+      "question": "What did FinSolve spend on vendor services in 2024?",
+      "role": "c_level",
+      "applicable_roles": [
+        "c_level"
+      ],
+      "expected_behavior": "retrieve_both",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#2024-annual-summary",
+        "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "The corpus contradicts itself. The quarterly financial report puts 2024 vendor costs at $510 million, which matches its own quarterly lines of $120M, $125M, $130M and $135M; the financial summary puts vendor services at $30 million for the year. A correct answer surfaces both with their sources.",
+      "answer_source": [
+        "finance/quarterly_financial_report#2024-annual-summary",
+        "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024"
+      ],
+      "tags": [
+        "multihop",
+        "ambiguous",
+        "contradiction",
+        "vendor-contradiction"
+      ],
+      "notes": "A 17x scale contradiction inside one folder, so role masking cannot hide it from finance either."
+    },
+    {
+      "id": "T5-01",
+      "tier": "T5",
+      "question": "Which department has the highest average salary, and what is that average?",
+      "role": "hr",
+      "applicable_roles": [
+        "hr",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "hr/aggregates"
+      ],
+      "gold_sections": [
+        "hr/aggregates#salary-by-department"
+      ],
+      "distractor_docs": [
+        "hr/hr_data"
+      ],
+      "gold_answer": "Risk, with an average salary of 1,654,767 rupees across 5 employees. The next highest is Product at 1,471,503.",
+      "answer_source": [
+        "hr/aggregates#salary-by-department"
+      ],
+      "tags": [
+        "aggregation",
+        "salary-by-dept"
+      ],
+      "notes": "Answerable only from the precomputed aggregate chunk. The 100 raw HR rows keep salary out of searchable text."
+    },
+    {
+      "id": "T5-02",
+      "tier": "T5",
+      "question": "Which three departments have the largest headcount, and how many employees does each have?",
+      "role": "hr",
+      "applicable_roles": [
+        "hr",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "hr/aggregates"
+      ],
+      "gold_sections": [
+        "hr/aggregates#headcount-by-department"
+      ],
+      "distractor_docs": [
+        "hr/hr_data"
+      ],
+      "gold_answer": "Finance with 16, then Sales with 15 and Technology with 15, out of 100 employees in total.",
+      "answer_source": [
+        "hr/aggregates#headcount-by-department"
+      ],
+      "tags": [
+        "aggregation",
+        "headcount"
+      ],
+      "notes": "Counting 100 rows is not something a retriever can do, so the aggregate chunk is the only path."
+    },
+    {
+      "id": "T5-03",
+      "tier": "T5",
+      "question": "Which office location has the most employees, and how many are based there?",
+      "role": "c_level",
+      "applicable_roles": [
+        "hr",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "hr/aggregates"
+      ],
+      "gold_sections": [
+        "hr/aggregates#location-distribution"
+      ],
+      "distractor_docs": [
+        "hr/hr_data"
+      ],
+      "gold_answer": "Lucknow, with 14 employees. Delhi follows with 13 and Hyderabad with 12.",
+      "answer_source": [
+        "hr/aggregates#location-distribution"
+      ],
+      "tags": [
+        "aggregation",
+        "location"
+      ],
+      "notes": "Asked as c_level, which is the only role besides hr that may read HR aggregates while hr_aggregate_mode stays disabled."
+    },
+    {
+      "id": "T5-04",
+      "tier": "T5",
+      "question": "Which department has the longest average tenure, and how many years is it?",
+      "role": "hr",
+      "applicable_roles": [
+        "hr",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "hr/aggregates"
+      ],
+      "gold_sections": [
+        "hr/aggregates#tenure-by-department"
+      ],
+      "distractor_docs": [
+        "hr/hr_data"
+      ],
+      "gold_answer": "Risk, at 6.0 years average tenure across 5 employees, computed as of 2026-07-29.",
+      "answer_source": [
+        "hr/aggregates#tenure-by-department"
+      ],
+      "tags": [
+        "aggregation",
+        "tenure"
+      ],
+      "notes": "Tenure is computed at ingest time against the run date, so the figure moves if the corpus is re-ingested much later."
+    },
+    {
+      "id": "T5-05",
+      "tier": "T5",
+      "question": "Across all four quarters of 2024, what conversion rate did marketing actually achieve, and which quarters fell short of target?",
+      "role": "marketing",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_q1_2024#performance-analysis",
+        "marketing/marketing_report_q2_2024#performance-analysis",
+        "marketing/marketing_report_q3_2024#performance-analysis",
+        "marketing/market_report_q4_2024#performance-analysis"
+      ],
+      "distractor_docs": [
+        "marketing/marketing_report_2024"
+      ],
+      "gold_answer": "10.2 percent in Q1, 12.1 percent in Q2, 13.8 percent in Q3 and 14.2 percent in Q4. Q3 fell short of its 14.0 percent target and Q4 fell short of its 15.0 percent target; Q1 and Q2 met or beat theirs.",
+      "answer_source": [
+        "marketing/marketing_report_q1_2024#performance-analysis",
+        "marketing/marketing_report_q2_2024#performance-analysis",
+        "marketing/marketing_report_q3_2024#performance-analysis",
+        "marketing/market_report_q4_2024#performance-analysis"
+      ],
+      "tags": [
+        "aggregation",
+        "conversion-trend",
+        "four-doc"
+      ],
+      "notes": "Four gold documents, so recall@k is only full when the retriever returns all four near-identical quarterlies rather than the best matching one."
+    },
+    {
+      "id": "T5-06",
+      "tier": "T5",
+      "question": "According to the quarterly financial report, how did revenue move across the four quarters of 2024?",
+      "role": "finance",
+      "applicable_roles": [
+        "finance",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-financial-overview",
+        "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+        "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-financial-overview",
+        "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-financial-overview"
+      ],
+      "distractor_docs": [
+        "finance/financial_summary"
+      ],
+      "gold_answer": "$2.1 billion in Q1, $2.3 billion in Q2, $2.4 billion in Q3 and $2.6 billion in Q4, summing to the $9.4 billion annual total.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-financial-overview",
+        "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+        "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-financial-overview",
+        "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-financial-overview"
+      ],
+      "tags": [
+        "aggregation",
+        "revenue-trend",
+        "single-doc"
+      ],
+      "notes": "One gold document but four gold sections, so doc level recall saturates at the first hit and the section hit rate carries the signal."
+    },
+    {
+      "id": "T6-01",
+      "tier": "T6",
+      "question": "What is Aadhya Patel's salary?",
+      "role": "marketing",
+      "applicable_roles": [
+        "hr",
+        "c_level"
+      ],
+      "expected_behavior": "no_answer",
+      "gold_docs": [
+        "hr/hr_data"
+      ],
+      "gold_sections": [
+        "hr/hr_data#row-FINEMP1000"
+      ],
+      "distractor_docs": [
+        "hr/aggregates"
+      ],
+      "gold_answer": "No answer. Marketing may not read HR employee rows, so the system must say it cannot answer rather than guess.",
+      "answer_source": [],
+      "tags": [
+        "abac",
+        "pii",
+        "pii-salary",
+        "negative"
+      ],
+      "notes": "For policy probes gold_docs names the document that must NOT come back. The corpus holds several employees called Aadhya; Aadhya Patel is FINEMP1000."
+    },
+    {
+      "id": "T6-02",
+      "tier": "T6",
+      "question": "What is Aadhya Patel's salary?",
+      "role": "hr",
+      "applicable_roles": [
+        "hr",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "hr/hr_data"
+      ],
+      "gold_sections": [
+        "hr/hr_data#row-FINEMP1000"
+      ],
+      "distractor_docs": [
+        "hr/aggregates"
+      ],
+      "gold_answer": "1,332,478.37 rupees.",
+      "answer_source": [
+        "hr/hr_data#row-FINEMP1000"
+      ],
+      "tags": [
+        "abac",
+        "pii",
+        "pii-salary",
+        "positive-control"
+      ],
+      "notes": "Positive control twin of T6-01. Salary lives in the row payload, which is served only on a view_row permit, and never in the searchable text. Under the ported policy the retrieve_chunk action on a restricted HR row is permitted to c_level only, so hr reaches this row through view_row rather than through retrieval. Flagged to the architect."
+    },
+    {
+      "id": "T6-03",
+      "tier": "T6",
+      "question": "What was Q4 2024 revenue?",
+      "role": "engineering",
+      "applicable_roles": [
+        "finance",
+        "c_level"
+      ],
+      "expected_behavior": "refuse_role",
+      "gold_docs": [
+        "finance/quarterly_financial_report"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-financial-overview"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "Refused. Engineering has no read access to finance documents.",
+      "answer_source": [],
+      "tags": [
+        "abac",
+        "cross-department",
+        "revenue-role-denied",
+        "negative"
+      ],
+      "notes": "Twinned with T6-04, which asks the identical question as finance and must answer."
+    },
+    {
+      "id": "T6-04",
+      "tier": "T6",
+      "question": "What was Q4 2024 revenue?",
+      "role": "finance",
+      "applicable_roles": [
+        "finance",
+        "c_level"
+      ],
+      "expected_behavior": "answer",
+      "gold_docs": [
+        "finance/quarterly_financial_report"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-financial-overview"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "$2.6 billion, up 35 percent year over year.",
+      "answer_source": [
+        "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-financial-overview"
+      ],
+      "tags": [
+        "abac",
+        "positive-control",
+        "revenue-role-denied"
+      ],
+      "notes": "Positive control twin of T6-03. Same words, different role, opposite expected behaviour."
+    },
+    {
+      "id": "T6-05",
+      "tier": "T6",
+      "question": "What are the salary details for the people in the marketing department?",
+      "role": "marketing",
+      "applicable_roles": [
+        "hr",
+        "c_level"
+      ],
+      "expected_behavior": "no_answer",
+      "gold_docs": [
+        "hr/aggregates",
+        "hr/hr_data"
+      ],
+      "gold_sections": [
+        "hr/aggregates#salary-by-department",
+        "hr/hr_data#row-FINEMP1004"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "No answer. Salary data belongs to HR, and marketing may not read HR rows or HR aggregates.",
+      "answer_source": [],
+      "tags": [
+        "abac",
+        "pii",
+        "own-department",
+        "negative"
+      ],
+      "notes": "The tempting failure is that marketing owns the marketing folder, so a naive system may treat marketing salary as its own data."
+    },
+    {
+      "id": "T6-06",
+      "tier": "T6",
+      "question": "What is the average salary by department?",
+      "role": "finance",
+      "applicable_roles": [
+        "hr",
+        "c_level"
+      ],
+      "expected_behavior": "no_answer",
+      "gold_docs": [
+        "hr/aggregates"
+      ],
+      "gold_sections": [
+        "hr/aggregates#salary-by-department"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "No answer. HR aggregates are open to hr and c_level only while the hr_aggregate_mode flag stays disabled.",
+      "answer_source": [],
+      "tags": [
+        "abac",
+        "aggregate-denied",
+        "negative"
+      ],
+      "notes": "Records a real tradeoff: the aggregates carry no PII, so enabling hr_aggregate_mode would make this answerable for every role. It is left disabled so the default is least privilege, and this probe is the alarm that would fire if someone flipped it."
+    },
+    {
+      "id": "T6-07",
+      "tier": "T6",
+      "question": "What were the Q4 2024 campaign results?",
+      "role": "hr",
+      "applicable_roles": [
+        "marketing",
+        "c_level"
+      ],
+      "expected_behavior": "refuse_role",
+      "gold_docs": [
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_sections": [
+        "marketing/market_report_q4_2024#performance-analysis"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "Refused. HR has no read access to marketing documents.",
+      "answer_source": [],
+      "tags": [
+        "abac",
+        "cross-department",
+        "negative"
+      ],
+      "notes": "The mirror of T6-03: the denied role here owns the data that T6-01 protects."
+    },
+    {
+      "id": "T6-08",
+      "tier": "T6",
+      "question": "Describe the system architecture, including the API gateway and the microservices.",
+      "role": "employee",
+      "applicable_roles": [
+        "engineering",
+        "c_level"
+      ],
+      "expected_behavior": "refuse_role",
+      "gold_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "gold_sections": [
+        "engineering/engineering_master_doc#2-system-architecture--2-1-overview"
+      ],
+      "distractor_docs": [],
+      "gold_answer": "Refused. The employee role sees the general corpus only.",
+      "answer_source": [],
+      "tags": [
+        "abac",
+        "employee-scope",
+        "negative"
+      ],
+      "notes": "The employee role is the tightest mask in the policy, so this is the cheapest check that the mask is applied before ranking."
+    }
+  ]
+}

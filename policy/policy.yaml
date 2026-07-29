@@ -32,7 +32,7 @@ resource_attributes:
 
 # Global toggles (change via configuration, not code)
 flags:
-  hr_aggregate_mode: disabled   # disabled by default; if enabled, non‑HR can receive safe summaries only
+  hr_aggregate_mode: disabled   # disabled by default; if enabled, non-HR can receive safe summaries only
 
 # Default decision is deny unless a rule matches (least privilege)
 default: deny
@@ -82,27 +82,34 @@ rules:
         - ne: [resource.owner_dept, general]
     effect: deny
 
-  # 5) HR CSV: row-level access restricted to HR and C-Level
+  # 5) HR CSV rows: HR and C-Level, for search as well as for opening the row.
+  #
+  # Why retrieve_chunk and view_source sit here next to view_row: the searchable
+  # text of a row is PII-free by construction (see ingest/hr_csv.py, which puts
+  # only name, role, department and location in `text`). The PII itself lives in
+  # the row payload, and the payload is still gated on view_row alone. So HR can
+  # find its own rows, and nothing sensitive rides along with the finding.
   - name: hr_rows_hr_and_c_level_only
     when:
       all:
         - eq: [resource.owner_dept, hr]
         - eq: [resource.doc_type, csv]
-        - eq: [action, view_row]
+        - in: [action, [retrieve_chunk, view_source, view_row]]
         - in: [subject.role, [hr, c_level]]
     effect: permit
 
-  # 6) Non‑HR cannot view HR rows (explicit)
+  # 6) Non-HR cannot touch HR rows at all (explicit). The action list mirrors
+  # rule 5 exactly, so the two rules always cover the same ground.
   - name: non_hr_hr_rows_deny
     when:
       all:
         - eq: [resource.owner_dept, hr]
         - eq: [resource.doc_type, csv]
-        - eq: [action, view_row]
+        - in: [action, [retrieve_chunk, view_source, view_row]]
         - not_in: [subject.role, [hr, c_level]]
     effect: deny
 
-  # 7) Optional: HR aggregates for non‑HR (only if flag enabled)
+  # 7) Optional: HR aggregates for non-HR (only if flag enabled)
   - name: hr_aggregates_non_hr_if_enabled
     when:
       all:
@@ -132,21 +139,35 @@ rules:
         - not_in: [subject.role, [c_level]]
     effect: deny
 
-# Ingestion-time convenience: compute allowed_roles for fast filtering
-# This is a denormalization derived from the above rules.
-allowed_roles_computation:
-  - for resource.owner_dept == general:
-      allowed_roles: [finance, marketing, hr, engineering, c_level, employee]
-  - for resource.doc_type == md and resource.sensitivity in [general, internal]:
-      allowed_roles: [resource.owner_dept, c_level]
-  - for resource.doc_type == csv and resource.owner_dept == hr:
-      allowed_roles: [hr, c_level]
-  - for resource.doc_type == aggregate and resource.owner_dept == hr:
-      allowed_roles: [hr, c_level]  # plus non‑HR if hr_aggregate_mode is enabled at runtime
+# allowed_roles_computation: DOCUMENTATION ONLY.
+#
+# This block is a comment, not data. No code reads it. Ingest computes
+# allowed_roles by calling PolicyEngine.allowed_roles(), which asks the rules
+# above with action = retrieve_chunk, once per role. What follows is simply the
+# answer that loop gives today, written out so a reader does not have to
+# simulate the rule order in their head. If the two ever disagree, the rules
+# are right and this block is stale.
+#
+#   owner_dept == general
+#     -> finance, marketing, hr, engineering, c_level, employee   (rule 1)
+#   doc_type == md, sensitivity in [general, internal]
+#     -> the owning department, plus c_level                      (rules 0, 2)
+#   doc_type == md, sensitivity in [confidential, restricted]
+#     -> c_level only; even the owning department loses it        (rules 0, 9)
+#   doc_type == csv, owner_dept == hr        (the HR employee rows)
+#     -> hr, c_level                                              (rules 0, 5)
+#   doc_type == aggregate, owner_dept == hr  (the five HR summaries)
+#     -> hr, c_level, plus the other departments when the
+#        hr_aggregate_mode flag is enabled at runtime             (rules 0, 7, 8)
+#   anything else (attributes no rule was written for)
+#     -> c_level only, by the default deny                        (rule 0)
+#
+# employee never appears outside the general row: rule 3 cuts it off first.
 
 notes:
-  - Ownership is determined by the source file’s department folder today; cross‑mentions
+  - Ownership is determined by the source file’s department folder today; cross-mentions
     (e.g., finance discussing marketing spend) do not change owner_dept.
-  - HR CSV contains PII; treat entire row as restricted. Row-level access is granted only
-    to HR and C-Level via view_row; other roles never receive raw rows.
-  - General docs are considered non‑sensitive internal information suitable for all roles.
+  - HR CSV contains PII; treat the whole row as restricted. Only HR and C-Level may retrieve
+    a row at all, and only they may open its payload via view_row. Other roles never see a
+    row, in search results or anywhere else.
+  - General docs are considered non-sensitive internal information suitable for all roles.
