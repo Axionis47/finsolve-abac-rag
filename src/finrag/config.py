@@ -17,10 +17,50 @@ REPO_ROOT: Path = Path(__file__).resolve().parents[2]
 DEFAULT_EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 DEFAULT_VERTEX_LOCATION = "us-central1"
 
+# The Vertex text embedding model dense retrieval uses, and its vector length.
+DEFAULT_VERTEX_EMBED_MODEL = "text-embedding-005"
+
+# The Gemini model the hybrid_rerank mode calls. Read from our own variable, not
+# the `.env` VERTEX_MODEL, for the same reason as the embedding model: a copied
+# `.env` must not silently change the model a published number was measured with.
+# gemini-2.0-flash is not served to this project (404); 2.5-flash is.
+DEFAULT_VERTEX_RERANK_MODEL = "gemini-2.5-flash"
+
+# Which embedding backend `finrag ingest` and dense search should use. "vertex"
+# calls the real API; "fake" is the offline deterministic stand-in the tests use.
+DEFAULT_EMBEDDER = "vertex"
+
 
 def _path_from_env(name: str, default: Path) -> Path:
     raw = os.environ.get(name)
     return Path(raw).expanduser() if raw else default
+
+
+def load_env(path: str | Path | None = None) -> list[str]:
+    """Read `KEY=VALUE` lines from a `.env` file into `os.environ`.
+
+    A value already in the environment always wins, so the shell can override
+    the file and a test's monkeypatched variable is never clobbered. Returns the
+    names it set, never the values, because this file holds credentials.
+
+    Deliberately not python-dotenv: our `.env` is plain `KEY=VALUE` lines with
+    `#` comments, and one dependency for six lines of parsing is not worth it.
+    """
+    env_path = Path(path) if path else REPO_ROOT / ".env"
+    if not env_path.exists():
+        return []
+
+    added: list[str] = []
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        name = name.strip()
+        if name and name not in os.environ:
+            os.environ[name] = value.strip().strip('"').strip("'")
+            added.append(name)
+    return added
 
 
 @dataclass
@@ -37,10 +77,17 @@ class Settings:
     vertex_project: str | None = None
     vertex_location: str = DEFAULT_VERTEX_LOCATION
     vertex_model: str = "gemini-2.0-flash"
+    vertex_embed_model: str = DEFAULT_VERTEX_EMBED_MODEL
+    vertex_rerank_model: str = DEFAULT_VERTEX_RERANK_MODEL
+    embedder: str = DEFAULT_EMBEDDER
 
     @property
     def chunks_path(self) -> Path:
         return self.artifacts_dir / "chunks.jsonl"
+
+    @property
+    def embed_cache_path(self) -> Path:
+        return self.artifacts_dir / "embed_cache.npz"
 
     @property
     def bm25_dir(self) -> Path:
@@ -72,9 +119,22 @@ class Settings:
             results_dir=_path_from_env("FINRAG_RESULTS_DIR", base / "evals" / "results"),
             policy_path=_path_from_env("FINRAG_POLICY_PATH", base / "policy" / "policy.yaml"),
             embed_model=os.environ.get("FINRAG_EMBED_MODEL", DEFAULT_EMBED_MODEL),
-            vertex_project=os.environ.get("VERTEX_PROJECT") or None,
+            # GCP_PROJECT is the fallback because some machines only set that one.
+            vertex_project=(
+                os.environ.get("VERTEX_PROJECT") or os.environ.get("GCP_PROJECT") or None
+            ),
             vertex_location=os.environ.get("VERTEX_LOCATION") or DEFAULT_VERTEX_LOCATION,
             vertex_model=os.environ.get("VERTEX_MODEL", "gemini-2.0-flash"),
+            # Read from our own variable, not VERTEX_EMBEDDING_MODEL, so the .env
+            # copied from the old repo cannot silently swap the model the gold
+            # numbers were measured with.
+            vertex_embed_model=os.environ.get(
+                "FINRAG_VERTEX_EMBED_MODEL", DEFAULT_VERTEX_EMBED_MODEL
+            ),
+            vertex_rerank_model=os.environ.get(
+                "FINRAG_VERTEX_RERANK_MODEL", DEFAULT_VERTEX_RERANK_MODEL
+            ),
+            embedder=os.environ.get("FINRAG_EMBEDDER", DEFAULT_EMBEDDER),
         )
 
 

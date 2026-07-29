@@ -392,8 +392,9 @@ def test_save_index_creates_the_folder_if_it_is_not_there(tmp_path: Path) -> Non
 # --- the registry -----------------------------------------------------------
 
 
-def test_available_modes_lists_both_modes() -> None:
-    assert available_modes() == ["bm25", "naive"]
+def test_available_modes_still_lists_bm25() -> None:
+    """The full list is pinned in test_dense.py, which owns the newest mode."""
+    assert "bm25" in available_modes()
 
 
 def test_build_retriever_builds_the_bm25_mode_in_memory() -> None:

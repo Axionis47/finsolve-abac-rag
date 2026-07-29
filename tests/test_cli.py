@@ -13,6 +13,8 @@ Two things are being pinned.
     bad labels.
   * ingest and eval work end to end on the real corpus and the real gold set,
     which is the one check that the whole R0 pipeline is actually wired up.
+  * `finrag sweep` runs the leakage gate over the real corpus and exits 0 only
+    when nothing leaked, which is the one check that the gate is wired up.
 """
 
 from __future__ import annotations
@@ -187,3 +189,57 @@ def test_ingest_then_eval_runs_end_to_end_on_the_real_corpus(
     assert sorted(report["per_tier"]) == ["T1", "T2", "T3", "T4", "T5", "T6"]
     # Every T6 policy probe has to pass at every rung, R0 included.
     assert report["policy_probes"]["pass_rate"] == 1.0
+
+
+def test_sweep_before_ingest_says_to_run_ingest(
+    monkeypatch: pytest.MonkeyPatch,
+    repo_root: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    point_settings_at(monkeypatch, repo_root, tmp_path)
+
+    assert cli.main(["sweep"]) == 1
+    assert "finrag ingest" in capsys.readouterr().out
+
+
+def test_sweep_refuses_an_unknown_mode_and_lists_the_known_ones(
+    monkeypatch: pytest.MonkeyPatch,
+    repo_root: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    point_settings_at(monkeypatch, repo_root, tmp_path)
+    assert cli.main(["ingest"]) == 0
+    capsys.readouterr()
+
+    assert cli.main(["sweep", "--modes", "quantum"]) == 1
+    assert "quantum" in capsys.readouterr().out
+
+
+def test_sweep_on_the_real_corpus_reports_no_leakage(
+    monkeypatch: pytest.MonkeyPatch,
+    repo_root: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The gate itself, on the shipped corpus and gold set, in naive mode.
+
+    One mode rather than all five, because the suite has to stay fast and the
+    other four are swept in `test_sweep.py` over the fixture corpus. What this
+    pins is the wiring: real chunks, real policy, all 50 questions, all 6 roles.
+    """
+    point_settings_at(monkeypatch, repo_root, tmp_path)
+    assert cli.main(["ingest"]) == 0
+    capsys.readouterr()
+
+    assert cli.main(["sweep", "--modes", "naive", "--k", "5"]) == 0
+    printed = capsys.readouterr().out
+    assert "VIOLATIONS:      0" in printed
+
+    report = read_the_one_report(tmp_path / "results")
+    assert report["rung"] == "r4"
+    assert report["mode"] == "sweep"
+    assert report["cells_checked"] == 50 * 6
+    assert report["violations"] == 0
+    assert report["hits_inspected"] > 0

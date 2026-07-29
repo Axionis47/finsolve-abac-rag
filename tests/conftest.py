@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from importlib.util import find_spec
 from pathlib import Path
@@ -10,6 +11,13 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC = REPO_ROOT / "src"
+
+# The whole suite is offline. Ingest embeds every chunk, and its default backend
+# is the real Vertex API, so without this a plain `pytest` would spend money and
+# fail wherever there are no credentials. Set here rather than in a fixture
+# because `run_ingest` reads it through Settings at call time, in several tests.
+# `setdefault`, so a deliberate run against the real backend can still override.
+os.environ.setdefault("FINRAG_EMBEDDER", "fake")
 
 # The editable install can go missing (a stale or skipped .pth file), which
 # would fail every test for a reason that has nothing to do with the code.

@@ -1,16 +1,19 @@
-"""The ingest run: corpus folders in, chunks.jsonl plus the BM25 index out.
+"""The ingest run: corpus folders in, chunks.jsonl plus both indexes out.
 
 This is the last step of ingest and the only one that touches the whole corpus.
 It walks `data/corpus`, treats each folder name as the owning department, hands
 markdown files to the chunker and the HR CSV to the row loader and the
 aggregate builder, then asks the policy engine which roles may retrieve each
 chunk and stamps the answer onto it. Finally it sorts every chunk by chunk_id,
-writes one JSON object per line, and builds the BM25 index over those same
+writes one JSON object per line, and builds both search indexes over those same
 chunks in that same order.
 
-The index is built here, once, and not per query. It lives in `artifacts/bm25/`
-and the tokenizer that builds it is the one the query side imports, so the two
-can never drift apart. See retrieval/bm25.py for why that matters.
+Both indexes are built here, once, and not per query. The BM25 index lives in
+`artifacts/bm25/` and the tokenizer that builds it is the one the query side
+imports, so the two can never drift apart. See retrieval/bm25.py for why that
+matters. The dense matrix lives in `artifacts/dense.npz`, and its vectors go
+through the embedding cache, so a second ingest over an unchanged corpus makes no
+API calls at all.
 
 Two properties matter downstream and are both bought by that sort plus a fixed
 tenure reference date: running ingest twice over an unchanged corpus produces a
@@ -30,6 +33,8 @@ from finrag.ingest.hr_csv import load_hr_rows
 from finrag.models import ROLES, Chunk, ResourceAttrs
 from finrag.policy.engine import PolicyEngine
 from finrag.retrieval.bm25 import build_and_save_index
+from finrag.retrieval.dense import build_and_save_matrix
+from finrag.retrieval.embed import Embedder, build_embedder
 
 # The folder whose documents everyone may read.
 GENERAL_DEPT = "general"
@@ -59,10 +64,17 @@ class IngestStats:
     chunks_path: Path
     bm25_dir: Path
     n_indexed: int
+    dense_path: Path
+    n_embedded: int
+    embedder_name: str
 
 
-def run_ingest(settings: Settings) -> IngestStats:
-    """Build every chunk, stamp its roles, write both artifacts, report counts."""
+def run_ingest(settings: Settings, embedder: Embedder | None = None) -> IngestStats:
+    """Build every chunk, stamp its roles, write all three artifacts, report counts.
+
+    `embedder` is injectable so a caller can hand in the offline fake; left out,
+    it is chosen by `settings.embedder`, which is "vertex" unless told otherwise.
+    """
     engine = PolicyEngine.from_yaml(settings.policy_path)
 
     chunks = collect_chunks(settings.corpus_dir)
@@ -75,10 +87,14 @@ def run_ingest(settings: Settings) -> IngestStats:
         raise ValueError(f"No chunks found under {settings.corpus_dir}. Nothing to index.")
 
     write_chunks(settings.chunks_path, chunks)
-    # Same list, same order, so index row N is always chunks.jsonl line N.
+    # Same list, same order for both indexes, so row N is always line N.
     n_indexed = build_and_save_index(chunks, settings.bm25_dir)
 
-    return _summarise(chunks, settings.chunks_path, settings.bm25_dir, n_indexed)
+    if embedder is None:
+        embedder = build_embedder(settings)
+    n_embedded = build_and_save_matrix(chunks, embedder, settings.dense_path)
+
+    return _summarise(chunks, settings, n_indexed, n_embedded, embedder.name)
 
 
 def collect_chunks(corpus_dir: str | Path) -> list[Chunk]:
@@ -182,9 +198,10 @@ def read_chunks(path: str | Path) -> list[Chunk]:
 
 def _summarise(
     chunks: list[Chunk],
-    chunks_path: Path,
-    bm25_dir: Path,
+    settings: Settings,
     n_indexed: int,
+    n_embedded: int,
+    embedder_name: str,
 ) -> IngestStats:
     doc_types: list[str] = []
     owner_depts: list[str] = []
@@ -196,9 +213,12 @@ def _summarise(
         n_chunks=len(chunks),
         by_doc_type=_count_values(doc_types),
         by_owner_dept=_count_values(owner_depts),
-        chunks_path=Path(chunks_path),
-        bm25_dir=Path(bm25_dir),
+        chunks_path=Path(settings.chunks_path),
+        bm25_dir=Path(settings.bm25_dir),
         n_indexed=n_indexed,
+        dense_path=Path(settings.dense_path),
+        n_embedded=n_embedded,
+        embedder_name=embedder_name,
     )
 
 

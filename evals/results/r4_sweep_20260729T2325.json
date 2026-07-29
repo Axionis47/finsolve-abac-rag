@@ -1,0 +1,293 @@
+{
+  "rung": "r4",
+  "mode": "sweep",
+  "generated_at": "2026-07-29T23:25:21Z",
+  "k": 10,
+  "roles": [
+    "finance",
+    "marketing",
+    "hr",
+    "engineering",
+    "c_level",
+    "employee"
+  ],
+  "modes": [
+    "bm25",
+    "dense",
+    "hybrid",
+    "hybrid_rerank",
+    "naive"
+  ],
+  "n_questions": 50,
+  "cells_checked": 1500,
+  "hits_inspected": 14908,
+  "violations": 0,
+  "violations_recorded": 0,
+  "empty_cells": 0,
+  "rerank": "fallback only (offline stub backend, no api calls)",
+  "per_role": {
+    "finance": {
+      "cells": 250,
+      "hits": 2500,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "marketing": {
+      "cells": 250,
+      "hits": 2500,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hr": {
+      "cells": 250,
+      "hits": 2464,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "engineering": {
+      "cells": 250,
+      "hits": 2480,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "c_level": {
+      "cells": 250,
+      "hits": 2500,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "employee": {
+      "cells": 250,
+      "hits": 2464,
+      "violations": 0,
+      "empty_cells": 0
+    }
+  },
+  "per_mode": {
+    "bm25": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "dense": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hybrid": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hybrid_rerank": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "naive": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    }
+  },
+  "breakdown": {
+    "finance": {
+      "bm25": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "dense": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid_rerank": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "naive": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "marketing": {
+      "bm25": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "dense": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid_rerank": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "naive": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "hr": {
+      "bm25": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "dense": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid_rerank": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "naive": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "engineering": {
+      "bm25": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "dense": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid_rerank": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "naive": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "c_level": {
+      "bm25": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "dense": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid_rerank": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "naive": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "employee": {
+      "bm25": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "dense": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hybrid_rerank": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "naive": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    }
+  },
+  "violation_details": []
+}

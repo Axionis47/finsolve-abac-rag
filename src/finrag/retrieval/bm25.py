@@ -1,9 +1,8 @@
 """BM25 lexical search over an index built once at ingest.
 
 Where this sits: ingest writes `artifacts/chunks.jsonl` and then calls
-`build_and_save_index` here to write `artifacts/bm25/`. At query time the
-retriever loads that folder. Nothing is rebuilt per query, which is the main
-thing the old repo got wrong.
+`build_and_save_index` here to write `artifacts/bm25/`. At query time the retriever
+loads that folder. Nothing is rebuilt per query, the old repo's main mistake.
 
 Why BM25 beats the naive word count: it weighs a rare word far more than a common
 one (IDF) and stops a long chunk from winning just by being long (length
@@ -31,9 +30,9 @@ from finrag.models import Chunk, Hit
 from finrag.retrieval.base import visible_ids
 from finrag.retrieval.naive import tokenize
 
-# Saved next to the bm25s files: the chunk ids in index row order. bm25s knows
-# only rows 0..n-1, so without this list a reordered chunks.jsonl would quietly
-# map scores onto the wrong chunks.
+# Saved next to the bm25s files: the chunk ids in index row order. bm25s knows only
+# rows 0..n-1, so without this list a reordered chunks.jsonl would map scores onto
+# the wrong chunks.
 CHUNK_IDS_FILENAME = "chunk_ids.json"
 
 # One of the bm25s files, used to tell "no index here" from "wrong folder".
@@ -102,10 +101,8 @@ def save_index(index: bm25s.BM25, chunks: Sequence[Chunk], index_dir: str | Path
     for chunk in chunks:
         chunk_ids.append(chunk.chunk_id)
 
-    path = index_dir / CHUNK_IDS_FILENAME
-    with open(path, "w", encoding="utf-8", newline="\n") as handle:
-        handle.write(json.dumps(chunk_ids, ensure_ascii=False))
-        handle.write("\n")
+    with open(index_dir / CHUNK_IDS_FILENAME, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(chunk_ids, ensure_ascii=False) + "\n")
 
 
 def load_index(index_dir: str | Path) -> tuple[bm25s.BM25, list[str]]:
@@ -130,8 +127,8 @@ def build_and_save_index(chunks: Sequence[Chunk], index_dir: str | Path) -> int:
 class BM25Retriever:
     """BM25 search over chunk text, role masked before any ranking.
 
-    Pass `index_dir` to use the artifact ingest wrote. Leave it out and the index
-    is built in memory, which is how the tests compare the two.
+    Pass `index_dir` to use the artifact ingest wrote; leave it out and the index is
+    built in memory, which is how the tests compare the two.
     """
 
     name = "bm25"
@@ -149,8 +146,8 @@ class BM25Retriever:
             self.index, stored_ids = load_index(index_dir)
             _check_index_matches_chunks(self.chunks, stored_ids, index_dir)
 
-        # Kept for the debug field: which query words a chunk actually contains.
-        # Same tokenizer again, so this agrees with what was indexed.
+        # Kept for the debug field: which query words a chunk contains. Same
+        # tokenizer again, so this agrees with what was indexed.
         self._terms_by_id: dict[str, set[str]] = {}
         for chunk in self.chunks:
             self._terms_by_id[chunk.chunk_id] = set(tokenize(chunk.text))
@@ -166,9 +163,8 @@ class BM25Retriever:
         if not query_terms:
             return []
 
-        scores = self.index.get_scores(query_terms, weight_mask=self._weight_mask(allowed))
         distinct_terms = set(query_terms)
-
+        scores = self.index.get_scores(query_terms, weight_mask=self._weight_mask(allowed))
         scored: list[tuple[float, str, Chunk]] = []
         for row, chunk in enumerate(self.chunks):
             # Second lock on the same door, deliberately. If the mask above were
@@ -248,7 +244,7 @@ def _check_index_matches_chunks(
 
     if current_ids != list(stored_ids):
         raise ValueError(
-            f"The bm25 index at {index_dir} was built from different chunks "
-            f"({len(stored_ids)} rows) than the ones loaded ({len(current_ids)} rows), "
-            "or from a different order. Run `finrag ingest` to rebuild both together."
+            f"The bm25 index at {index_dir} was built from different chunks, or in a "
+            f"different order ({len(stored_ids)} rows saved, {len(current_ids)} loaded). "
+            "Run `finrag ingest` to rebuild both together."
         )
