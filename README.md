@@ -95,7 +95,12 @@ seen. The role string never appears in any prompt the agent reads.
 ## Results
 
 Section hit rate and section MRR at k=10, 50 gold questions, leakage always 0.
-Every cell comes from a JSON file in [`evals/results/`](evals/results/).
+Every cell comes from a JSON file in [`evals/results/`](evals/results/), and
+every cell was produced with the real backends: Vertex embeddings for `dense`
+and `hybrid`, live Gemini calls for `hybrid_rerank` and `react`, the built
+Neo4j graph for `graphrag`. The no-credentials column above describes fallback
+behavior, not how these numbers were made. Only the test suite and the leakage
+sweep run without Vertex, on purpose, so anyone can run the gates for free.
 
 | mode | section hit | section MRR |
 |---|---|---|
