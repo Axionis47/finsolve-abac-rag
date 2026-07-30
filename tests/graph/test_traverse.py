@@ -35,7 +35,7 @@ MASK_CLAUSE = "AND all(r IN rels WHERE r.source_chunk_id IN $visible_ids) "
 WIDE_QUERY = "Q1 2024 campaign spend revenue risk salary finance"
 
 # Roles the micro corpus knows about, including two that may see nothing.
-ROLES = ("c_level", "marketing", "hr", "finance", "employee")
+ROLES = ("c_level", "marketing", "hr", "finance", "engineering", "employee")
 
 FINANCE_REVENUE_CHUNK = "finance/quarterly_financial_report#q4-revenue"
 

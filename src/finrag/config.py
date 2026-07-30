@@ -20,6 +20,14 @@ DEFAULT_VERTEX_LOCATION = "us-central1"
 # The Vertex text embedding model dense retrieval uses, and its vector length.
 DEFAULT_VERTEX_EMBED_MODEL = "text-embedding-005"
 
+# The Gemini model the answer step generates with, and the fallback for anything
+# else that asks for a model by no other name. It was gemini-2.0-flash from R0
+# until R6; Vertex now answers 404 NOT_FOUND for that name in this project, and a
+# default that cannot be reached is a trap for whoever clones this next.
+# gemini-2.5-flash works in us-central1. gemini-3.6-flash works too, but only on
+# VERTEX_LOCATION=global, so it is not the default while .env pins a region.
+DEFAULT_VERTEX_MODEL = "gemini-2.5-flash"
+
 # The Gemini model the hybrid_rerank mode calls. Read from our own variable, not
 # the `.env` VERTEX_MODEL, for the same reason as the embedding model: a copied
 # `.env` must not silently change the model a published number was measured with.
@@ -76,7 +84,7 @@ class Settings:
     embed_model: str = DEFAULT_EMBED_MODEL
     vertex_project: str | None = None
     vertex_location: str = DEFAULT_VERTEX_LOCATION
-    vertex_model: str = "gemini-2.0-flash"
+    vertex_model: str = DEFAULT_VERTEX_MODEL
     vertex_embed_model: str = DEFAULT_VERTEX_EMBED_MODEL
     vertex_rerank_model: str = DEFAULT_VERTEX_RERANK_MODEL
     embedder: str = DEFAULT_EMBEDDER
@@ -124,7 +132,7 @@ class Settings:
                 os.environ.get("VERTEX_PROJECT") or os.environ.get("GCP_PROJECT") or None
             ),
             vertex_location=os.environ.get("VERTEX_LOCATION") or DEFAULT_VERTEX_LOCATION,
-            vertex_model=os.environ.get("VERTEX_MODEL", "gemini-2.0-flash"),
+            vertex_model=os.environ.get("VERTEX_MODEL", DEFAULT_VERTEX_MODEL),
             # Read from our own variable, not VERTEX_EMBEDDING_MODEL, so the .env
             # copied from the old repo cannot silently swap the model the gold
             # numbers were measured with.

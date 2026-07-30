@@ -7,6 +7,7 @@ from finrag.graph.retriever import GraphRetriever
 from finrag.graph.store import GraphStore
 from finrag.models import Chunk
 from finrag.retrieval.base import Retriever
+from finrag.retrieval.registry import available_modes
 
 
 def _retriever(store: GraphStore, chunks: list[Chunk]) -> GraphRetriever:
@@ -107,3 +108,22 @@ def test_a_chunk_the_graph_knows_but_the_corpus_dropped_is_skipped(
 
     hits = retriever.search("campaign spend", "marketing", k=10)
     assert hits == []
+
+
+# The registry, which needs no container: building the mode is what needs one.
+
+
+def test_the_graph_mode_is_registered_under_the_name_the_retriever_reports() -> None:
+    assert GraphRetriever.name in available_modes()
+
+
+def test_the_full_list_of_modes_is_what_this_rung_left_behind() -> None:
+    """Pinned in the newest mode's file, as R2 pinned it in test_dense.py."""
+    assert available_modes() == [
+        "bm25",
+        "dense",
+        "graphrag",
+        "hybrid",
+        "hybrid_rerank",
+        "naive",
+    ]

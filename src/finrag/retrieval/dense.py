@@ -82,6 +82,17 @@ def load_matrix(dense_path: str | Path) -> tuple[np.ndarray, list[str], str]:
         for chunk_id in stored["chunk_ids"]:
             chunk_ids.append(str(chunk_id))
         model = str(stored["model"])
+
+    # The file's own arithmetic, checked by the one function that reads it. Every
+    # other guard here compares the file against the world; this one is internal,
+    # and without it a short matrix is an IndexError at query time on whichever
+    # row happens to be missing, which reads as a bug in the search loop.
+    if vectors.shape[0] != len(chunk_ids):
+        raise ValueError(
+            f"The dense matrix at {dense_path} is inconsistent: {vectors.shape[0]} "
+            f"vectors against {len(chunk_ids)} chunk ids. Run `finrag ingest` to "
+            "rebuild it."
+        )
     return vectors, chunk_ids, model
 
 
@@ -122,7 +133,8 @@ class DenseRetriever:
         # The other way round, an empty chunk list would accept any saved matrix
         # without a word, which is the one failure this guard exists to prevent.
         if dense_path is not None:
-            self.vectors, stored_ids, _model = load_matrix(dense_path)
+            self.vectors, stored_ids, stored_model = load_matrix(dense_path)
+            _check_model_matches_embedder(stored_model, embedder, dense_path)
             _check_matrix_matches_chunks(self.chunks, stored_ids, dense_path)
         elif not self.chunks:
             # Nothing to embed, so there is no matrix and search returns nothing.
@@ -186,6 +198,30 @@ class DenseRetriever:
             text=chunk.text,
             debug={"cosine": score, "embedder": self.embedder.name},
         )
+
+
+def _check_model_matches_embedder(
+    stored_model: str,
+    embedder: Embedder,
+    dense_path: str | Path,
+) -> None:
+    """Refuse a matrix from one embedding space queried by another.
+
+    The failure this stops is the quiet one. Vectors from two models are not
+    interchangeable, but a dot product between them still returns a number: a
+    Vertex-built matrix searched with the fake embedder answers every query with
+    cosines around 0.05 and a ranking that is pure noise, and nothing raises.
+    `embed_cache.py` handles the same hazard by starting empty, which it can do
+    because a cache can be refilled. A matrix cannot, so this raises instead.
+    """
+    if stored_model == embedder.model:
+        return
+    raise ValueError(
+        f"The dense matrix at {dense_path} was built with '{stored_model}' but the "
+        f"query embedder is '{embedder.model}'. Cosines between two embedding "
+        "spaces are meaningless. Run `finrag ingest` with the embedder you mean to "
+        "search with, or set FINRAG_EMBEDDER to match the matrix."
+    )
 
 
 def _check_matrix_matches_chunks(

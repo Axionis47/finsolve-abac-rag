@@ -1,7 +1,7 @@
 """Mode name to retriever: the one place that knows what "naive" means.
 
 The CLI, the eval harness and the API all pick a retriever by a short string
-("naive", "bm25", later "dense", "hybrid", "graph"). They should not import
+("naive", "bm25", "dense", "hybrid", "hybrid_rerank", "graphrag"). They should not import
 retriever classes directly, or every new mode would mean edits in three places.
 Instead they load the artifacts once into an `IndexBundle`, then call a factory
 from `FACTORIES`.
@@ -15,6 +15,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from finrag.graph.retriever import GraphRetriever
+from finrag.graph.store import GraphStore
 from finrag.llm.base import LLMBackend
 from finrag.models import Chunk
 from finrag.retrieval.base import Retriever
@@ -30,9 +32,10 @@ from finrag.retrieval.rerank import LLMReranker, RerankRetriever
 class IndexBundle:
     """Everything a retriever might need, loaded from `artifacts/` once.
 
-    `chunks`, `bm25_dir`, `dense_path` and `embedder` are filled in today. The
-    remaining path is here so the later modes can take an index without changing
-    this signature and breaking every caller.
+    `chunks`, `bm25_dir`, `dense_path`, `embedder` and `llm` are the ones anything
+    reads. `graph_path` is not: the graph ended up in Neo4j rather than in a file,
+    so `make_graphrag` opens a `GraphStore` instead. The field stays because
+    removing it would edit every caller for nothing.
 
     `embedder` and `llm` are objects rather than paths because building either
     may open a Vertex client, and only the modes that need one should pay for
@@ -88,6 +91,17 @@ def make_hybrid(bundle: IndexBundle) -> Retriever:
     return HybridRetriever(bundle.chunks, make_bm25(bundle), make_dense(bundle))
 
 
+def make_graphrag(bundle: IndexBundle) -> Retriever:
+    """Two-hop traversal over the Neo4j graph `finrag graph` built.
+
+    The graph lives in Neo4j rather than in `artifacts/`, so `graph_path` stays
+    unused and there is nothing to load here. `GraphStore()` opens a driver, not a
+    connection, so a caller that never asks for this mode pays nothing for the
+    import; the first search is what needs the container up.
+    """
+    return GraphRetriever(bundle.chunks, GraphStore())
+
+
 def make_hybrid_rerank(bundle: IndexBundle) -> Retriever:
     """Hybrid, then one Gemini call to reorder the top twenty."""
     if bundle.llm is None:
@@ -101,6 +115,7 @@ def make_hybrid_rerank(bundle: IndexBundle) -> Retriever:
 FACTORIES: dict[str, Callable[[IndexBundle], Retriever]] = {
     "bm25": make_bm25,
     "dense": make_dense,
+    "graphrag": make_graphrag,
     "hybrid": make_hybrid,
     "hybrid_rerank": make_hybrid_rerank,
     "naive": make_naive,

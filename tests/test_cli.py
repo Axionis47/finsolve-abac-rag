@@ -243,3 +243,71 @@ def test_sweep_on_the_real_corpus_reports_no_leakage(
     assert report["cells_checked"] == 50 * 6
     assert report["violations"] == 0
     assert report["hits_inspected"] > 0
+
+
+# R5 and R6 wiring: the four subcommands that used to print "not wired up yet".
+# The guards are what these test. Actually serving, or actually writing a graph,
+# needs a container and a port and belongs in the smoke run, not in the suite.
+
+
+def test_the_help_lists_every_subcommand_and_calls_none_of_them_pending(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """No subcommand is a stub any more.
+
+    `command_pending` and `PENDING_COMMANDS` are gone with R5 and R6, so the help
+    must not promise a later rung for anything.
+    """
+    with pytest.raises(SystemExit) as exited:
+        cli.main(["--help"])
+
+    assert exited.value.code == 0
+    printed = capsys.readouterr().out
+    for command in ["ingest", "graph", "eval", "sweep", "serve", "ui"]:
+        assert command in printed
+    assert "not wired up yet" not in printed
+
+
+def test_graph_before_ingest_says_to_run_ingest(
+    monkeypatch: pytest.MonkeyPatch,
+    repo_root: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # The guard has to come before anything touches Neo4j, so this passes with
+    # the container up or down.
+    point_settings_at(monkeypatch, repo_root, tmp_path)
+
+    assert cli.main(["graph"]) == 1
+    assert "finrag ingest" in capsys.readouterr().out
+
+
+def test_serve_before_ingest_says_to_run_ingest_rather_than_starting(
+    monkeypatch: pytest.MonkeyPatch,
+    repo_root: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # No uvicorn process is started: the check returns first. A test that bound a
+    # port would be a flake waiting for a busy machine.
+    point_settings_at(monkeypatch, repo_root, tmp_path)
+
+    assert cli.main(["serve"]) == 1
+    assert "finrag ingest" in capsys.readouterr().out
+
+
+def test_the_ui_command_refuses_when_the_pages_are_missing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cli, "REPO_ROOT_UI", tmp_path / "nowhere")
+
+    assert cli.main(["ui"]) == 1
+    assert "No UI entry script" in capsys.readouterr().out
+
+
+def test_the_ui_entry_script_this_repo_ships_is_where_the_command_looks() -> None:
+    # The other half of the test above: the guard fires on a missing file, and
+    # the file it looks for is the one in the repo.
+    assert (cli.REPO_ROOT_UI / "app.py").exists()

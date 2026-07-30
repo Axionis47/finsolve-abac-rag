@@ -17,6 +17,17 @@ Three constraints shape the whole file:
   * Any failure falls back to the hybrid order and is counted. A reranker that
     silently returns garbage is worse than no reranker, and one that raises takes
     the whole eval down over a flaky call.
+
+LENGTH. This file is over the ~250 line guideline and stays that way on purpose.
+The obvious cut is `parse_order` and `build_prompt` into a `rerank_io.py`, which
+would leave a 150-line class whose two hardest lines, "the model returns
+positions" and "a fallback is counted, never hidden", would then be explained in
+a different file from the one that enforces them. Disclosed here and in
+DECISIONS rather than split.
+
+The Vertex client this class is handed comes from `llm/vertex.py`
+(`build_rerank_llm`): thinking off, a small token cap, and no retry of its own,
+because `LLMReranker` below counts every call it makes.
 """
 
 from __future__ import annotations

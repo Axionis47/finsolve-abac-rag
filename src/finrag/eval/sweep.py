@@ -12,11 +12,18 @@ through `PolicyEngine.replay`, which re-decides it from the rules rather than
 trusting the `allowed_roles` stamped on the chunk at ingest. So a stale stamp is
 caught here instead of hidden here.
 
-The whole sweep runs offline. Dense modes read the embedding cache ingest filled,
-and the reranker is built on `FallbackOnlyLLM`, a backend that always fails, so
-`LLMReranker` falls back to the fused order and calls nothing. The sweep is about
-the mask, not about ranking quality, and every mask in `RerankRetriever.search`
-still runs on the fallback path.
+Every mode but one runs offline. Dense modes read the embedding cache ingest
+filled, and the reranker is built on `FallbackOnlyLLM`, a backend that always
+fails, so `LLMReranker` falls back to the fused order and calls nothing. The
+sweep is about the mask, not about ranking quality, and every mask in
+`RerankRetriever.search` still runs on the fallback path.
+
+The exception is `graphrag`, whose mask lives inside Cypher and therefore needs
+the Neo4j container to be proved at all. It is swept when bolt answers and
+dropped with a printed note when it does not, so a laptop with no container still
+gets the other five modes checked rather than an error. Asking for it by name
+with the container down is a refusal, not a silent skip: `--modes graphrag` is a
+person saying they want that mask tested.
 
 One number matters: `violations` must be 0. Everything else in the report is
 there so a reader can see that the check really ran, and how wide.
@@ -27,17 +34,23 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
+import numpy as np
+
 from finrag.config import Settings
+from finrag.graph.store import bolt_is_open
 from finrag.ingest.pipeline import read_chunks
 from finrag.models import ROLES
 from finrag.policy.engine import PolicyEngine
 from finrag.retrieval.base import Retriever
-from finrag.retrieval.embed import build_embedder
+from finrag.retrieval.embed import Embedder, build_embedder
 from finrag.retrieval.registry import IndexBundle, available_modes, build_retriever
 
 # Modes that need to embed the query text. They read the on-disk embedding cache
 # first, so a sweep over questions a previous eval already embedded costs nothing.
 MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset({"dense", "hybrid", "hybrid_rerank"})
+
+# Modes that cannot run without the Neo4j container.
+MODES_NEEDING_A_GRAPH: frozenset[str] = frozenset({"graphrag"})
 
 # A broken retriever can leak on every one of the fifteen hundred cells, and a
 # report with fifteen thousand violation records is unreadable and unwritable.
@@ -59,19 +72,92 @@ class FallbackOnlyLLM:
         raise RuntimeError("the leakage sweep runs offline: no rerank model is called")
 
 
-def build_offline_retrievers(
+class CacheOnlyEmbedder:
+    """Answers from the on-disk embedding cache, and refuses to call an API.
+
+    Why this exists rather than trusting `build_embedder`: the sweep's "offline"
+    was luck, not structure. `build_embedder` defaults to the real Vertex backend
+    behind the cache, so the 1,800-cell gate ran free only because the 50 gold
+    questions happened to be in `embed_cache.npz` from an earlier eval. One new
+    gold question, or a cleared artifacts folder, and the free gate would have
+    quietly started billing per query.
+
+    So a miss is an error naming the question, not a call. The fix it asks for is
+    one eval run, which pays for each question once and leaves it cached.
+    """
+
+    def __init__(self, cached: Any) -> None:
+        self.cache = cached.cache
+        self.name = f"cache-only-{cached.name}"
+        self.model = cached.model
+        self.dim = cached.dim
+
+    def embed_texts(self, texts: list[str]) -> np.ndarray:
+        out = np.zeros((len(texts), self.dim), dtype=np.float32)
+        for row, text in enumerate(texts):
+            vector = self.cache.get(text)
+            if vector is None:
+                raise RuntimeError(
+                    "The leakage sweep is offline by design, and there is no cached "
+                    f"'{self.model}' vector for this text:\n  {text[:120]!r}\n"
+                    "Run `finrag eval --mode dense` once to fill the cache, or set "
+                    "FINRAG_EMBEDDER=fake to sweep with offline vectors."
+                )
+            out[row] = vector
+        return out
+
+
+def build_sweep_embedder(settings: Settings) -> Embedder:
+    """The query embedder for a sweep: the cache, with nothing behind it that bills.
+
+    The fake backend is handed back as it is. It costs nothing, needs no cache,
+    and a sweep on a machine with no credentials is exactly what it is for.
+    """
+    embedder = build_embedder(settings)
+    if settings.embedder == "fake":
+        return embedder
+    return CacheOnlyEmbedder(embedder)
+
+
+def offline_modes() -> list[str]:
+    """Every registry mode that needs no container and no network."""
+    modes: list[str] = []
+    for mode in available_modes():
+        if mode not in MODES_NEEDING_A_GRAPH:
+            modes.append(mode)
+    return modes
+
+
+def sweepable_modes() -> list[str]:
+    """Every mode this machine can sweep right now, graph modes included if bolt answers.
+
+    One bolt check, here, rather than one per mode: the answer is the same for
+    all of them and a connection attempt per mode would slow a laptop sweep down
+    for nothing.
+    """
+    if bolt_is_open():
+        return list(available_modes())
+    return offline_modes()
+
+
+def build_sweep_retrievers(
     settings: Settings,
     modes: Sequence[str] | None = None,
 ) -> dict[str, Retriever]:
-    """One retriever per mode, all of them runnable with no network.
+    """One retriever per mode, ready to sweep.
 
     The artifacts are loaded once and shared, so every mode sees exactly the
     chunk set and the indexes `finrag eval` sees. That matters: a sweep over a
     different corpus than the eval would prove nothing about the eval.
+
+    With no `modes` given this sweeps everything the machine can run. A mode named
+    explicitly is always built, and a graph mode named with the container down
+    raises rather than quietly dropping the one mask the caller asked about.
     """
     if modes is None:
-        modes = available_modes()
+        modes = sweepable_modes()
     modes = tuple(modes)
+    _check_graph_modes(modes)
 
     bundle = IndexBundle(
         chunks=read_chunks(settings.chunks_path),
@@ -81,7 +167,7 @@ def build_offline_retrievers(
     )
     for mode in modes:
         if mode in MODES_NEEDING_AN_EMBEDDER:
-            bundle.embedder = build_embedder(settings)
+            bundle.embedder = build_sweep_embedder(settings)
             break
     bundle.llm = FallbackOnlyLLM()
 
@@ -89,6 +175,21 @@ def build_offline_retrievers(
     for mode in modes:
         retrievers[mode] = build_retriever(mode, bundle)
     return retrievers
+
+
+def _check_graph_modes(modes: Sequence[str]) -> None:
+    """Refuse a graph mode the container cannot serve, and say how to start it."""
+    wanted: list[str] = []
+    for mode in modes:
+        if mode in MODES_NEEDING_A_GRAPH:
+            wanted.append(mode)
+    if not wanted or bolt_is_open():
+        return
+    raise RuntimeError(
+        f"The {', '.join(wanted)} mode needs Neo4j, and bolt is not answering. "
+        "Start it with `docker start finrag-neo4j`, or leave --modes off to sweep "
+        "the modes that run without it."
+    )
 
 
 def _new_counts() -> dict[str, int]:

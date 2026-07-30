@@ -395,6 +395,7 @@ def test_the_rerank_mode_refuses_a_bundle_with_no_model() -> None:
         build_retriever("hybrid_rerank", bundle)
 
 
-def test_the_full_list_of_modes_is_what_this_rung_left_behind() -> None:
-    """Pinned in the newest mode's file, as R2 pinned it in test_dense.py."""
-    assert available_modes() == ["bm25", "dense", "hybrid", "hybrid_rerank", "naive"]
+def test_the_rerank_mode_is_registered() -> None:
+    assert "hybrid_rerank" in available_modes()
+    # The full list moved to tests/graph/test_graph_retriever.py when graphrag
+    # landed, keeping the convention that the newest mode's file pins it.

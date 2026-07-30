@@ -8,6 +8,11 @@ role. The sweep must catch it, count it exactly, and name the tuple behind it.
 Then the real modes are swept over the same fixture corpus and must come back
 clean. Policy semantics are not re-tested here; `test_policy.py` owns the role
 matrix, and this file only checks that the sweep reports what the policy decides.
+
+"Real modes" here means the offline ones. `graphrag` reads a Neo4j namespace built
+from the real corpus, so it cannot be pointed at a six-chunk fixture; its mask is
+proved in `tests/graph/test_traverse.py` against the test namespace, and on the
+real corpus by `finrag sweep`.
 """
 
 from __future__ import annotations
@@ -19,6 +24,7 @@ import pytest
 from finrag.eval import sweep
 from finrag.eval.sweep import (
     breakdown_lines,
+    offline_modes,
     run_leakage_sweep,
     sweep_passed,
 )
@@ -91,7 +97,7 @@ def real_retrievers(micro_corpus: list[Chunk]) -> dict[str, Any]:
         llm=sweep.FallbackOnlyLLM(),
     )
     retrievers: dict[str, Any] = {}
-    for mode in available_modes():
+    for mode in offline_modes():
         retrievers[mode] = build_retriever(mode, bundle)
     return retrievers
 
@@ -149,7 +155,7 @@ def test_c_level_sees_the_whole_fixture_corpus_without_a_violation(
     assert report["per_role"]["c_level"]["violations"] == 0
 
 
-@pytest.mark.parametrize("mode", available_modes())
+@pytest.mark.parametrize("mode", offline_modes())
 def test_each_real_mode_sweeps_clean_on_the_fixture_corpus(
     mode: str, policy: PolicyEngine, real_retrievers: dict[str, Any]
 ) -> None:
@@ -200,3 +206,99 @@ def test_the_offline_rerank_backend_refuses_to_generate() -> None:
     # backend that answered would make the sweep call a model.
     with pytest.raises(RuntimeError):
         sweep.FallbackOnlyLLM().generate("rank these")
+
+
+# Which modes a machine can sweep. graphrag needs the Neo4j container, and the
+# rule is: dropped silently only when nobody asked for it by name.
+
+
+def test_the_offline_set_is_every_mode_that_needs_no_container() -> None:
+    assert "graphrag" not in offline_modes()
+    for mode in available_modes():
+        if mode != "graphrag":
+            assert mode in offline_modes()
+
+
+def test_the_offline_set_and_the_graph_modes_together_are_the_whole_registry() -> None:
+    # A new mode must land in one of the two lists. Without this, a mode added to
+    # the registry and forgotten here would never be swept at all.
+    covered = set(offline_modes()) | set(sweep.MODES_NEEDING_A_GRAPH)
+    assert covered == set(available_modes())
+
+
+def test_asking_for_a_graph_mode_with_bolt_down_is_refused_by_name(
+    monkeypatch: pytest.MonkeyPatch, settings
+) -> None:
+    monkeypatch.setattr(sweep, "bolt_is_open", lambda *args, **kwargs: False)
+    with pytest.raises(RuntimeError, match="docker start finrag-neo4j"):
+        sweep.build_sweep_retrievers(settings, ["graphrag"])
+
+
+def test_the_default_mode_list_drops_graph_modes_when_bolt_is_down(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sweep, "bolt_is_open", lambda *args, **kwargs: False)
+    assert sweep.sweepable_modes() == offline_modes()
+
+
+def test_the_default_mode_list_is_the_whole_registry_when_bolt_answers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sweep, "bolt_is_open", lambda *args, **kwargs: True)
+    assert sweep.sweepable_modes() == available_modes()
+
+
+# The cold-cache guard. Before this, "the sweep is offline" meant "the questions
+# happened to be cached"; one new gold question would have made the free gate
+# start billing per query, silently.
+
+
+def _vertex_settings(tmp_path) -> Any:
+    """Settings that ask for the real embedder, over an empty artifacts folder."""
+    from dataclasses import replace as replace_fields
+
+    from finrag.config import Settings
+
+    return replace_fields(
+        Settings(),
+        artifacts_dir=tmp_path,
+        embedder="vertex",
+        vertex_project="demo-project",
+    )
+
+
+def test_a_cold_cache_names_the_question_instead_of_calling_the_api(tmp_path) -> None:
+    embedder = sweep.build_sweep_embedder(_vertex_settings(tmp_path))
+
+    with pytest.raises(RuntimeError) as caught:
+        embedder.embed_texts(["what was the campaign spend in Q3"])
+
+    message = str(caught.value)
+    assert "campaign spend in Q3" in message
+    assert "finrag eval --mode dense" in message
+
+
+def test_a_warm_cache_answers_without_the_backend(tmp_path) -> None:
+    # The other half: a cached question must still sweep, with nothing called.
+    from finrag.retrieval.embed import EMBED_DIM, FakeEmbedder
+    from finrag.retrieval.embed_cache import CachingEmbedder, EmbeddingCache
+
+    settings = _vertex_settings(tmp_path)
+    cache = EmbeddingCache.load(settings.embed_cache_path, settings.vertex_embed_model, EMBED_DIM)
+    CachingEmbedder(FakeEmbedder(), cache).embed_texts(["a cached question"])
+
+    embedder = sweep.build_sweep_embedder(settings)
+    assert embedder.embed_texts(["a cached question"]).shape == (1, EMBED_DIM)
+
+
+def test_the_fake_embedder_is_handed_back_untouched(tmp_path) -> None:
+    # No credentials, no cache, no hazard: the offline path must not be made to
+    # depend on a cache file that only a paid run would fill.
+    from dataclasses import replace as replace_fields
+
+    from finrag.config import Settings
+
+    settings = replace_fields(Settings(), artifacts_dir=tmp_path, embedder="fake")
+    embedder = sweep.build_sweep_embedder(settings)
+
+    assert embedder.embed_texts(["never seen before"]).shape[0] == 1

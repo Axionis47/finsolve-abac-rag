@@ -106,10 +106,23 @@ def save_index(index: bm25s.BM25, chunks: Sequence[Chunk], index_dir: str | Path
 
 
 def load_index(index_dir: str | Path) -> tuple[bm25s.BM25, list[str]]:
-    """Read back what `save_index` wrote, or say plainly what is missing."""
+    """Read back what `save_index` wrote, or say plainly what is missing.
+
+    Both files are checked in one guard. A half-written artifact folder, params
+    present and chunk ids gone, is the shape an interrupted ingest leaves behind,
+    and it used to fall through to a bare FileNotFoundError from `open` that named
+    a file nobody outside this module has heard of.
+    """
     index_dir = Path(index_dir)
-    if not (index_dir / PARAMS_FILENAME).exists():
-        raise FileNotFoundError(f"No bm25 index at {index_dir}. Run `finrag ingest` first.")
+    missing: list[str] = []
+    for filename in (PARAMS_FILENAME, CHUNK_IDS_FILENAME):
+        if not (index_dir / filename).exists():
+            missing.append(filename)
+    if missing:
+        raise FileNotFoundError(
+            f"No usable bm25 index at {index_dir}: missing {', '.join(missing)}. "
+            "Run `finrag ingest` first."
+        )
 
     index = bm25s.BM25.load(str(index_dir), show_progress=False)
     with open(index_dir / CHUNK_IDS_FILENAME, encoding="utf-8") as handle:
@@ -136,15 +149,19 @@ class BM25Retriever:
     def __init__(self, chunks: Sequence[Chunk], index_dir: str | Path | None = None) -> None:
         self.chunks = list(chunks)
 
-        # bm25s cannot index an empty corpus (average document length would be a
-        # division by zero), so we skip the index and search returns nothing.
-        if not self.chunks:
-            self.index = None
-        elif index_dir is None:
-            self.index = build_index(self.chunks)
-        else:
+        # The row-order guard is checked first, before the empty-corpus shortcut,
+        # the same order dense.py uses. The other way round,
+        # `BM25Retriever([], index_dir=stale)` accepts a mismatched index in
+        # silence, which is the one failure the guard exists to prevent.
+        if index_dir is not None:
             self.index, stored_ids = load_index(index_dir)
             _check_index_matches_chunks(self.chunks, stored_ids, index_dir)
+        elif not self.chunks:
+            # bm25s cannot index an empty corpus (average document length would be
+            # a division by zero), so we skip the index and search returns nothing.
+            self.index = None
+        else:
+            self.index = build_index(self.chunks)
 
         # Kept for the debug field: which query words a chunk contains. Same
         # tokenizer again, so this agrees with what was indexed.
@@ -192,6 +209,13 @@ class BM25Retriever:
         scoring already zeroed and never reaches the ranking. It is also why we
         use `get_scores` and sort ourselves instead of calling `retrieve`, which
         would do its own top-k: the mask and the tie-break stay plain Python.
+
+        THE INDEX METHOD MUST STAY `lucene`, the bm25s default `build_index` uses.
+        With `bm25l` or `bm25+` the library adds a nonoccurrence floor AFTER the
+        mask multiply, so every denied chunk would come out with a small nonzero
+        score and this lock would stop working. The `score > 0.0` test in `search`
+        is what would let them through; the second `allowed` check in that loop is
+        the reason a change of method would be a bug and not a breach.
         """
         mask = np.zeros(len(self.chunks), dtype="float32")
         for row, chunk in enumerate(self.chunks):

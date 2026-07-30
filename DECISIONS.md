@@ -242,6 +242,16 @@ closes a hazard without quietly repricing the baseline that R1 will be compared 
   incomparable with R0's, because the naive floor tokenizes plainly. Sharing one tokenizer
   keeps the R0 to R1 delta a measurement of ranking alone. Stemming can arrive later as its
   own change with its own row in this table.
+
+  What that deferral costs, recorded at integration because R3 inherited the bill: with
+  stopwords off, function words hold top-five slots on plenty of questions. `the`, `was`,
+  `of` and `in` are in nearly every chunk, so their IDF is small but not zero, and a short
+  chunk that happens to hold several of them can out-score a longer chunk that holds the
+  real term once. Rank 1 is not affected on this corpus, and it stays well separated from
+  rank 2, which is why the section MRR numbers above hold up. The cost lands one rung later:
+  R3's reranker is handed a top-30 padded with those chunks and has to spend part of its
+  single call rejecting them. It does, and it improved 34 of 40 scored questions anyway,
+  but it was never told why its input looked like that.
 - `index.retrieve()` instead of `get_scores()`. Dropped. `retrieve` does its own top-k, so
   the mask and the tie-break would sit inside library code. `get_scores` returns the score
   vector and we cut it ourselves in plain Python that can be read and tested.
@@ -281,8 +291,8 @@ shows 2 of 8 because 6 are policy probes scored on behaviour.
 | T6 ABAC | 8 | 2 | 1.000 to 1.000 | 0.225 to 1.000 | 1.000 to 1.000 | 0.500 to 1.000 | 0 to 0 |
 | OVERALL | 50 | 40 | 0.725 to 0.750 | 0.488 to 0.637 | 0.887 to 0.988 | 0.746 to 0.876 | 0 to 0 |
 
-Ambiguous both-sources recall@10: 0.500 to 0.750, 3 of 4. Policy probes: 6 of 6 passed in
-both runs. Total leakage 0 in both, target 0. Corpus unchanged at 318 chunks over 11
+Ambiguous both-sources recall@10: 0.500 (2 of 4) -> 0.750 (3 of 4). Policy probes: 6 of 6
+passed in both runs. Total leakage 0 in both, target 0. Corpus unchanged at 318 chunks over 11
 documents; the index covers all 318.
 
 Overall section MRR rises from 0.488 to 0.637, a gain of 0.149, which is the number that
@@ -320,9 +330,15 @@ T4 does not, and it is worth saying plainly rather than filing it as a win.
   ambiguous probes and on whether it can answer a bridge question whose two halves share no
   vocabulary, not on this row.
 - T5 is the honest surprise, section MRR 0.352 to 0.774. The aggregate chunks are short and
-  hold rare tokens (`1,654,767`, department names), which is precisely the shape BM25 is good
-  at, and length normalisation stops the 100 HR row chunks from crowding them out. T5-02 and
-  T5-03 went from 0.000 to 1.000.
+  hold rare terms (department names, and the digit groups a salary figure breaks into), which
+  is precisely the shape BM25 is good at, and length normalisation stops the 100 HR row chunks
+  from crowding them out. T5-02 and T5-03 went from 0.000 to 1.000.
+
+  Corrected at integration: an earlier draft of this line named `1,654,767` as the rare token.
+  It is never one token. Our tokenizer is `\w+` on lowercased text, so that figure indexes as
+  `1`, `654`, `767`, and `1` and `654` are common across the HR rows. The effect is real and
+  the mechanism was wrong: what BM25 rewards here is the pair of uncommon digit groups
+  (`767`, `565`) landing together in one short chunk, plus the department names beside them.
 - T6 section MRR 0.225 to 1.000. Both positive controls now come back at rank 1. Leakage
   stays 0 and all 6 policy probes pass, but R4 still has to prove that for every role, not
   only the roles the gold set happens to ask with.
@@ -727,8 +743,8 @@ worse than R2.
 
 - Hybrid's T2 collapse is the mechanism worth understanding, because it is not the one we
   guessed. It is not tie dilution: at depth 30 the two lists overlap heavily, 454 of 500
-  top-ten slots were found by both retrievers, and only 19 of 500 slots involved a
-  duplicate fused score. It is that RRF punishes a strong single-list opinion. T2-07
+  top-ten slots were found by both retrievers, and duplicate fused scores account for only
+  19 pairs (38 slots) of the 500. It is that RRF punishes a strong single-list opinion. T2-07
   ("during the July to September stretch, how many people joined the point scheme") has
   its gold section at dense rank 1 and BM25 does not find it in 30 tries. RRF scores it
   1/61 = 0.0164, while nine chunks that both lists placed around rank 5 score 0.027 to
@@ -918,9 +934,287 @@ silent config flip into a failing test.
   50 question texts were already in `embed_cache.npz` from the R2 and R3 runs, and the file
   mtime confirms it was not rewritten. The cache built for cost turns out to be what makes
   a 1,500-cell offline sweep possible at all.
-- `cli.py` is now 333 lines, over the ~250 guideline. Roughly a third of it is console
+- `cli.py` is now 343 lines, over the ~250 guideline. Roughly a third of it is console
   table formatting for two commands. Flagged rather than fixed here, since extracting a
   `cli_print.py` would touch R0 to R3 code this rung has no business editing.
 - Writing `LeakyRetriever` first changed what the rest of the tests are worth. Every clean
   assertion in `test_sweep.py` now sits next to a proof that the same assertion fails when
   the mask is removed, which is the difference between a green suite and evidence.
+
+## R5: graph RAG on Neo4j, with the role mask inside the traversal
+
+### Decision
+
+Put a knowledge graph in Neo4j, walk it two hops from the query terms, and rank chunks by
+how many distinct paths reached them. Register it as one more mode, `graphrag`, behind the
+same `search(query, role, k)` contract every other retriever satisfies, so the eval harness
+scores it against the other five with nothing changed but a string.
+
+The mask is written in Cypher, not in Python. The role's visible chunk ids are computed by
+`retrieval/base.visible_ids` and passed to the server as a parameter; every relationship in
+every path is checked against that list inside the query. Filtering after the walk would be
+too late: a denied edge would already have carried the walk to a neighbour it should not
+have reached, and the ranking would carry that shape out even after the denied chunk itself
+was dropped. Python then checks the returned ids a second time on the way into a `Hit`.
+
+### What was added
+
+- `src/finrag/graph/`: `schema.py` (node and edge shapes, id rules, dedupe), `store.py`
+  (the driver, the `:Finrag` namespace, batched writes, `wipe`, `counts`),
+  `build_structural.py` (the graph read off chunk metadata, which cannot hallucinate),
+  `build_llm.py` (one Gemini call per chunk for entity triples), `traverse.py` (the masked
+  Cypher walk) and `retriever.py` (`GraphRetriever`).
+- Registry: `make_graphrag`, one factory, and `"graphrag"` in `FACTORIES`. Nothing was
+  added to `IndexBundle`: the graph lives in Neo4j, so `graph_path` stays unused, and the
+  field's docstring now says so instead of promising a later mode will read it.
+- CLI: `finrag graph`, and `finrag graph --llm` for the entity layer. Both lists are
+  written in ONE `write_graph` call, because that call wipes the namespace first and two
+  calls would leave only the second graph.
+- 6 test files under `tests/graph/` (98 tests). They use the `:FinragTest` namespace and
+  delete only that, so a test run cannot touch `:Finrag`, and they skip with one line when
+  bolt is closed.
+
+### The real build
+
+`finrag graph --llm` over the whole corpus, gemini-2.5-flash at temperature 0 with thinking
+switched off, one call per chunk:
+
+| | |
+|---|---|
+| chunks asked | 318 |
+| answers that parsed | 318 |
+| fallback rate | 0.00 (0 chunks skipped) |
+| triples extracted | 2,124 |
+| malformed items dropped | 0 |
+| wall time | 8m42s (about 1.6s per chunk) |
+
+The graph went from 344 nodes / 709 relationships (structural only) to 2,644 nodes / 5,844
+relationships: 2,306 entity nodes, 318 chunk, 11 doc, 5 dept, 4 quarter, and 3,011
+`mentions_entity` edges tying the entity layer back to the chunks it came from.
+
+A zero fallback rate on 318 calls is a better result than the 30 percent ceiling we set
+before starting, and it is mostly the prompt's doing: it asks for a JSON array, names the
+exact keys, and the parser accepts a fenced or prefixed answer by slicing between the first
+`[` and the last `]`. Worth saying plainly, though: "parsed" is not "true". Nothing here
+checks a triple against the passage it came from. The trust boundary holds anyway, because
+a model-written label can only ever become a node label or a relation name, and it is the
+chunk the triple came from that decides who may walk the edge.
+
+### What the run says
+
+`finrag eval --mode graphrag --rung r5`, 50 questions, k = 5 and 10:
+
+| tier | n | scored | section hit | section MRR | recall@10 | doc MRR | leak |
+|---|---|---|---|---|---|---|---|
+| T1 direct | 8 | 8 | 0.625 | 0.296 | 0.875 | 0.875 | 0 |
+| T2 paraphrase | 8 | 8 | 0.125 | 0.125 | 1.000 | 0.771 | 0 |
+| T3 temporal | 10 | 10 | 0.100 | 0.020 | 1.000 | 0.675 | 0 |
+| T4 multi-hop | 10 | 6 | 0.500 | 0.078 | 0.833 | 0.722 | 0 |
+| T5 aggregation | 6 | 6 | 1.000 | 0.407 | 1.000 | 1.000 | 0 |
+| T6 ABAC | 8 | 2 | 1.000 | 0.121 | 1.000 | 0.667 | 0 |
+| OVERALL | 50 | 40 | 0.450 | 0.168 | 0.950 | 0.790 | 0 |
+
+Ambiguous both-sources recall@10: 0.250 (1 of 4). Policy probes 6 of 6. Leakage 0.
+
+Graph RAG is the worst retriever in this repo on every metric that measures ranking, and it
+is worst on precisely the tier it was supposed to win. The mechanism is the one
+`traverse.py` predicted in a comment before the first eval was run: a department node joins
+every chunk it owns, so at two hops every chunk in a seeded department is reachable, and
+"how many paths reached this chunk" becomes a proxy for "how big is this department".
+T3 asks about a specific quarter's marketing report; the walk returns the performance
+analysis of every quarter, in an order that has nothing to do with the quarter named. Doc
+recall@10 stays at 0.950 because the right DOCUMENT is nearly always in there; section MRR
+of 0.168 is the same fact stated honestly.
+
+### Did it pay for itself
+
+No, not as a retriever, and the two places it did not lose are worth reading carefully.
+
+T5 aggregation is at section hit 1.000, the same as bm25, dense and hybrid, and T6 is at
+1.000 as well. Neither is a win: both tiers have few scored questions and both are already
+saturated for every mode above naive. The one number that would have justified the rung is
+the ambiguous both-sources probe, the four questions whose answer needs a bridge between
+two documents that share no vocabulary. That is the case graph RAG exists for, and it went
+0.750 under bm25 to 0.250 under graphrag. It found fewer bridges than plain word overlap.
+
+What the rung did buy: the mask is now proved inside a query language as well as in Python,
+which is a different kind of evidence than the other five modes give. 1,800 sweep cells and
+2,811 graphrag hits later, the Cypher mask has never let one denied chunk through, and
+`n_blocked_late` (the count of chunks the Cypher returned and the Python double lock
+refused) is 0 across all 2,811 of them, checked directly over the 50 gold questions in all
+six roles. That is worth having, and it is not worth 8m42s of API time
+plus a container in the deployment for a mode nobody should route a question to.
+
+If someone picks this up: `traverse.py`'s own comment names the first thing to try, which
+is leaving `owned_by` out of the walk so a department cannot join everything it owns. That
+is a one-line change to the Cypher and a re-run of one eval. It was not tried here because
+the integration's job was to report what the rung built, not to tune it into a better
+number after the fact.
+
+### Alternatives considered
+
+- Ranking by shortest path instead of path count. Dropped for now: with `owned_by` in the
+  walk almost everything is two hops away, so shortest path would flatten to a single tie
+  and the tie-break (chunk_id) would do all the ranking.
+- Three hops. Allowed by `MAX_HOPS_ALLOWED` but not used. At two hops the walk already
+  returns most of a department; at three it returns most of the corpus.
+- Storing the graph in `artifacts/graph.json`. Dropped when the mask moved into Cypher: the
+  whole argument for a graph database here is that the traversal and the mask are the same
+  query, and a JSON file would have meant re-implementing both in Python.
+
+## R6: the API, the UI, and the integration of everything
+
+### Decision
+
+Serve it. `create_app()` gives `/health`, `/modes`, `/roles` and `/ask`; `finrag serve` runs
+it; `finrag ui` runs three Streamlit pages against it. The answer step retrieves under the
+role mask, numbers the excerpts, asks for an answer that cites them by number, and maps
+those numbers back to chunk ids. No hits means no answer: a model handed an empty context
+will invent a number, and an invented number in a finance tool is worse than a blank.
+
+The role comes from the request body. That is a demo shortcut and it is written down as one
+in `api/app.py`: a client that picks its own role has no access control at all. It is built
+this way so the ABAC behaviour can be driven from a role picker without an identity
+provider, and the point of the exercise is that nothing underneath cares where the role
+came from.
+
+### What was added
+
+- `src/finrag/prompting.py` (the grounded prompt, citation parsing, the extractive quote),
+  `src/finrag/generate.py` (`Answerer`), `src/finrag/api/app.py` (`create_app`), the five
+  `ui/` files (`app.py`, `api_client.py`, three pages), and 57 offline tests (68 in the
+  four test files now, with the ones this integration added for the new construction
+  helpers and the mode lists).
+- `src/finrag/llm/vertex.py` was REPLACED. R3 shipped an untested version of this file; the
+  R6 branch shipped its own with tests, and the ruling recorded in `docs/followups.md` was
+  to keep the tested one. Reconciling it took one new function rather than a change to
+  `retrieval/rerank.py`, because the reranker only ever wanted an `LLMBackend`:
+  `build_rerank_llm(settings)` builds the client with R3's dials (its own model setting,
+  thinking off, a 512-token cap, and one try, so `LLMReranker`'s own retry stays the only
+  one and its reported call count stays true). `build_extraction_llm(settings)` is the same
+  idea for `finrag graph --llm`, with a 2,048-token cap because twelve triples are longer
+  than twenty numbers. `build_llm(settings)` stays what serving calls, and it may still
+  return None, which means answers are extractive rather than absent.
+- `config.py`: `vertex_model` was `gemini-2.0-flash`, which Vertex answers 404 for in this
+  project. It is now `DEFAULT_VERTEX_MODEL = "gemini-2.5-flash"`, defined once and imported
+  by `llm/vertex.py` so the two cannot drift. A default nobody can reach is a trap for
+  whoever clones this next.
+- `generate.py` needed two mode lists, not one. R6 shipped `MODES_NEEDING_AN_EMBEDDER =
+  {"dense"}`, which would have made `/ask?mode=hybrid` a 500: hybrid and hybrid_rerank both
+  run a dense retriever underneath. Both are in the set now, and `MODES_NEEDING_AN_LLM`
+  builds the rerank client on first use. A process running on `FakeLLM` reranks with that
+  same fake rather than reaching for credentials it was told not to use.
+- The sweep learned about services. `offline_modes()` is every mode that needs no container,
+  `sweepable_modes()` adds the graph modes when bolt answers, and asking for `graphrag` by
+  name with the container down is a refusal naming `docker start finrag-neo4j` rather than a
+  silent skip. `finrag sweep` prints `NOT SWEPT: <mode>` for anything it dropped, because a
+  sweep that quietly covered five of six modes reads as a clean bill of health for the sixth.
+
+### The punch list
+
+Every unchecked box in `docs/followups.md` is folded in and ticked with a note. The three
+that changed behaviour:
+
+- `dense.py` now refuses a matrix from one embedding space queried by another. This was the
+  verifier's highest-value find and the reason is that the failure was silent: a
+  Vertex-built matrix searched with the fake embedder returns cosines around 0.05 and a
+  ranking that is noise, and nothing raises. `load_matrix` also checks its own arithmetic
+  now (`vectors.shape[0] == len(chunk_ids)`), so a half-written npz fails on load instead of
+  raising an IndexError inside the scoring loop later.
+- `sweep.py` no longer holds a live Vertex client behind the "offline" gate. `build_embedder`
+  defaults to the real backend, so the 1,500-cell sweep ran free only because the 50 gold
+  questions happened to be in `embed_cache.npz` from an earlier eval. One new gold question
+  would have started billing per query with nothing to show for it. `CacheOnlyEmbedder`
+  turns a miss into an error naming the question.
+- `bm25.py` checks both index files in one guard, and its constructor now runs the row-order
+  check before the empty-corpus shortcut, so `BM25Retriever([], index_dir=stale)` is refused
+  rather than accepted in silence.
+
+### What the run says
+
+`finrag sweep --rung r6`, with graphrag in it: 50 questions x 6 roles x 6 modes = 1,800
+cells, 17,719 hits inspected, 5 empty cells, **0 violations**, 21 seconds, no API calls.
+
+The six-mode progression, section hit rate @10 / section MRR / leakage:
+
+| tier | n | naive | bm25 | dense | hybrid | hybrid_rerank | graphrag |
+|---|---|---|---|---|---|---|---|
+| T1 direct | 8 | 1.000 / 0.740 / 0 | 1.000 / 0.792 / 0 | 0.875 / 0.812 / 0 | 1.000 / 0.833 / 0 | 1.000 / 0.896 / 0 | 0.625 / 0.296 / 0 |
+| T2 paraphrase | 8 | 0.125 / 0.016 / 0 | 0.000 / 0.000 / 0 | 0.875 / 0.729 / 0 | 0.625 / 0.202 / 0 | 0.875 / 0.812 / 0 | 0.125 / 0.125 / 0 |
+| T3 temporal | 10 | 0.800 / 0.625 / 0 | 0.800 / 0.700 / 0 | 0.900 / 0.653 / 0 | 1.000 / 0.716 / 0 | 0.900 / 0.662 / 0 | 0.100 / 0.020 / 0 |
+| T4 multi-hop | 10 | 1.000 / 0.778 / 0 | 1.000 / 0.917 / 0 | 0.833 / 0.833 / 0 | 1.000 / 0.736 / 0 | 1.000 / 0.875 / 0 | 0.500 / 0.078 / 0 |
+| T5 aggregation | 6 | 0.667 / 0.352 / 0 | 1.000 / 0.774 / 0 | 1.000 / 0.889 / 0 | 1.000 / 0.778 / 0 | 1.000 / 0.771 / 0 | 1.000 / 0.407 / 0 |
+| T6 ABAC | 8 | 1.000 / 0.225 / 0 | 1.000 / 1.000 / 0 | 1.000 / 1.000 / 0 | 1.000 / 1.000 / 0 | 1.000 / 1.000 / 0 | 1.000 / 0.121 / 0 |
+| OVERALL | 50 | 0.725 / 0.488 / 0 | 0.750 / 0.637 / 0 | 0.900 / 0.780 / 0 | 0.925 / 0.663 / 0 | **0.950 / 0.804 / 0** | 0.450 / 0.168 / 0 |
+
+Ambiguous both-sources recall@10: naive 0.500, bm25 0.750, dense 0.500, hybrid 0.750,
+hybrid_rerank 0.750, graphrag 0.250. Policy probes 6 of 6 in every mode. Leakage 0 in every
+cell of every mode, which is now a claim from 1,800 role-crossed cells rather than from 50
+questions asked in the one role each was written for.
+
+`hybrid_rerank` is the mode to route to: best section hit (0.950) and best section MRR
+(0.804), for one Gemini call per question. The whole ladder is worth reading as two jumps
+and a mistake. Dense over bm25 is the paraphrase jump (T2 section MRR 0.000 to 0.729).
+Rerank over hybrid is the ordering jump (overall 0.663 to 0.804) and it repairs hybrid's own
+T2 collapse. Graph RAG is the mistake, and it is a useful one: it is the only rung whose
+number went down, and the reason was written in a code comment before the eval was run.
+
+### The serve smoke
+
+Nine probes against a live API with real generation, saved whole in
+`evals/results/r6_smoke_20260730T0017.json`. What they show:
+
+- T3-04 as `marketing` in bm25, dense and hybrid_rerank: all three answer "Influencer
+  Marketing generated 500,000 impressions, with 25 regional influencers", all three cite
+  `marketing/marketing_report_q3_2024#campaign-highlights--latin-american-expansion`, in 1.5
+  to 3 seconds. The same question in graphrag returns five marketing sections, none of them
+  the right one, and the model refuses rather than answering from them. The eval table says
+  graphrag's T3 section hit is 0.100; this is what that looks like from the outside.
+- "What is Aadhya Patel's salary?" as `marketing`: `no_answer`, and the five hits are
+  general handbook sections. The mask removed 212 of 318 chunks before ranking, and no HR
+  row was among the ones it kept.
+- The same question as `hr`: the right row (`hr/hr_data#row-FINEMP1000`) comes back at rank
+  1, and the answer is still `no_answer`. The salary is not in the chunk text; it is in the
+  row payload, which is gated on the separate `view_row` action, and no serving path
+  performs that action. The control probe proves the row is otherwise usable: "Which
+  department and city does Aadhya Patel work in?" as `hr` answers "Sales department in
+  Ahmedabad", cited to that same row. So the figure Rs 1,332,478.37 appears in no response
+  body in this repo, for any role, including the roles the policy would permit it to. That
+  is stricter than the policy, and it is deliberate in `prompting.hit_view`, but it is a gap
+  between what the policy says and what the app can do. Flagged for the architect.
+- "What was Q4 revenue?" as `engineering`: `no_answer`, and no finance chunk in the body.
+  The same question as `employee`: also `no_answer`, NOT the 403 we expected. 403 fires when
+  a role may see nothing at all in the corpus, and on the real corpus every role can see
+  `general/` (56 chunks for employee), so the 403 branch is unreachable here. It is exercised
+  by `tests/test_api.py` against a fixture corpus with no general documents.
+
+### The forward decision on `Hit.debug`
+
+R1 asked whether the exact bm25 float should be role-gated before an API exposed it, because
+global IDF means a score carries information about documents the role cannot see. Decided:
+`prompting.hit_view` builds each response hit from a fixed field list with no `debug` and no
+`payload`, so the exact float, the matched-term list and the row PII never leave the process.
+`score` is still sent, rounded to four places, and it carries the same IDF. Accepted rather
+than fixed: it is one number per visible hit, with no ids and no counts attached, and it is
+what lets a person reading a ranking check it.
+
+### Surprises
+
+- The LLM graph build did not fail once in 318 calls. We budgeted for 30 percent and wrote
+  the "keep it structural-only" branch into the plan. Prompt shape and a forgiving parser
+  did the work; the model was never the risk we thought it was.
+- The R2-R4 verifier's highest-value find was not a bug that had happened. Nothing in this
+  repo has ever queried a Vertex matrix with a fake embedder. The value was that the failure
+  mode would have produced a full eval table of plausible nonsense, which is the one kind of
+  wrong number a green suite cannot catch.
+- Line counts, disclosed rather than fixed: `cli.py` 481, `sweep.py` 339,
+  `graph/build_llm.py` 298, `vertex.py` 288, `rerank.py` 275, `bm25.py` 274,
+  `graph/store.py` 271, `generate.py` 267, `graph/traverse.py` 258. `cli.py` is the real
+  offender and about a third of it is console table formatting for two commands;
+  `cli_print.py` is the seam. `rerank.py` and `bm25.py` grew by comments this rung, both of
+  them the invariant notes the verifiers asked for, and splitting either would put a comment
+  in one file and the code it guards in another. The three graph files carry the Cypher, the
+  store guards and the mask notes for the same reason. The rule this repo is actually
+  following is "a file may exceed 250 lines if this document says why", and nine of them now
+  do (the final verifier counted; the first draft of this list missed the three graph files).
+- 601 tests, all green, with the Neo4j container up. Nothing skips on this machine.

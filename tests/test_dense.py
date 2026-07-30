@@ -400,3 +400,54 @@ def test_a_second_ingest_embeds_nothing_new(repo_root: Path, tmp_path: Path) -> 
     run_ingest(settings, embedder=CachingEmbedder(counting, cache))
 
     assert counting.calls == []
+
+
+# The two guards a hand-forged or stale npz has to trip. Both were found by the
+# R2-R4 verifier: each failure was silent, and a silent wrong ranking is worse
+# than a crash because it still produces a table.
+
+
+class _OtherSpaceEmbedder(FakeEmbedder):
+    """The same fake vectors under a different model name."""
+
+    name = "fake-other"
+    model = "text-embedding-005"
+
+
+def test_a_matrix_from_another_embedding_space_is_refused(tmp_path: Path) -> None:
+    # The quiet failure: a Vertex-built matrix queried with the fake embedder
+    # returns cosines around 0.05 and a ranking that is noise, and nothing raises.
+    dense_path = tmp_path / "dense.npz"
+    build_and_save_matrix(CORPUS, FakeEmbedder(), dense_path)
+
+    with pytest.raises(ValueError) as caught:
+        DenseRetriever(CORPUS, _OtherSpaceEmbedder(), dense_path=dense_path)
+
+    message = str(caught.value)
+    assert "fake" in message
+    assert "text-embedding-005" in message
+
+
+def test_the_matching_embedder_is_accepted(tmp_path: Path) -> None:
+    # The other half: the guard must not refuse the ordinary case.
+    dense_path = tmp_path / "dense.npz"
+    build_and_save_matrix(CORPUS, FakeEmbedder(), dense_path)
+
+    retriever = DenseRetriever(CORPUS, FakeEmbedder(), dense_path=dense_path)
+    assert retriever.search("revenue", "c_level", k=1)
+
+
+def test_a_matrix_with_fewer_rows_than_chunk_ids_is_refused(tmp_path: Path) -> None:
+    # Hand-forged, the shape a half-written file would have. Without this guard
+    # the failure is an IndexError inside the scoring loop at query time.
+    dense_path = tmp_path / "dense.npz"
+    vectors = build_matrix(CORPUS, FakeEmbedder())
+    np.savez(
+        dense_path,
+        vectors=vectors[:-1],
+        chunk_ids=np.array([chunk.chunk_id for chunk in CORPUS]),
+        model=np.array("fake"),
+    )
+
+    with pytest.raises(ValueError, match="inconsistent"):
+        load_matrix(dense_path)

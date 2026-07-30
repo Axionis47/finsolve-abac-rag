@@ -1,11 +1,11 @@
 """The `finrag` command line: one subcommand per stage of the build.
 
 This is the front door a person uses. `finrag ingest` runs the ingest pipeline
-and prints what it wrote. `finrag eval` scores a retrieval mode against the gold
-set and saves the report. `finrag sweep` runs the ABAC leakage sweep over every
-question, role and mode. The remaining subcommands exist so the installed
-console script has a complete shape from day one; each prints which rung of the
-build will fill it in and exits non-zero, so nothing mistakes a stub for work.
+and prints what it wrote. `finrag graph` rebuilds the Neo4j graph from those
+chunks. `finrag eval` scores a retrieval mode against the gold set and saves the
+report. `finrag sweep` runs the ABAC leakage sweep over every question, role and
+mode. `finrag serve` runs the API and `finrag ui` runs the Streamlit pages
+against it. Every subcommand is wired; none of them is a stub.
 """
 
 from __future__ import annotations
@@ -21,12 +21,15 @@ from finrag.eval.harness import EvalHarness
 from finrag.eval.report_io import write_report
 from finrag.eval.sweep import (
     breakdown_lines,
-    build_offline_retrievers,
+    build_sweep_retrievers,
     run_leakage_sweep,
     sweep_passed,
 )
+from finrag.graph import build_llm as graph_build_llm
+from finrag.graph import build_structural
+from finrag.graph.store import GraphStore
 from finrag.ingest.pipeline import IngestStats, read_chunks, run_ingest
-from finrag.llm.vertex import build_llm
+from finrag.llm.vertex import build_extraction_llm, build_rerank_llm
 from finrag.policy.engine import PolicyEngine
 from finrag.retrieval.embed import build_embedder
 from finrag.retrieval.registry import IndexBundle, available_modes, build_retriever
@@ -39,11 +42,8 @@ MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset({"dense", "hybrid", "hybri
 # real API call per question, so no other mode should build a client.
 MODES_NEEDING_AN_LLM: frozenset[str] = frozenset({"hybrid_rerank"})
 
-# Subcommands that are not built yet, and the rung that will build them.
-PENDING_COMMANDS: dict[str, str] = {
-    "graph": "R5 (graph schema and the structural or LLM builds)",
-    "serve": "R6 (the FastAPI app and the UI)",
-}
+# The Streamlit pages live outside the package, next to pyproject.toml.
+REPO_ROOT_UI = Path(__file__).resolve().parents[2] / "ui"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -58,7 +58,17 @@ def build_parser() -> argparse.ArgumentParser:
         "ingest",
         help="chunk the corpus, write artifacts/chunks.jsonl, the BM25 index and dense.npz",
     )
-    subparsers.add_parser("graph", help="build the knowledge graph (not wired up yet)")
+    graph_parser = subparsers.add_parser(
+        "graph", help="rebuild the Neo4j knowledge graph from artifacts/chunks.jsonl"
+    )
+    graph_parser.add_argument(
+        "--llm",
+        action="store_true",
+        help=(
+            "also ask Gemini for entity triples, one call per chunk "
+            "(costs money; the structural build alone is free)"
+        ),
+    )
 
     eval_parser = subparsers.add_parser("eval", help="score a retrieval mode on the gold set")
     eval_parser.add_argument(
@@ -93,7 +103,20 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"modes to sweep (default: all of {', '.join(available_modes())})",
     )
 
-    subparsers.add_parser("serve", help="run the API (not wired up yet)")
+    serve_parser = subparsers.add_parser("serve", help="run the API on localhost")
+    serve_parser.add_argument("--host", default="127.0.0.1", help="interface to bind")
+    serve_parser.add_argument("--port", type=int, default=8000, help="port to bind")
+    serve_parser.add_argument(
+        "--reload", action="store_true", help="restart on a code change (development only)"
+    )
+
+    ui_parser = subparsers.add_parser("ui", help="run the Streamlit UI (needs the API running)")
+    ui_parser.add_argument("--port", type=int, default=8501, help="port for the UI")
+    ui_parser.add_argument(
+        "--api",
+        default="http://127.0.0.1:8000",
+        help="base URL of the finrag API the pages call",
+    )
 
     return parser
 
@@ -103,6 +126,46 @@ def command_ingest() -> int:
     settings = Settings.from_env()
     stats = run_ingest(settings)
     print_stats(stats)
+    return 0
+
+
+def command_graph(with_llm: bool = False) -> int:
+    """Rebuild the :Finrag graph from artifacts/chunks.jsonl. Wipes, then writes.
+
+    Two layers. The structural one is read off the chunk metadata and cannot
+    hallucinate; the LLM one asks Gemini for entity triples, one call per chunk,
+    and is only built when asked for. Both lists go into ONE `write_graph` call
+    because that call wipes the namespace first, so writing them one after the
+    other would leave only the second.
+    """
+    settings = Settings.from_env()
+    if not settings.chunks_path.exists():
+        print(f"No chunks at {settings.chunks_path}. Run `finrag ingest` first.")
+        return 1
+
+    chunks = read_chunks(settings.chunks_path)
+    nodes, edges = build_structural.extract(chunks)
+    stats = None
+    if with_llm:
+        extractor = build_extraction_llm(settings)
+        print(
+            f"Asking {extractor.model} for triples over {len(chunks)} chunks, "
+            "one call each..."
+        )
+        llm_nodes, llm_edges, stats = graph_build_llm.extract(extractor, chunks)
+        nodes = nodes + llm_nodes
+        edges = edges + llm_edges
+
+    with GraphStore() as store:
+        counts = store.write_graph(nodes, edges)
+
+    print(f"Wrote {counts.n_nodes} nodes and {counts.n_edges} relationships to :Finrag")
+    if stats is not None:
+        print(
+            f"triples: {stats.n_triples} from {stats.n_parsed} chunks, "
+            f"{stats.n_dropped_items} items dropped, "
+            f"fallback rate: {stats.fallback_rate:.2f} ({stats.n_skipped} chunks)"
+        )
     return 0
 
 
@@ -135,7 +198,7 @@ def command_eval(mode: str, rung: str, k_values: list[int]) -> int:
         # this eval embeds nothing and makes no API calls.
         bundle.embedder = build_embedder(settings)
     if mode in MODES_NEEDING_AN_LLM:
-        bundle.llm = build_llm(settings)
+        bundle.llm = build_rerank_llm(settings)
     retriever = build_retriever(mode, bundle)
     policy = PolicyEngine.from_yaml(settings.policy_path)
 
@@ -186,7 +249,20 @@ def command_sweep(rung: str, k: int, modes: list[str] | None = None) -> int:
         print(problem)
         return 1
 
-    retrievers = build_offline_retrievers(settings, modes)
+    try:
+        retrievers = build_sweep_retrievers(settings, modes)
+    except RuntimeError as problem:
+        # A graph mode was asked for with the container down. That is a setup
+        # problem with a one-line fix, not a stack trace.
+        print(problem)
+        return 1
+
+    # A sweep that quietly covered five modes when six exist would read as a
+    # clean bill of health for the sixth. Name what is not being checked.
+    for mode in available_modes():
+        if mode not in retrievers:
+            print(f"NOT SWEPT: {mode} (its backing service is not answering)")
+
     report = run_leakage_sweep(retrievers, policy, gold.entries, k=k)
     path = write_report(report, rung, "sweep", settings.results_dir)
 
@@ -293,11 +369,63 @@ def _print_summary_row(label: str, summary: dict[str, Any], top_k: int) -> None:
     print(row)
 
 
-def command_pending(name: str) -> int:
-    """Explain that a subcommand is a placeholder, and which rung fills it in."""
-    print(f"finrag {name} is not wired up yet.")
-    print(f"It arrives in rung {PENDING_COMMANDS[name]}.")
-    return 1
+def command_serve(host: str, port: int, reload: bool) -> int:
+    """Run the FastAPI app with uvicorn.
+
+    Passed as an import string with `factory=True` so uvicorn builds the app in
+    the worker process; `--reload` needs that anyway, and it keeps this function
+    from loading 318 chunks in a process that is about to be replaced.
+    """
+    import uvicorn
+
+    settings = Settings.from_env()
+    if not settings.chunks_path.exists():
+        print(f"No chunks at {settings.chunks_path}. Run `finrag ingest` first.")
+        return 1
+
+    print(f"Serving finrag on http://{host}:{port}  (docs at /docs)")
+    uvicorn.run(
+        "finrag.api.app:create_app",
+        factory=True,
+        host=host,
+        port=port,
+        reload=reload,
+    )
+    return 0
+
+
+def command_ui(port: int, api: str) -> int:
+    """Run the Streamlit UI, pointed at a running API.
+
+    Streamlit has no supported in-process entry point, so this shells out to the
+    module the same way `streamlit run` does. FINRAG_API is how the pages find
+    the API; it is set here so nobody has to export it by hand.
+    """
+    import os
+    import subprocess
+
+    entry = REPO_ROOT_UI / "app.py"
+    if not entry.exists():
+        print(f"No UI entry script at {entry}.")
+        return 1
+
+    env = dict(os.environ)
+    env["FINRAG_API"] = api
+    print(f"Starting the UI on http://127.0.0.1:{port}, talking to {api}")
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            str(entry),
+            "--server.port",
+            str(port),
+        ],
+        env=env,
+        check=False,
+    )
+    return completed.returncode
 
 
 def print_stats(stats: IngestStats) -> None:
@@ -332,11 +460,21 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "ingest":
         return command_ingest()
+    if args.command == "graph":
+        return command_graph(args.llm)
     if args.command == "eval":
         return command_eval(args.mode, args.rung, args.k)
     if args.command == "sweep":
         return command_sweep(args.rung, args.k, args.modes)
-    return command_pending(args.command)
+    if args.command == "serve":
+        return command_serve(args.host, args.port, args.reload)
+    if args.command == "ui":
+        return command_ui(args.port, args.api)
+
+    # Unreachable: argparse rejects any name that has no subparser. It is here so
+    # a new subparser with no branch above fails loudly instead of exiting 0.
+    print(f"finrag {args.command} has no handler. This is a bug in cli.py.")
+    return 2
 
 
 if __name__ == "__main__":

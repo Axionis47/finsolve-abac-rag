@@ -10,8 +10,8 @@ The mask is `traverse.py`'s job and it happens inside the Cypher. This file adds
 one more lock anyway when it turns a candidate into a `Hit`, because a Hit is the
 thing that leaves the retrieval layer with chunk text in it.
 
-Not registered in `retrieval/registry.py` here. Wiring the mode is a separate
-step; see docs/r5_wiring.md.
+Registered in `retrieval/registry.py` as mode "graphrag" (wired at integration,
+per docs/r5_wiring.md).
 """
 
 from __future__ import annotations

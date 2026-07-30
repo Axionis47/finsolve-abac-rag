@@ -377,10 +377,34 @@ def test_an_index_built_from_other_chunks_is_refused(tmp_path: Path) -> None:
         BM25Retriever(CORPUS[:3], index_dir=index_dir)
 
 
+def test_an_empty_chunk_list_does_not_excuse_a_mismatched_index(tmp_path: Path) -> None:
+    # The order of the two guards in `__init__`. With the empty-corpus shortcut
+    # first, this construction accepted a stale index without a word.
+    index_dir = tmp_path / "bm25"
+    build_and_save_index(CORPUS, index_dir)
+
+    with pytest.raises(ValueError):
+        BM25Retriever([], index_dir=index_dir)
+
+
 def test_a_missing_index_says_to_run_ingest(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError) as caught:
         BM25Retriever(CORPUS, index_dir=tmp_path / "nothing-here")
     assert "finrag ingest" in str(caught.value)
+
+
+def test_a_half_written_index_folder_names_the_file_that_is_missing(tmp_path: Path) -> None:
+    # params present, chunk ids gone: what an interrupted ingest leaves behind.
+    index_dir = tmp_path / "bm25"
+    build_and_save_index(CORPUS, index_dir)
+    (index_dir / CHUNK_IDS_FILENAME).unlink()
+
+    with pytest.raises(FileNotFoundError) as caught:
+        BM25Retriever(CORPUS, index_dir=index_dir)
+
+    message = str(caught.value)
+    assert CHUNK_IDS_FILENAME in message
+    assert "finrag ingest" in message
 
 
 def test_save_index_creates_the_folder_if_it_is_not_there(tmp_path: Path) -> None:
