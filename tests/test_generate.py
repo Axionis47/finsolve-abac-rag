@@ -163,11 +163,11 @@ def test_a_mode_that_needs_no_embedder_does_not_get_one(micro_corpus) -> None:
 
 
 def test_the_fused_modes_all_need_an_embedder(micro_corpus) -> None:
-    # hybrid and hybrid_rerank both run a dense retriever underneath. Leaving
-    # them out of this set is what would make `/ask?mode=hybrid` a 500.
+    # hybrid, hybrid_rerank and react all run a dense retriever underneath.
+    # Leaving one out of this set is what would make `/ask?mode=hybrid` a 500.
     from finrag.generate import MODES_NEEDING_AN_EMBEDDER
 
-    assert MODES_NEEDING_AN_EMBEDDER == {"dense", "hybrid", "hybrid_rerank"}
+    assert MODES_NEEDING_AN_EMBEDDER == {"dense", "hybrid", "hybrid_rerank", "react"}
 
 
 def test_graphrag_with_the_server_down_refuses_instantly_and_says_how_to_fix_it(
@@ -202,6 +202,62 @@ def test_an_offline_process_reranks_with_the_same_fake_it_answers_with(
 
     retriever = answerer.retriever("hybrid_rerank")
     assert retriever.reranker.llm is fake
+
+
+def test_an_offline_process_runs_the_agent_with_the_same_fake_it_answers_with(
+    micro_corpus, monkeypatch
+) -> None:
+    # Same rule as the reranker, and the same trap: a process told to run on a
+    # fake must not reach for credentials to think with.
+    def explode(_settings):
+        raise AssertionError("the agent path built a real Vertex client")
+
+    monkeypatch.setattr("finrag.llm.vertex.build_agent_llm", explode)
+    fake = FakeLLM()
+    answerer = make_answerer(micro_corpus, llm=fake)
+    answerer.bundle.embedder = _fake_embedder()
+
+    retriever = answerer.retriever("react")
+    assert retriever.agent.llm is fake
+
+
+def test_the_react_mode_answers_from_the_agent_without_a_second_generation_call(
+    micro_corpus,
+) -> None:
+    from finrag.llm.fake import ScriptedLLM
+
+    llm = ScriptedLLM(
+        [
+            '{"thought": "look", "action": "search", "argument": "campaign spend"}',
+            '{"thought": "done", "action": "finish", "argument": "Spend was 2.0 million [1]."}',
+        ]
+    )
+    answerer = make_answerer(micro_corpus, llm=llm)
+    answerer.bundle.embedder = _fake_embedder()
+
+    result = answerer.answer("what was the campaign spend", "marketing", mode="react", k=5)
+
+    assert result["answer"] == "Spend was 2.0 million [1]."
+    assert result["citations"] == [result["hits"][0]["chunk_id"]]
+    # Two calls: the search and the finish. A third would be the answer step
+    # writing the answer over again.
+    assert len(llm.calls) == 2
+
+
+def test_a_react_run_with_no_permitted_observation_gives_the_no_answer_shape(
+    micro_corpus,
+) -> None:
+    from finrag.llm.fake import ScriptedLLM
+
+    llm = ScriptedLLM(['{"thought": "t", "action": "finish", "argument": "NOT_IN_CONTEXT"}'])
+    answerer = make_answerer(micro_corpus, llm=llm)
+    answerer.bundle.embedder = _fake_embedder()
+
+    result = answerer.answer("kubernetes autoscaling rollout", "engineering", mode="react", k=5)
+
+    assert result["reason"] == "no_answer"
+    assert result["answer"] is None
+    assert result["hits"] == []
 
 
 def _fake_embedder():

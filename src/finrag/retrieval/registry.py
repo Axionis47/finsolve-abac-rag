@@ -1,7 +1,7 @@
 """Mode name to retriever: the one place that knows what "naive" means.
 
 The CLI, the eval harness and the API all pick a retriever by a short string
-("naive", "bm25", "dense", "hybrid", "hybrid_rerank", "graphrag"). They should not import
+("naive", "bm25", "dense", "hybrid", "hybrid_rerank", "graphrag", "react"). They should not import
 retriever classes directly, or every new mode would mean edits in three places.
 Instead they load the artifacts once into an `IndexBundle`, then call a factory
 from `FACTORIES`.
@@ -19,6 +19,8 @@ from finrag.graph.retriever import GraphRetriever
 from finrag.graph.store import GraphStore
 from finrag.llm.base import LLMBackend
 from finrag.models import Chunk
+from finrag.react import REACT_BASE_MODE, ReactAgent
+from finrag.react_retriever import ReactRetriever
 from finrag.retrieval.base import Retriever
 from finrag.retrieval.bm25 import BM25Retriever
 from finrag.retrieval.dense import DenseRetriever
@@ -112,6 +114,23 @@ def make_hybrid_rerank(bundle: IndexBundle) -> Retriever:
     return RerankRetriever(bundle.chunks, make_hybrid(bundle), LLMReranker(bundle.llm))
 
 
+def make_react(bundle: IndexBundle) -> Retriever:
+    """The ReAct agent, searching with whichever mode `REACT_BASE_MODE` names.
+
+    The base retriever is built HERE, from the registry, rather than inside the
+    agent. That is the ABAC guarantee: the agent's only way to reach a chunk is a
+    retriever this file built, which masks before it ranks, so the agent inherits
+    the invariant instead of restating it.
+    """
+    if bundle.llm is None:
+        raise ValueError(
+            "react mode needs an llm in the bundle. Build one with "
+            "finrag.llm.vertex.build_agent_llm(settings)."
+        )
+    base = build_retriever(REACT_BASE_MODE, bundle)
+    return ReactRetriever(bundle.chunks, ReactAgent(bundle.chunks, base, bundle.llm))
+
+
 FACTORIES: dict[str, Callable[[IndexBundle], Retriever]] = {
     "bm25": make_bm25,
     "dense": make_dense,
@@ -119,6 +138,7 @@ FACTORIES: dict[str, Callable[[IndexBundle], Retriever]] = {
     "hybrid": make_hybrid,
     "hybrid_rerank": make_hybrid_rerank,
     "naive": make_naive,
+    "react": make_react,
 }
 
 

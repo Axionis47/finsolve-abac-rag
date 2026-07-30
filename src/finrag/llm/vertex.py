@@ -20,9 +20,11 @@ TWO CALLERS, TWO SHAPES. Answering wants a paragraph and tolerates None. R3's
 reranker wants a permutation of twenty numbers, cannot work at all without a
 model, and must not spend output tokens on thinking. `build_rerank_llm` at the
 bottom of this file is that second shape: same class, different dials, and a
-refusal instead of a None. The two builders live here rather than in
-`retrieval/rerank.py` so every Vertex client this project opens is constructed in
-one file.
+refusal instead of a None. The builders live here rather than in
+`retrieval/rerank.py` or `react.py` so every Vertex client this project opens is
+constructed in one file. R5's `build_extraction_llm` and R7's `build_agent_llm`
+are the same shape again, one dial apart each: a bigger output cap, because
+twelve triples and an agent's final answer are both longer than a permutation.
 """
 
 from __future__ import annotations
@@ -85,6 +87,11 @@ NO_THINKING_BUDGET = 0
 # its own retry loop and counts every call, so a second retry underneath it would
 # make the reported call count a third of the truth.
 RERANK_RETRY_TRIES = 1
+
+# One agent turn is a thought and either a query or the final answer, wrapped in
+# JSON. Twice the rerank cap, because a truncated object does not parse and a
+# parse failure on the last hop throws the whole answer away.
+AGENT_MAX_OUTPUT_TOKENS = 1024
 
 # Triple extraction asks for up to twelve JSON objects about one chunk, which is
 # longer than a rerank permutation and shorter than an answer. Too small a cap
@@ -258,6 +265,38 @@ def build_rerank_llm(settings: Any) -> VertexLLM:
         location=getattr(settings, "vertex_location", DEFAULT_VERTEX_LOCATION),
         model=getattr(settings, "vertex_rerank_model", DEFAULT_VERTEX_MODEL),
         max_output_tokens=RERANK_MAX_OUTPUT_TOKENS,
+        thinking_budget=NO_THINKING_BUDGET,
+        retry_tries=RERANK_RETRY_TRIES,
+    )
+
+
+def build_agent_llm(settings: Any) -> VertexLLM:
+    """The client the `react` agent thinks with. Rerank's dials, a bigger cap.
+
+    Same three reasons as `build_rerank_llm`: no None (an agent with no model is
+    not a weaker agent, it is a plain search wearing the agent's name), no
+    `FINRAG_LLM` switch (a published react number must come from the real model,
+    and the tests inject a scripted backend directly), and thinking off, because
+    the reply is a JSON object and Gemini 2.5 bills thinking against the output
+    cap.
+
+    The one dial that differs is the cap. A rerank reply is twenty numbers; an
+    agent reply is a thought plus, on the last hop, the whole answer, so 512
+    tokens would truncate the JSON and turn a good answer into a parse failure.
+    One try, like the reranker: the loop counts its own calls, and its
+    error-note retry is the retry.
+    """
+    project = getattr(settings, "vertex_project", None)
+    if not project:
+        raise RuntimeError(
+            "The react agent needs a Vertex project. Set VERTEX_PROJECT (or "
+            "GCP_PROJECT) in .env, or run the `hybrid` mode, which needs no model."
+        )
+    return VertexLLM(
+        project=project,
+        location=getattr(settings, "vertex_location", DEFAULT_VERTEX_LOCATION),
+        model=getattr(settings, "vertex_rerank_model", DEFAULT_VERTEX_MODEL),
+        max_output_tokens=AGENT_MAX_OUTPUT_TOKENS,
         thinking_budget=NO_THINKING_BUDGET,
         retry_tries=RERANK_RETRY_TRIES,
     )

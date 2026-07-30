@@ -41,6 +41,35 @@ class FakeLLM:
         return f"{FAKE_LLM_PREFIX}::{_digest(prompt)}::{prompt.strip()[:80]}"
 
 
+class ScriptedLLM:
+    """Returns prepared replies in order, ignoring the prompt.
+
+    `FakeLLM` keys on the exact prompt, which works when a caller builds one
+    prompt it can reproduce in a test. A ReAct loop builds a different prompt
+    every hop, each containing the last hop's observations, so pinning them by
+    text would mean pasting the transcript into the test. This backend answers
+    the first call with the first reply and so on, which is how a scripted agent
+    run is written: search, search, finish.
+
+    Once the script runs out the last reply repeats, so a loop that asks more
+    times than expected keeps going rather than raising. A test that wants the
+    loop to break on garbage puts the garbage in the script.
+    """
+
+    name = "scripted"
+
+    def __init__(self, replies: list[str]) -> None:
+        if not replies:
+            raise ValueError("a scripted backend needs at least one reply")
+        self.replies = list(replies)
+        self.calls: list[tuple[str, str | None]] = []
+
+    def generate(self, prompt: str, system: str | None = None) -> str:
+        self.calls.append((prompt, system))
+        index = min(len(self.calls) - 1, len(self.replies) - 1)
+        return self.replies[index]
+
+
 class FakeEmbeddings:
     """Hashed character-trigram vectors, L2-normalised.
 

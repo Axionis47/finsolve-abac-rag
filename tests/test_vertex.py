@@ -12,12 +12,14 @@ from finrag.config import Settings
 from finrag.llm.base import LLMBackend
 from finrag.llm.fake import FakeLLM
 from finrag.llm.vertex import (
+    AGENT_MAX_OUTPUT_TOKENS,
     DEFAULT_MAX_OUTPUT_TOKENS,
     DEFAULT_VERTEX_MODEL,
     RERANK_MAX_OUTPUT_TOKENS,
     RERANK_RETRY_TRIES,
     RETRY_TRIES,
     VertexLLM,
+    build_agent_llm,
     build_llm,
     build_rerank_llm,
     model_name,
@@ -227,6 +229,27 @@ def test_the_rerank_client_ignores_the_generation_backend_switch(monkeypatch) ->
     # number published from a fake would be a lie, so this builder never reads it.
     monkeypatch.setenv("FINRAG_LLM", "fake")
     assert isinstance(build_rerank_llm(Settings(vertex_project="demo-project")), VertexLLM)
+
+
+def test_the_agent_client_keeps_thinking_off_but_doubles_the_output_cap() -> None:
+    # A rerank reply is twenty numbers. An agent reply is a thought plus, on the
+    # last hop, the whole answer, and a truncated JSON object does not parse.
+    llm = build_agent_llm(Settings(vertex_project="demo-project"))
+    assert llm.thinking_budget == 0
+    assert llm.max_output_tokens == AGENT_MAX_OUTPUT_TOKENS
+    assert llm.max_output_tokens > RERANK_MAX_OUTPUT_TOKENS
+
+
+def test_the_agent_client_retries_once_so_the_loop_owns_the_retry() -> None:
+    # The loop counts every call it makes, and its error-note retry is the retry.
+    llm = build_agent_llm(Settings(vertex_project="demo-project"))
+    assert llm.retry_tries == RERANK_RETRY_TRIES == 1
+
+
+def test_the_agent_client_refuses_rather_than_returning_none(monkeypatch) -> None:
+    monkeypatch.delenv("FINRAG_LLM", raising=False)
+    with pytest.raises(RuntimeError, match="hybrid"):
+        build_agent_llm(Settings(vertex_project=None))
 
 
 def test_the_rerank_client_refuses_rather_than_returning_none(monkeypatch) -> None:

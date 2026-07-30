@@ -201,6 +201,22 @@ def test_the_breakdown_table_has_a_row_per_role_and_one_total_row(
     assert lines[-1].startswith("ALL")
 
 
+def test_the_swept_agent_falls_back_to_one_plain_search_and_still_returns_hits(
+    real_retrievers: dict[str, Any],
+) -> None:
+    # The mode is swept offline because the stub backend fails, the loop forces a
+    # finish, and the fallback search puts real hits through the union and the
+    # last lock. Empty hits here would mean the react column tests nothing.
+    retriever = real_retrievers["react"]
+
+    hits = retriever.search("What was the campaign spend?", "marketing", k=10)
+
+    assert hits != []
+    assert retriever.totals["fallback_searches"] == 1
+    assert retriever.totals["hops"] == 0
+    assert retriever.totals["call_failures"] == 2
+
+
 def test_the_offline_rerank_backend_refuses_to_generate() -> None:
     # The sweep depends on this failing, not on it returning something bland: a
     # backend that answered would make the sweep call a model.

@@ -1218,3 +1218,338 @@ what lets a person reading a ranking check it.
   following is "a file may exceed 250 lines if this document says why", and nine of them now
   do (the final verifier counted; the first draft of this list missed the three graph files).
 - 601 tests, all green, with the Neo4j container up. Nothing skips on this machine.
+
+## R7: a ReAct agent, and what agency is worth
+
+### Decision
+
+Add a seventh mode, `react`. The model plans its own searches: think, search, read the
+excerpts, search again, up to four hops, then write the answer itself. One tool, and the
+tool is a `hybrid` retriever built by the registry. The role is never in the prompt.
+
+Every mode before this one runs a fixed pipeline over one query. A question like T4-05 ("in
+Q3 finance put 35 percent of $130 million behind loyalty, what did that return") is two
+questions in one sentence, and no fusion or reranking of a single query finds both halves.
+This rung is the test of whether letting the model decide what to look for next buys
+anything worth 2.6 API calls a question.
+
+It buys the best ranking numbers in the repo and the two best answers on the multi-hop
+tier. It also loses a multi-hop question `hybrid_rerank` gets right, and it is the WORST
+mode on the ambiguous probes, which is the one place the plan expected it to win.
+
+### What was added
+
+- `src/finrag/react_prompt.py`: what the model reads and writes. `Step`, `Problem`,
+  `parse_step`, `normalise_query`, `build_agent_prompt`, and the system prompt. No
+  function in this file takes a role, which is the point: `build_agent_prompt` cannot leak
+  the role into the prompt because it is never given one.
+- `src/finrag/react.py`: the loop. `ReactAgent.run(question, role)` returns an `AgentRun`
+  with the answer, the observations, the hop queries and an eleven-field stats block. It
+  never raises. Every way it can go wrong is a counter.
+- `src/finrag/react_retriever.py`: the result. `ReactRetriever` is the mode. It returns the
+  deduped union of every observation across every hop, ranked cited-first in citation
+  order and then in discovery order, ranks reassigned 1..n and cut to k. It also carries
+  `search_with_answer`, the extra door the answer step uses.
+- `llm/vertex.py`: `build_agent_llm(settings)`. The rerank client's dials with twice the
+  output cap, because a rerank reply is twenty numbers and an agent reply is a thought plus
+  the whole answer, and a truncated JSON object does not parse.
+- `llm/fake.py`: `ScriptedLLM`, which answers in order and ignores the prompt. `FakeLLM`
+  keys on the exact prompt, and a ReAct prompt changes every hop, so pinning replies by
+  text would mean pasting a transcript into every test.
+- `generate.py`: mode `react` uses the agent's OWN answer. No second generation pass. It
+  ran the model once per hop with the whole transcript in front of it (the enforced
+  ceiling is 2 x MAX_HOPS + 1 = 9 calls, since each hop may carry one parse retry; the
+  real run never used a retry, so the worst measured bill was 5); one more call
+  writing the same answer from a handful of excerpts would cost more and know less. Its citation
+  numbers are renumbered onto the hits it returns, so `parse_citations` still maps `[2]`
+  back to a chunk id the same way it does for every other mode.
+- Registry, CLI and sweep wiring, plus an `agent` block in the saved eval report (calls,
+  mean hops, forced finishes, and every failure counter), for the same reason R3 saved a
+  `rerank` block: a run where the loop fell back on half the questions scores like half an
+  agent and reads like a whole one.
+- 52 new tests (39 in `tests/test_react.py`, the rest in the api, generate, sweep, vertex
+  and fake-backend files). 657 in the suite, all green, all offline.
+
+### The two locks, and why the tool is the only door
+
+The agent has exactly one capability: `base.search(query, role, k)`. There is no read
+document, no list sections, no chunk-id lookup. So the ABAC guarantee is not a new one to
+argue about, it is `hybrid`'s guarantee, which masks before it ranks.
+
+On top of that, two checks:
+
+- `ReactAgent._observe` re-checks `visible_ids` before an excerpt reaches the prompt, and
+  counts what it removed. This is the lock that matters most in this rung, because the
+  model reads passage text. A denied chunk arriving here would be read by the model even
+  if it never reached a response.
+- `ReactRetriever.search` re-checks it again on the way out, the same double lock
+  `RerankRetriever.search` has.
+
+Both are tested against a deliberately compromised base retriever that returns every
+chunk to every role: the denied text appears in no prompt the model was given, the denied
+id appears in no hit, and the masked count says one chunk was removed rather than nothing
+having happened. A second test runs the real loop with a real hybrid tool over the micro
+corpus as `marketing` and asserts every observation and every returned hit is inside
+`visible_ids`.
+
+No line the framework writes carries the role: not the system prompt, the rules block,
+the hop headers or the retry note (the final verifier checked all 129 real prompts). Role
+WORDS can still appear inside quoted question text or the model's own thoughts when the
+question itself mentions a department; what the design guarantees is that nothing ever
+tells the model what role it is serving. A model that knew the role could reason about
+permissions, and reasoning about permissions is how an agent talks itself into asking for
+something it should not have.
+
+### Alternatives considered
+
+- Giving the agent a second tool: fetch a chunk by id, or list a document's sections.
+  Dropped, and this is the ABAC line rather than a preference. Any tool that takes an id
+  can be asked for an id the role cannot see, and then the mask is a filter on the model's
+  imagination instead of a filter on the corpus. Search-only means the agent can want
+  anything and reach only what the mask already permitted.
+- Putting the role in the prompt so the agent could explain a refusal ("you are marketing,
+  so the finance report is out of reach"). Dropped. That is a better error message bought
+  with the one thing this repo will not spend: the model's ignorance of the permission
+  system.
+- A second generation pass over the union, so `react` answered the way every other mode
+  answers. Dropped. It doubles the bill on the mode that already costs the most, and the
+  transcript is strictly more information than the top five excerpts.
+- Scoring the union by its base-retriever scores instead of by what the answer cited.
+  Dropped. Scores from four different searches are not on one scale, and the agent read
+  every observation and then named the ones it used, which is a better signal than
+  arithmetic. Measured: this is where the section MRR came from (see below).
+- Letting the loop run until the model chose to stop. Dropped. Four hops is a bill you can
+  state; "until it feels done" is not.
+- Retrying a failed hop more than once. Dropped. One retry with the parse error quoted back
+  fixed every failure we saw in the real run (0 parse failures in 131 calls); a second
+  retry would mostly buy a longer wait on a model that is actually down.
+
+### The measured deviations
+
+Three things in the built mode differ from the plan, each with a number behind it.
+
+- OBSERVATION EXCERPTS STAYED AT 400 CHARACTERS. The first real run refused a question it
+  had the gold section for, so the obvious suspect was the excerpt: the answer step gives
+  the model 1,200 characters per excerpt and the agent was getting 400. We ran three T4
+  questions at 400 and at 1,200. At 1,200 the model refused MORE often, 3 refusals against
+  1. So the width was not the bottleneck and the design's 400 stands. Worth having tested,
+  because the intuition was wrong and it would have tripled the prompt.
+- THE FINISH RULE CHANGED, AND THAT IS WHAT FIXED THE REFUSALS. The first prompt copied
+  `prompting.py` exactly: answer, or reply NOT_IN_CONTEXT. On compound T4 questions the
+  model read "answer" as "answer every part" and refused when it could only do half. The
+  rule now asks it to answer what the observations support and to name the part they do
+  not, and to use the refusal token only when nothing relevant came back. Same three
+  questions: 3 refusals became 0, and one of them produced the two-department answer
+  `hybrid_rerank` refuses to write (T4-05, below). The refusal convention is not weakened:
+  the token is still the only way to refuse, and an answer with no observations behind it
+  is still discarded before it reaches a caller.
+- A LOOP THAT OBSERVES NOTHING RUNS ONE PLAIN SEARCH ANYWAY. Not in the plan; added because
+  without it a model outage turns retrieval off, and because the offline leakage sweep would
+  otherwise have nothing to sweep. If the loop ends with zero observations the question
+  itself is searched once, the answer is dropped (an answer with no evidence is the one
+  thing this repo refuses to print), and `fallback_searches` counts it. In the real run it
+  fired 0 times out of 50. In the sweep it fires on every cell, which is what makes that
+  column mean anything.
+
+### The seven-mode table, section hit rate at 10 / section MRR / leakage
+
+The six older columns are R6's real runs, unchanged. They are comparable because `dense`
+was re-run on this rung as a control and reproduced R6 exactly (0.900 / 0.780, ambiguous
+0.500), so the corpus, the chunks and the indexes are the same ones those numbers came
+from.
+
+| tier | n | naive | bm25 | dense | hybrid | hybrid_rerank | graphrag | react |
+|---|---|---|---|---|---|---|---|---|
+| T1 direct | 8 | 1.000 / 0.740 / 0 | 1.000 / 0.792 / 0 | 0.875 / 0.812 / 0 | 1.000 / 0.833 / 0 | 1.000 / 0.896 / 0 | 0.625 / 0.296 / 0 | 1.000 / **0.938** / 0 |
+| T2 paraphrase | 8 | 0.125 / 0.016 / 0 | 0.000 / 0.000 / 0 | 0.875 / 0.729 / 0 | 0.625 / 0.202 / 0 | 0.875 / 0.812 / 0 | 0.125 / 0.125 / 0 | **1.000 / 1.000** / 0 |
+| T3 temporal | 10 | 0.800 / 0.625 / 0 | 0.800 / 0.700 / 0 | 0.900 / 0.653 / 0 | 1.000 / 0.716 / 0 | 0.900 / 0.662 / 0 | 0.100 / 0.020 / 0 | 1.000 / **0.867** / 0 |
+| T4 multi-hop | 10 | 1.000 / 0.778 / 0 | 1.000 / **0.917** / 0 | 0.833 / 0.833 / 0 | 1.000 / 0.736 / 0 | 1.000 / 0.875 / 0 | 0.500 / 0.078 / 0 | 0.833 / 0.750 / 0 |
+| T5 aggregation | 6 | 0.667 / 0.352 / 0 | 1.000 / 0.774 / 0 | 1.000 / **0.889** / 0 | 1.000 / 0.778 / 0 | 1.000 / 0.771 / 0 | 1.000 / 0.407 / 0 | 1.000 / 0.861 / 0 |
+| T6 ABAC | 8 | 1.000 / 0.225 / 0 | 1.000 / 1.000 / 0 | 1.000 / 1.000 / 0 | 1.000 / 1.000 / 0 | 1.000 / 1.000 / 0 | 1.000 / 0.121 / 0 | 1.000 / 1.000 / 0 |
+| OVERALL | 50 | 0.725 / 0.488 / 0 | 0.750 / 0.637 / 0 | 0.900 / 0.780 / 0 | 0.925 / 0.663 / 0 | 0.950 / 0.804 / 0 | 0.450 / 0.168 / 0 | **0.975 / 0.896** / 0 |
+
+Doc level, same run: recall@10 0.975, doc MRR 0.988. Policy probes 6 of 6. Leakage 0 in
+every tier, and the mean number of hits react returns is 6.88 against every other mode's
+10, which matters for the next line.
+
+`finrag sweep --rung r7`: 50 questions x 6 roles x 7 modes = **2,100 cells, 19,519 hits
+inspected, 5 empty cells, 0 violations**, 18.6 seconds, no API calls. The react column is
+1,800 of those hits, six per cell, because the offline stub backend fails, the loop forces a
+finish and the fallback search runs. So what the gate proves for this mode is the union, the
+ranking and the last lock, not a real multi-hop plan. The multi-hop path is proved by the
+offline tests over the micro corpus and by the r7 eval, where 348 observations over 50
+questions in the roles those questions were written for leaked nothing.
+
+### The ambiguous line, which is where the plan was wrong
+
+Ambiguous both-sources recall@10: naive 0.500, bm25 0.750, dense 0.500, hybrid 0.750,
+hybrid_rerank 0.750, graphrag 0.250, **react 0.250 (1 of 4)**.
+
+The plan said react's hop queries would be the mechanism that finally reached 4 of 4. What
+happened is the opposite, and the reason is worth more than the number.
+
+All four probes ended with exactly six hits. For three that is one hop; T4-07 took two,
+and both of its queries chased the same (marketing) side, so the second hop found nothing
+new (six hits does not by itself mean one hop; a barren second hop also yields six). The
+agent got a plausible answer and finished. It never suspects a second source exists,
+because nothing in the question hints at one: "What was the Q2 2024 marketing spend?"
+reads like a lookup,
+and the corpus contradiction is only visible to someone who has already seen both
+documents. A ten-wide single-shot search stumbles into both sources by breadth; a two-hop
+agent that stops at one hop covers less ground than the mode it is built on.
+
+We measured the two halves of that. At `hop_k=10` instead of 6 the same four questions
+score 2 of 4 (T4-09 and T4-10), so about half the deficit is simply that six hits cannot
+cover two documents plus their neighbours, and the other half is early stopping. And in the
+answer transcript, NEITHER mode surfaced both conflicting figures on any of the four: react
+answered "the documents do not contain information about the Q2 2024 marketing spend" for
+T4-07 after two hops, and `hybrid_rerank` answered "$2.5 million" with no mention that the
+financial report says $550 million. Every mode in this repo is confidently one-sided on
+these questions.
+
+We did not add a rule telling the agent to look for conflicting sources. That is tuning to
+four labelled questions, and it would make the number go up without making the mode better
+at anything a person would ask. Recorded as the open problem instead.
+
+### Cost accounting
+
+The r7 eval: **131 Gemini calls over 50 questions, 2.62 per question, 1.6 mean hops**, 80
+hops and 348 observations in total. 3 forced finishes, 1 repeated query caught and retried,
+0 parse failures, 0 unknown actions, 0 call failures, 0 fallback searches. Roughly two and
+a half minutes of wall clock.
+
+Against the alternatives: `hybrid` is free after the embedding cache, `hybrid_rerank` is one
+call per question, `react` is 2.6 and answers with the same calls. The serving comparison is
+closer than the eval one: `hybrid_rerank` answering a question costs a rerank call plus an
+answer call, so 2 against react's 2.6 with no separate answer step. The spot check spent 31
+calls on 10 questions for react and 20 for hybrid_rerank.
+
+Nothing is cached, and nothing can be. The embedding cache makes a dense or hybrid eval
+free on a rerun; a react eval pays again every time, and it pays a DIFFERENT amount, because
+the model's plan is not stable at temperature 0. Two runs of the same T4 question took 3
+hops and 2 hops. That is a real property of the mode, not a bug, but the final verifier's
+three real runs bound it tighter than this paragraph first claimed: section hit was 0.975
+on every run, section MRR moved only 0.896 / 0.901 / 0.897, and the wobble lives almost
+entirely on the four-question ambiguous line (1 of 4 or 2 of 4 depending on the run).
+
+One more thing a reader owes themselves: a react eval never embeds the gold questions,
+because the agent asks its own queries instead. So it does not refill the embedding cache
+the offline sweep depends on. Ours came up empty and the sweep refused by name, exactly as
+R6's `CacheOnlyEmbedder` was written to do, and one `finrag eval --mode dense` fixed it.
+
+### Where agency paid, and where it burned calls to tie
+
+Overall section MRR: 0.896, against 0.804 for `hybrid_rerank` and 0.780 for `dense`. Best in
+the repo, on the metric this project has treated as the headline since R0, and it is nearly
+all ranking rather than reach: section hit rate went from 0.950 to 0.975, while MRR went from
+0.804 to 0.896. The mechanism is the cited-first ordering. The agent reads six to twelve
+excerpts, decides which ones answer the question, and cites them, and that citation is a
+better rank-1 signal than a fused score or a permutation of twenty passages.
+
+- T2 paraphrase, 0.812 to **1.000 / 1.000**. Every one of the eight questions has its gold
+  section at rank 1. This is the tier bm25 scored 0.000 on and the tier R3's reranker was
+  built to rescue. An agent that can reword the question and search again is simply better
+  at paraphrase than a reranker reading one fused list.
+- T3 temporal, 0.662 to 0.867, and T1, 0.896 to 0.938. Same mechanism.
+- T4 multi-hop, 0.875 DOWN to 0.750, and section hit 1.000 down to 0.833. The tier this rung
+  was built for is the one tier where it lost ground. One question (T4-01) never returned its
+  gold section at all: the agent asked three rewordings of the same whole question, and its
+  gold section sits in the finance report, which none of the three queries went after. bm25
+  scores 0.917 here for free.
+- The ambiguous probes, 0.750 down to 0.250, covered above.
+
+Answer level, the ten T4 questions with both modes at k=10, saved whole in
+`evals/results/r7_answers_20260730T0255.json`:
+
+(This tally was corrected by the final verifier, who scored all ten against `gold_answer`
+himself; the first draft claimed 2-1 for react by omitting T4-07 and crediting T4-01.)
+
+- REACT WINS 1. T4-05: react gives $45.5 million and the 40,000 loyalty enrolments, and
+  `hybrid_rerank` returns NO_ANSWER. That one question is the whole argument for this rung.
+- HYBRID_RERANK WINS 3. T4-03: it says 2.3x ROI against a 2.4x target, the gold answer,
+  while react spent four hops on four rewordings of "influencer marketing ROI Q2 2024",
+  never found the figure, and finished by saying the documents do not specify it. Five
+  calls to be more wrong than one. T4-07: react retrieved the marketing report itself and
+  still answered that the documents lack the Q2 spend; `hybrid_rerank` reads $2.5 million
+  out of the same document. T4-01: the gold answer names a 20 percent traffic rise, 10
+  enterprise contracts at $1.2M ARR and 300 qualified leads; `hybrid_rerank` names all
+  three, react names none of them (it answers with engagement metrics from a different
+  section). The first draft credited react here for narrative shape; against gold it loses.
+- FOUR TIES (T4-04, T4-06, T4-09, T4-10), where both modes give the same correct figures and
+  react paid more for them. T4-04 took one hop and two calls, which is the good case: the
+  agent recognised a one-hop question and did not wander.
+- TWO WHERE BOTH FAIL (T4-02, T4-08). T4-02 needs the engineering technology matrix, and
+  neither mode reaches it; react says plainly that the platforms are not listed, which is at
+  least an honest half-answer.
+
+On strict gold agreement the set is a 3-3 coin toss (react fully agrees on T4-04/05/06,
+`hybrid_rerank` on T4-03/04/06); on head-to-head wins it is 1-3 against react.
+
+The pattern in the losses is one thing: when a hop fails, the agent rewords the same whole
+question instead of decomposing it. The prompt now asks for "ONE fact you still need" and
+says a question spanning two departments needs one search for each, which is what produced
+T4-05's answer. It is not enough. The next thing to try is showing the agent what it has
+already covered rather than only what it has already asked.
+
+### The honest verdict against hybrid_rerank
+
+`react` is the mode to route ranking-sensitive questions to, and `hybrid_rerank` is still the
+mode to route a production question to. Both halves of that are meant.
+
+For ranking, react wins on five tiers of six and by 0.092 overall section MRR, for 1.6 extra
+calls. If the job is "put the right section at rank 1 for a person who will read it", this is
+the best thing in the repo.
+
+For answering, it loses. It writes the one answer no other mode can (T4-05) and loses three
+head-to-heads doing it, it returns 6.88 hits where every other mode returns 10, it is the
+worst mode on the ambiguous probes, it costs the most, and it is the only mode whose answers
+move between runs (the ranking barely moves; the prose and the hop plans do). A finance tool
+that answers differently on Tuesday is a support ticket, and `hybrid_rerank` does not do
+that.
+
+So: seven modes, and the ladder now reads as three jumps and two mistakes. Dense over bm25 is
+the paraphrase jump. Rerank over hybrid is the ordering jump. React over rerank is the
+reasoning jump, and it is real but narrow. Graph RAG is the mistake we already wrote up, and
+the smaller one this rung adds is assuming that more agency would help most where the
+questions look hardest. It helped most on paraphrase, which nobody would have called hard.
+
+### Surprises
+
+- The refusal-to-answer failure came from copying our own prompt. `prompting.py` says
+  "answer, or reply NOT_IN_CONTEXT", which is right for a single shot over five excerpts and
+  wrong for an agent that has been asked a compound question and can only do half of it. The
+  same words mean different things at the end of a transcript.
+- A wider excerpt made the model refuse MORE. 1,200 characters per observation instead of
+  400, and the refusals went from 1 to 3 on the same three questions. We have no mechanism
+  for this beyond the obvious guess that more text raises the bar the model thinks it has to
+  clear. It is the second time in this repo that a prompt-shape intuition was backwards (R3's
+  reranker preferring prose to tables was the first).
+- Temperature 0 does not make an agent deterministic. Two runs of T4-01, identical settings,
+  went 3 hops and 2 hops with different queries. Every earlier mode in this repo returns the
+  same ranking twice, and `test_two_identical_searches_return_identical_results` in
+  `test_rerank.py` pins that for the reranker. There is no such test for react, and there
+  cannot be one against a real model.
+- 131 calls, 0 parse failures. The JSON envelope with thinking off held every time, which is
+  the same finding R5 had with 318 triple extractions and no failures. The parser and the
+  retry path exist for a failure mode we have now not seen twice.
+- The agent's queries are shorter and more keyword-shaped than the questions ("days sales
+  outstanding risk", "loyalty program return Q3 2024"). It is writing search queries, not
+  sentences, and that is probably part of why the paraphrase tier moved: a keyword query is
+  what BM25 wants, and the base retriever is half BM25.
+- The offline leakage sweep can only test half of this mode, and the half it tests is the
+  plumbing. This is the first mode where the gate is weaker than the mode. Recorded in the
+  `sweep.py` docstring as well as here, because a reader of that file deserves to know which
+  half a clean run covers.
+- The embedding cache lost the 50 gold-question vectors during this rung, and the shape of
+  that hazard is worth naming: `EmbeddingCache.load` starts empty when the stored model does
+  not match, and `save` rewrites the whole file, so any one process with a different
+  `FINRAG_EMBEDDER` can quietly destroy a cache every other run depends on. R6 fixed
+  "offline was luck"; this is the layer underneath it. Written up in `docs/followups.md`.
+- Line counts, disclosed as the rule requires: `react.py` is 270, which is R3's rerank.py
+  problem again (275) and the same answer, one file per idea. The mode did not fit in one file
+  at all: 510 non-blank lines (601 total; an earlier draft of this entry undercounted at
+  455) split three ways instead of one file, with the prompt
+  and the parser together because the parser exists to catch what the prompt asks for, and
+  the retriever apart because the union, the ranking and the last lock are a different job
+  from talking to a model. `tests/test_react.py` covers all three modules, against the usual
+  one-file-per-module rule, because splitting it would put the two mask tests in two files.

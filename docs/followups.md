@@ -1,3 +1,62 @@
+# Open from R7 (the react agent), 2026-07-30
+
+Fixed at close-out by the architect (from the R7 verify, PASS_WITH_NOTES):
+
+- [x] The last lock in react_retriever.py had no witness: deleting it left all
+      657 tests green because the observe mask makes it unreachable. -> New test
+      forges an AgentRun holding a denied observation and proves the lock alone
+      scrubs it.
+- [x] "Up to five calls" was wrong in generate.py and DECISIONS: the enforced
+      ceiling is 2 x MAX_HOPS + 1 = 9, since every hop may carry a parse retry
+      (the real run used none). -> Both corrected.
+- [x] DECISIONS T4 answer tally corrected per the verifier's own gold scoring:
+      1-3 head-to-head against react (T4-07 was omitted, T4-01 miscredited),
+      3-3 on strict gold agreement. Stability paragraph updated with the
+      three-run data (section hit 0.975 every run; MRR spread 0.005).
+- [x] "The role is not in the prompt" overstated; corrected to what holds: no
+      framework-authored line ever names the role (129 prompts checked); role
+      words can appear inside quoted question text or the model's own thoughts.
+
+Still open from the R7 verify:
+
+- [ ] The answer STRING leaves search_with_answer unfiltered; only the hits list
+      passes the last lock. Unreachable today (answers are written only from
+      masked observations), but the "same double lock as rerank" claim covers
+      one of two outbound channels. A cheap assertion would close it.
+- [ ] Per-question hop stats are not in the saved eval artifact (only process
+      totals), so per-question agency claims need an instrumented rerun to
+      check. Cheap fix: fold hit debug agent stats + hop_queries into the
+      per_question row, as R3 did for the rerank block.
+- [ ] test_the_prompt_never_names_the_role passes only because the micro corpus
+      has no role words; its docstring is honest, its name over-promises.
+- [ ] The scripts behind r7_answers_*.json and the three measured prompt
+      experiments are not in the repo; those artifacts cannot be regenerated.
+
+Not fixed, all of them recorded in DECISIONS under R7:
+
+- [ ] THE EMBEDDING CACHE CAN BE DESTROYED BY ONE PROCESS. `EmbeddingCache.load` starts
+      empty when the stored model name or dim does not match, and `save` rewrites the
+      whole file, so a single run with a different `FINRAG_EMBEDDER` replaces a shared
+      cache with its own handful of vectors. It happened during this rung: the 50 gold
+      question vectors went missing and `finrag sweep` refused by name. The refusal
+      worked exactly as R6 designed it and one `finrag eval --mode dense` refilled it, so
+      nothing was lost but a minute. The fix, if it ever bites harder, is for `save` to
+      merge with what is on disk, or to write per-model files.
+- [ ] A react eval does not refill that cache. The agent asks its own queries, so the 50
+      gold questions are never embedded by a react run. Anyone who runs react and then
+      sweeps on a cold cache meets the refusal above.
+- [ ] The offline sweep tests only half of `react`. The stub backend fails, so every cell
+      is the fallback search: the union, the ranking and the last lock run, the multi-hop
+      plan does not. First mode in the repo where the gate is weaker than the mode.
+- [ ] `react` is not reproducible. Temperature 0, same question, 3 hops one run and 2 the
+      next. Its table row is one sample.
+- [ ] When a hop finds nothing, the agent rewords the whole question instead of
+      decomposing it. That is T4-01 and T4-03, the two questions it loses. Next thing to
+      try: show it what it has already covered, not only what it has already asked.
+- [ ] No mode in this repo surfaces both sides of an ambiguous question. react is now the
+      worst of the seven at it (1 of 4). A prompt rule about conflicting sources would
+      move the number and would be tuning to four labelled questions.
+
 # Notes from the FINAL verify (R5+R6 integration, 2026-07-30, PASS_WITH_NOTES)
 
 Fixed at close-out by the architect:

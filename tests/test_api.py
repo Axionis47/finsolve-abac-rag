@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from finrag.api.app import create_app
 from finrag.generate import Answerer
-from finrag.llm.fake import FakeLLM
+from finrag.llm.fake import FakeLLM, ScriptedLLM
 from finrag.policy.engine import PolicyEngine
 from finrag.retrieval.registry import IndexBundle
 
@@ -76,6 +76,40 @@ def test_a_permitted_role_gets_an_answer_with_citations(micro_corpus, policy_pat
     assert body["reason"] == "ok"
     assert body["answer"]
     assert body["citations"]
+
+
+def test_the_react_mode_answers_with_the_agents_own_words_and_citations(
+    micro_corpus, policy_path
+) -> None:
+    # A scripted backend, so the loop really runs offline: one search, then a
+    # finish citing observation 1. The answer in the body is the agent's, and no
+    # second generation call was made to produce it.
+    llm = ScriptedLLM(
+        [
+            json.dumps({"thought": "find the spend", "action": "search", "argument": "spend"}),
+            json.dumps(
+                {
+                    "thought": "that is enough",
+                    "action": "finish",
+                    "argument": "Spend was 2.0 million dollars [1].",
+                }
+            ),
+        ]
+    )
+    client = make_client(micro_corpus, policy_path=policy_path, llm=llm)
+
+    response = client.post(
+        "/ask",
+        json={"question": SPEND_QUESTION, "role": "marketing", "mode": "react", "k": 5},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["reason"] == "ok"
+    assert body["answer"] == "Spend was 2.0 million dollars [1]."
+    assert body["citations"] == [body["hits"][0]["chunk_id"]]
+    assert len(llm.calls) == 2
+    assert DENIED_FINANCE_CHUNK not in json.dumps(body)
 
 
 def test_a_role_the_policy_gives_nothing_is_refused_with_the_rule(

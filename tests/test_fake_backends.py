@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from finrag.llm.base import EmbeddingBackend, LLMBackend
-from finrag.llm.fake import FakeEmbeddings, FakeLLM
+from finrag.llm.fake import FakeEmbeddings, FakeLLM, ScriptedLLM
 
 
 def test_fake_llm_returns_canned_response_on_exact_match() -> None:
@@ -28,6 +28,28 @@ def test_fake_llm_records_calls(fake_llm: FakeLLM) -> None:
 
 def test_fake_llm_satisfies_the_protocol(fake_llm: FakeLLM) -> None:
     assert isinstance(fake_llm, LLMBackend)
+
+
+def test_scripted_llm_answers_in_order_whatever_the_prompt() -> None:
+    llm = ScriptedLLM(["first", "second"])
+    assert llm.generate("anything") == "first"
+    assert llm.generate("something else") == "second"
+
+
+def test_scripted_llm_repeats_its_last_reply_once_the_script_runs_out() -> None:
+    # A loop that asks more times than the script expected should keep going, so
+    # the test that catches it is the one asserting the call count, not a crash.
+    llm = ScriptedLLM(["only"])
+    assert [llm.generate("a"), llm.generate("b")] == ["only", "only"]
+
+
+def test_scripted_llm_needs_a_script() -> None:
+    with pytest.raises(ValueError, match="at least one reply"):
+        ScriptedLLM([])
+
+
+def test_scripted_llm_satisfies_the_protocol() -> None:
+    assert isinstance(ScriptedLLM(["x"]), LLMBackend)
 
 
 def test_fake_embeddings_dim_and_shape(fake_embeddings: FakeEmbeddings) -> None:

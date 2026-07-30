@@ -18,6 +18,16 @@ fails, so `LLMReranker` falls back to the fused order and calls nothing. The
 sweep is about the mask, not about ranking quality, and every mask in
 `RerankRetriever.search` still runs on the fallback path.
 
+`react` gets the same backend and the same treatment. Its two model calls fail,
+the loop forces a finish, and the fallback search in `ReactAgent.run` puts one
+plain search of the question through the union, the ranking and the last lock.
+So the mode is swept for free, and what is swept is the plumbing rather than a
+real multi-hop plan. The multi-hop path is proved instead by `tests/test_react.py`
+(a real loop over the micro corpus, every observation checked against
+`visible_ids`) and by the r7 eval, which ran the real model over fifty questions
+with leakage 0. Recorded here because a reader owes it to themselves to know
+which half of a mode a gate covers.
+
 The exception is `graphrag`, whose mask lives inside Cypher and therefore needs
 the Neo4j container to be proved at all. It is swept when bolt answers and
 dropped with a printed note when it does not, so a laptop with no container still
@@ -47,7 +57,9 @@ from finrag.retrieval.registry import IndexBundle, available_modes, build_retrie
 
 # Modes that need to embed the query text. They read the on-disk embedding cache
 # first, so a sweep over questions a previous eval already embedded costs nothing.
-MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset({"dense", "hybrid", "hybrid_rerank"})
+MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset(
+    {"dense", "hybrid", "hybrid_rerank", "react"}
+)
 
 # Modes that cannot run without the Neo4j container.
 MODES_NEEDING_A_GRAPH: frozenset[str] = frozenset({"graphrag"})
@@ -59,17 +71,18 @@ MAX_RECORDED_VIOLATIONS = 100
 
 
 class FallbackOnlyLLM:
-    """A generation backend that always fails, so a reranker falls back.
+    """A generation backend that always fails, so a model-using mode falls back.
 
     Not a mock for a test: this is what the sweep uses on purpose. `LLMReranker`
-    counts a failure and returns its input order unchanged, which keeps the sweep
-    free and offline while still running every mask in `RerankRetriever.search`.
+    counts a failure and returns its input order unchanged; `ReactAgent` counts a
+    failure, forces a finish and runs its fallback search. Both keep the sweep
+    free and offline while still running every mask in the mode.
     """
 
     name = "fallback-only"
 
     def generate(self, prompt: str, system: str | None = None) -> str:
-        raise RuntimeError("the leakage sweep runs offline: no rerank model is called")
+        raise RuntimeError("the leakage sweep runs offline: no model is called")
 
 
 class CacheOnlyEmbedder:
@@ -293,6 +306,7 @@ def run_leakage_sweep(
         "violations_recorded": len(details),
         "empty_cells": totals["empty_cells"],
         "rerank": "fallback only (offline stub backend, no api calls)",
+        "react": "forced finish then one fallback search (offline stub backend, no api calls)",
         "per_role": per_role,
         "per_mode": per_mode,
         "breakdown": breakdown,

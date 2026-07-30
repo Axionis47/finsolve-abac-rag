@@ -17,6 +17,14 @@ With no generation backend configured the answer is extractive: sentences of the
 top hit quoted as they stand, flagged `extractive: true`. That is a weaker
 answer, not a wrong one, and it keeps the app usable offline.
 
+One mode skips step 4. `react` ran the model several times with the whole
+transcript in front of it and finished by writing an answer (typically one call
+per hop plus the finish; the hard ceiling is 2 x MAX_HOPS + 1 because every hop
+may carry one parse retry). Asking one more call to write the answer again from
+a handful of excerpts would cost more and know less, so its own answer is used
+as it stands. Its citations were renumbered onto the hits it returned, so the
+mapping from `[2]` back to a chunk id is the same one.
+
 Nothing here re-checks the policy to decide what to show. The mask already ran;
 re-filtering afterwards would imply the mask cannot be trusted, and then the
 invariant would be a suggestion. The policy engine appears once, to explain a
@@ -53,9 +61,16 @@ DEFAULT_K = 5
 # Modes whose query side has to be embedded, and modes that reorder with a model.
 # Both mirror the constants in cli.py; duplicated rather than imported so the
 # serving layer does not depend on the command line module.
-MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset({"dense", "hybrid", "hybrid_rerank"})
-MODES_NEEDING_AN_LLM: frozenset[str] = frozenset({"hybrid_rerank"})
+MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset(
+    {"dense", "hybrid", "hybrid_rerank", "react"}
+)
+MODES_NEEDING_AN_LLM: frozenset[str] = frozenset({"hybrid_rerank", "react"})
 MODES_NEEDING_A_GRAPH: frozenset[str] = frozenset({"graphrag"})
+
+# The one mode that writes its own answer. It ran the model once per hop with
+# the whole transcript in front of it; a second generation pass would cost
+# another call and know less than the agent already did.
+REACT_MODE = "react"
 
 
 class GraphUnavailableError(RuntimeError):
@@ -111,7 +126,7 @@ class Answerer:
             self.bundle.embedder = build_embedder(settings)
 
         if mode in MODES_NEEDING_AN_LLM and self.bundle.llm is None:
-            self.bundle.llm = self._rerank_llm()
+            self.bundle.llm = self._mode_llm(mode)
 
         if mode in MODES_NEEDING_A_GRAPH:
             # Probe before building: on a dead server the neo4j driver spends
@@ -129,20 +144,24 @@ class Answerer:
         self._retrievers[mode] = built
         return built
 
-    def _rerank_llm(self) -> LLMBackend:
-        """The backend the `hybrid_rerank` mode reorders with.
+    def _mode_llm(self, mode: str) -> LLMBackend:
+        """The backend a retrieval mode reasons with, which is not the answering one.
 
         Two backends, one process: the one that writes answers, and this one. A
-        process running offline on `FakeLLM` should rerank with that same fake
-        rather than reaching for credentials it was told not to use, so the
-        answering backend is reused unless it is the real Vertex client, which is
-        built with the wrong dials for a permutation. See `llm/vertex.py`.
+        process running offline on `FakeLLM` should rerank and run the agent with
+        that same fake rather than reaching for credentials it was told not to
+        use, so the answering backend is reused unless it is the real Vertex
+        client, which is built with the wrong dials for structured output. See
+        `llm/vertex.py`.
         """
-        from finrag.llm.vertex import build_rerank_llm
+        from finrag.llm.vertex import build_agent_llm, build_rerank_llm
 
         if self.llm is not None and getattr(self.llm, "name", "") != "vertex":
             return self.llm
-        return build_rerank_llm(self.settings or Settings.from_env())
+        settings = self.settings or Settings.from_env()
+        if mode == REACT_MODE:
+            return build_agent_llm(settings)
+        return build_rerank_llm(settings)
 
     def policy_refusal(self, role: str) -> dict[str, Any] | None:
         """Why the policy gives this role nothing at all, or None if it gives it something.
@@ -188,7 +207,13 @@ class Answerer:
         k: int = DEFAULT_K,
     ) -> dict[str, Any]:
         """Retrieve for this role and answer only from the hits."""
-        hits = self.retriever(mode).search(question, role, k=k)
+        retriever = self.retriever(mode)
+        agent_answer: str | None = None
+        if mode == REACT_MODE:
+            hits, agent_answer = retriever.search_with_answer(question, role, k=k)
+        else:
+            hits = retriever.search(question, role, k=k)
+
         result = self._empty_result(question, role, mode, k)
         result["audit"] = self.audit(role, hits, mode)
 
@@ -198,6 +223,16 @@ class Answerer:
             return result
 
         result["hits"] = [hit_view(hit) for hit in hits]
+
+        if mode == REACT_MODE:
+            # The agent already wrote the answer, and its citation numbers were
+            # renumbered onto these hits, so the usual parser still applies.
+            if agent_answer is None or is_refusal(agent_answer):
+                return result
+            result["answer"] = agent_answer
+            result["citations"] = parse_citations(agent_answer, hits)
+            result["reason"] = "ok"
+            return result
 
         if self.llm is None:
             result["answer"] = extractive_answer(question, hits[0])

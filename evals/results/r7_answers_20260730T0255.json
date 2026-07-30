@@ -1,0 +1,610 @@
+{
+  "rung": "r7",
+  "mode": "answers",
+  "generated_at": "2026-07-30T02:55:58Z",
+  "k": 10,
+  "n_questions": 10,
+  "note": "Ten T4 questions, which include all four ambiguous retrieve_both probes (T4-07 to T4-10). Same k for both modes, real Vertex for both. No judge model: the two answers next to the gold answer are the evidence.",
+  "agent_totals": {
+    "hops": 21,
+    "llm_calls": 31,
+    "forced_finishes": 2,
+    "parse_failures": 0,
+    "unknown_actions": 0,
+    "empty_searches": 0,
+    "repeated_queries": 0,
+    "call_failures": 0,
+    "fallback_searches": 0,
+    "observations": 70,
+    "masked_out": 0,
+    "questions": 10
+  },
+  "questions": [
+    {
+      "id": "T4-01",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "question": "The Q4 2024 financial report names aggressive digital campaigns as the mitigation for North America market saturation. What did those campaigns actually deliver?",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/market_report_q4_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q4-october-to-december-2024--risks-mitigation",
+        "marketing/market_report_q4_2024#q4-strategic-objectives",
+        "marketing/market_report_q4_2024#campaign-highlights--b2b-initiatives"
+      ],
+      "gold_answer": "Finance flags revenue growth pressure in North America from market saturation and names aggressive digital marketing campaigns as the mitigation. Only the Q4 marketing report quantifies the result: a 20 percent rise in website traffic against Q3, 10 new enterprise contracts worth $1.2 million in annual recurring revenue, and 300 qualified leads from two industry conferences.",
+      "react": {
+        "answer": "In Q4 2024, aggressive digital campaigns were launched as a mitigation strategy for revenue growth pressure in North America due to market saturation [1]. These digital campaigns delivered a 25% engagement rate on social media platforms like LinkedIn and Instagram, a 12% reduction in cost-per-click (CPC), and a 10% increase in click-through rates (CTR) for optimized Google Ads campaigns [2].",
+        "raw_answer": "In Q4 2024, aggressive digital campaigns were launched as a mitigation strategy for revenue growth pressure in North America due to market saturation [1]. These digital campaigns delivered a 25% engagement rate on social media platforms like LinkedIn and Instagram, a 12% reduction in cost-per-click (CPC), and a 10% increase in click-through rates (CTR) for optimized Google Ads campaigns [2].",
+        "citations": [
+          "finance/quarterly_financial_report#q4-october-to-december-2024--risks-mitigation",
+          "marketing/market_report_q4_2024#campaign-highlights--digital-marketing"
+        ],
+        "hop_queries": [
+          "Q4 2024 financial report aggressive digital campaigns results North America",
+          "Q4 2024 digital campaigns North America market saturation mitigation",
+          "Q4 2024 financial report North America market saturation mitigation"
+        ],
+        "hops": 3,
+        "llm_calls": 4,
+        "hits": [
+          "finance/quarterly_financial_report#q4-october-to-december-2024--risks-mitigation",
+          "marketing/market_report_q4_2024#campaign-highlights--digital-marketing",
+          "marketing/market_report_q4_2024#conclusion",
+          "marketing/marketing_report_q3_2024#campaign-highlights--digital-marketing",
+          "marketing/marketing_report_q3_2024#recommendations-for-q4-2024",
+          "marketing/market_report_q4_2024#q4-projections-targets",
+          "marketing/market_report_q4_2024#q4-marketing-overview",
+          "marketing/market_report_q4_2024#executive-summary",
+          "finance/quarterly_financial_report#executive-summary"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": "The aggressive digital marketing campaigns launched to mitigate revenue growth pressure in North America delivered a 25% engagement rate on social media platforms like LinkedIn and Instagram, a 12% reduction in cost-per-click (CPC), and a 10% increase in click-through rates (CTR) for optimized Google Ads campaigns [1][2]. Additionally, leveraging email marketing and social media for promotions resulted in a 20% increase in website traffic compared to Q3 [7].",
+        "reason": "ok",
+        "citations": [
+          "finance/quarterly_financial_report#q4-october-to-december-2024--risks-mitigation",
+          "marketing/market_report_q4_2024#campaign-highlights--digital-marketing",
+          "marketing/market_report_q4_2024#q4-strategic-objectives"
+        ],
+        "hits": [
+          "finance/quarterly_financial_report#q4-october-to-december-2024--risks-mitigation",
+          "marketing/market_report_q4_2024#campaign-highlights--digital-marketing",
+          "marketing/market_report_q4_2024#executive-summary",
+          "marketing/market_report_q4_2024#q4-marketing-overview",
+          "marketing/market_report_q4_2024#conclusion",
+          "marketing/market_report_q4_2024#q4-projections-targets",
+          "marketing/market_report_q4_2024#q4-strategic-objectives",
+          "marketing/market_report_q4_2024#campaign-highlights--customer-retention",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p4",
+          "marketing/marketing_report_q2_2024#executive-summary"
+        ]
+      }
+    },
+    {
+      "id": "T4-02",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "question": "Finance books between $45 million and $55 million of software subscriptions every quarter of 2024. Which platforms and tools does that spend pay for?",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "engineering/engineering_master_doc"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+        "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown",
+        "engineering/engineering_master_doc#3-technology-stack--3-1-comprehensive-technology-matrix"
+      ],
+      "gold_answer": "Software subscriptions run $45 million in Q1, $47 million in Q2, $50 million in Q3 and $55 million in Q4. The engineering technology matrix names what that buys, including AWS, Kubernetes, PostgreSQL 15, MongoDB 6.0, Redis 7.0, Jenkins, GitHub Actions, ArgoCD, Prometheus, Grafana and the ELK Stack.",
+      "react": {
+        "answer": "The provided documents do not specify which platforms and tools FinSolve's software subscriptions pay for. While the documents mention 'Software subscriptions (cloud services, licensing)' as a component of Vendor Services [1], they do not list the names of any specific platforms or tools associated with this spending.",
+        "raw_answer": "The provided documents do not specify which platforms and tools FinSolve's software subscriptions pay for. While the documents mention 'Software subscriptions (cloud services, licensing)' as a component of Vendor Services [1], they do not list the names of any specific platforms or tools associated with this spending.",
+        "citations": [
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p2"
+        ],
+        "hop_queries": [
+          "FinSolve software subscriptions platforms and tools 2024 Q1",
+          "FinSolve software subscriptions platforms tools",
+          "FinSolve software subscription platforms tools details"
+        ],
+        "hops": 3,
+        "llm_calls": 4,
+        "hits": [
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p2",
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-expense-breakdown",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p1",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "engineering/engineering_master_doc#1-introduction--1-3-scope",
+          "engineering/engineering_master_doc#4-software-development-lifecycle-sdlc--4-1-agile-methodology"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": "The provided excerpts indicate that the software subscription spend pays for \"cloud-based platforms,\" \"cloud-based infrastructure,\" and \"operational tech costs\" to support operational scalability [4][5][6][7]. However, the specific names of these platforms and tools are not detailed in the provided information.",
+        "reason": "ok",
+        "citations": [
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-expense-breakdown"
+        ],
+        "hits": [
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p2",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p1",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p5",
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-financial-overview",
+          "finance/quarterly_financial_report#2024-annual-summary",
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-financial-overview"
+        ]
+      }
+    },
+    {
+      "id": "T4-03",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "question": "Finance flagged in Q2 2024 that influencer marketing might underperform against expected ROI. What ROI did marketing report for that quarter, and what was the target?",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--risks-mitigation",
+        "marketing/marketing_report_q2_2024#q2-benchmarks",
+        "marketing/marketing_report_q2_2024#performance-analysis"
+      ],
+      "gold_answer": "Marketing reported a preliminary ROI of 2.3x against a 2.4x target, so the risk was borne out. Finance's mitigation was to shift to performance-based influencer contracts.",
+      "react": {
+        "answer": "The documents indicate that Finance flagged influencer marketing campaigns as potentially underperforming against expected ROI in Q2 2024 [1]. The overall ROI target for marketing initiatives in Q2 2024 was 2.4x [2]. However, the documents do not specify the reported ROI for influencer marketing in Q2 2024, nor do they provide a specific target ROI solely for influencer marketing.",
+        "raw_answer": "The documents indicate that Finance flagged influencer marketing campaigns as potentially underperforming against expected ROI in Q2 2024 [1]. The overall ROI target for marketing initiatives in Q2 2024 was 2.4x [2]. However, the documents do not specify the reported ROI for influencer marketing in Q2 2024, nor do they provide a specific target ROI solely for influencer marketing.",
+        "citations": [
+          "finance/quarterly_financial_report#q2-april-to-june-2024--risks-mitigation",
+          "marketing/marketing_report_q2_2024#q2-benchmarks"
+        ],
+        "hop_queries": [
+          "influencer marketing ROI Q2 2024",
+          "influencer marketing reported ROI Q2 2024",
+          "influencer marketing ROI target Q2 2024",
+          "influencer marketing specific ROI target Q2 2024"
+        ],
+        "hops": 4,
+        "llm_calls": 5,
+        "hits": [
+          "finance/quarterly_financial_report#q2-april-to-june-2024--risks-mitigation",
+          "marketing/marketing_report_q2_2024#q2-benchmarks",
+          "marketing/marketing_report_q2_2024#conclusion",
+          "marketing/marketing_report_q2_2024#campaign-highlights--influencer-partnerships",
+          "marketing/marketing_report_q2_2024#q2-projections-targets",
+          "marketing/marketing_report_q2_2024#recommendations-for-q3-2024",
+          "marketing/marketing_report_q2_2024#executive-summary",
+          "marketing/marketing_report_q2_2024#performance-analysis"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": "Marketing reported a preliminary ROI of 2.3x for Q2 2024, with the final calculations pending year-end revenue data [4]. The target ROI for the quarter was 2.4x [2][7].",
+        "reason": "ok",
+        "citations": [
+          "marketing/marketing_report_q2_2024#performance-analysis",
+          "marketing/marketing_report_q2_2024#q2-benchmarks",
+          "marketing/marketing_report_q2_2024#q2-marketing-overview"
+        ],
+        "hits": [
+          "finance/quarterly_financial_report#q2-april-to-june-2024--risks-mitigation",
+          "marketing/marketing_report_q2_2024#q2-benchmarks",
+          "marketing/marketing_report_q2_2024#q2-projections-targets",
+          "marketing/marketing_report_q2_2024#performance-analysis",
+          "marketing/marketing_report_q2_2024#conclusion",
+          "marketing/marketing_report_q2_2024#executive-summary",
+          "marketing/marketing_report_q2_2024#q2-marketing-overview",
+          "marketing/marketing_report_q2_2024#q2-strategic-objectives",
+          "marketing/marketing_report_q2_2024#recommendations-for-q3-2024",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p3"
+        ]
+      }
+    },
+    {
+      "id": "T4-04",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "question": "The annual financial summary reports days sales outstanding of 45 days against a 30 day industry benchmark. Which quarter names that as a risk, and what was done about it?",
+      "gold_docs": [
+        "finance/financial_summary",
+        "finance/quarterly_financial_report"
+      ],
+      "gold_sections": [
+        "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024",
+        "finance/quarterly_financial_report#q3-july-to-september-2024--risks-mitigation"
+      ],
+      "gold_answer": "Q3 2024 names high DSO as a risk to cash flow, and the mitigation was improved invoicing and collection practices to speed up receivables.",
+      "react": {
+        "answer": "The Q3 - July to September 2024 report names high Days Sales Outstanding (DSO) as a risk, stating it impacts cash flow [1]. To mitigate this, improved invoicing and collection processes were implemented [1].",
+        "raw_answer": "The Q3 - July to September 2024 report names high Days Sales Outstanding (DSO) as a risk, stating it impacts cash flow [1]. To mitigate this, improved invoicing and collection processes were implemented [1].",
+        "citations": [
+          "finance/quarterly_financial_report#q3-july-to-september-2024--risks-mitigation"
+        ],
+        "hop_queries": [
+          "days sales outstanding risk"
+        ],
+        "hops": 1,
+        "llm_calls": 2,
+        "hits": [
+          "finance/quarterly_financial_report#q3-july-to-september-2024--risks-mitigation",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p4",
+          "hr/hr_data#row-FINEMP1063",
+          "hr/hr_data#row-FINEMP1033",
+          "hr/hr_data#row-FINEMP1064",
+          "hr/hr_data#row-FINEMP1098"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": "The Q3 2024 quarterly financial report names \"High Days Sales Outstanding (DSO) impacting cash flow\" as a risk [1]. To mitigate this, FinSolve Technologies Inc. \"Implemented improved invoicing and collection practices to accelerate receivables\" [1].",
+        "reason": "ok",
+        "citations": [
+          "finance/quarterly_financial_report#q3-july-to-september-2024--risks-mitigation"
+        ],
+        "hits": [
+          "finance/quarterly_financial_report#q3-july-to-september-2024--risks-mitigation",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p4",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p3",
+          "finance/quarterly_financial_report#q1-january-to-march-2024--risks-mitigation",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--risks-mitigation",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--risks-mitigation",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p6",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p5",
+          "finance/quarterly_financial_report#executive-summary",
+          "marketing/marketing_report_q3_2024#conclusion"
+        ]
+      }
+    },
+    {
+      "id": "T4-05",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "question": "In Q3 2024 finance put 35 percent of $130 million of vendor services behind loyalty and retention. What did the loyalty programme return?",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+        "marketing/marketing_report_q3_2024#campaign-highlights--customer-retention",
+        "marketing/marketing_report_q3_2024#q3-strategic-objectives"
+      ],
+      "gold_answer": "That is $45.5 million. Marketing enrolled 40,000 customers in the loyalty program with 55 percent redeeming rewards by quarter end, and reported a 10 percent rise in repeat purchases against Q2.",
+      "react": {
+        "answer": "In Q3 2024, $45.5 million (35% of $130 million) was allocated to loyalty programs and customer retention strategies [1]. While loyalty programs contributed to an overall 30% year-over-year revenue increase [2], the specific financial return of the loyalty program itself is not detailed in the provided information. The loyalty program enrolled 40,000 customers, with 55% redeeming rewards by quarter-end [3].",
+        "raw_answer": "In Q3 2024, $45.5 million (35% of $130 million) was allocated to loyalty programs and customer retention strategies [1]. While loyalty programs contributed to an overall 30% year-over-year revenue increase [2], the specific financial return of the loyalty program itself is not detailed in the provided information. The loyalty program enrolled 40,000 customers, with 55% redeeming rewards by quarter-end [3].",
+        "citations": [
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-financial-overview",
+          "marketing/marketing_report_q3_2024#campaign-highlights--customer-retention"
+        ],
+        "hop_queries": [
+          "loyalty program return Q3 2024",
+          "loyalty program financial return Q3 2024",
+          "loyalty program revenue contribution Q3 2024",
+          "loyalty program financial impact Q3 2024"
+        ],
+        "hops": 4,
+        "llm_calls": 5,
+        "hits": [
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-financial-overview",
+          "marketing/marketing_report_q3_2024#campaign-highlights--customer-retention",
+          "marketing/market_report_q4_2024#campaign-highlights--customer-retention",
+          "marketing/marketing_report_q3_2024#recommendations-for-q4-2024",
+          "marketing/marketing_report_q3_2024#q3-strategic-objectives",
+          "marketing/marketing_report_q3_2024#conclusion",
+          "marketing/marketing_report_q3_2024#executive-summary",
+          "marketing/marketing_report_q3_2024#q3-projections-targets"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": null,
+        "reason": "no_answer",
+        "citations": [],
+        "hits": [
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-financial-overview",
+          "marketing/marketing_report_q3_2024#campaign-highlights--customer-retention",
+          "marketing/marketing_report_q3_2024#q3-marketing-overview",
+          "marketing/marketing_report_q3_2024#q3-strategic-objectives",
+          "marketing/marketing_report_q3_2024#executive-summary",
+          "marketing/marketing_report_q3_2024#conclusion",
+          "marketing/marketing_report_q3_2024#performance-analysis",
+          "marketing/marketing_report_q3_2024#q3-projections-targets",
+          "marketing/marketing_report_q3_2024#q3-benchmarks"
+        ]
+      }
+    },
+    {
+      "id": "T4-06",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "question": "Finance credits part of Q2 2024 revenue growth to early traction in Southeast Asia. What customer numbers did marketing report for that region, and what drove them?",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+        "marketing/marketing_report_q2_2024#performance-analysis",
+        "marketing/marketing_report_q2_2024#campaign-highlights--influencer-partnerships"
+      ],
+      "gold_answer": "Finance reports Q2 revenue of $2.3 billion, up 25 percent year over year, helped by early traction in Southeast Asia. Marketing acquired 190,000 new customers in the quarter with 55 percent from Southeast Asia, and 20 regional influencers contributed 40,000 sign-ups.",
+      "react": {
+        "answer": "Marketing reported 40,000 new customer sign-ups in Southeast Asia directly attributed to influencer partnerships [1]. Overall, 55% of the 190,000 new customers acquired in Q2 2024 were from Southeast Asia, totaling 104,500 new customers [2]. The drivers for these numbers included influencer partnerships, email retargeting, and localized campaigns [3].",
+        "raw_answer": "Marketing reported 40,000 new customer sign-ups in Southeast Asia directly attributed to influencer partnerships [1]. Overall, 55% of the 190,000 new customers acquired in Q2 2024 were from Southeast Asia, totaling 104,500 new customers [2]. The drivers for these numbers included influencer partnerships, email retargeting, and localized campaigns [3].",
+        "citations": [
+          "marketing/marketing_report_q2_2024#campaign-highlights--influencer-partnerships",
+          "marketing/marketing_report_q2_2024#performance-analysis",
+          "marketing/marketing_report_q2_2024#conclusion"
+        ],
+        "hop_queries": [
+          "Q2 2024 Southeast Asia customer numbers marketing report"
+        ],
+        "hops": 1,
+        "llm_calls": 2,
+        "hits": [
+          "marketing/marketing_report_q2_2024#campaign-highlights--influencer-partnerships",
+          "marketing/marketing_report_q2_2024#performance-analysis",
+          "marketing/marketing_report_q2_2024#conclusion",
+          "marketing/marketing_report_q2_2024#executive-summary",
+          "marketing/marketing_report_q2_2024#q2-marketing-overview",
+          "marketing/marketing_report_q2_2024#recommendations-for-q3-2024"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": "Marketing reported that 55% of the 190,000 new customers acquired by quarter-end were from Southeast Asia, which is 104,500 customers [1]. These numbers were driven by localized marketing campaigns focusing on digital and influencer-driven strategies [6]. Specifically, partnerships with 20 regional influencers contributed to 40,000 new customer sign-ups [3]. Localized digital campaigns were launched in Indonesia, Thailand, and Vietnam, and partnerships with regional e-commerce platforms resulted in a 15% increase in website traffic from Southeast Asia [7]. Social media campaigns in Southeast Asia also achieved an 18% engagement rate [9].",
+        "reason": "ok",
+        "citations": [
+          "marketing/marketing_report_q2_2024#performance-analysis",
+          "marketing/marketing_report_q2_2024#q2-marketing-overview",
+          "marketing/marketing_report_q2_2024#campaign-highlights--influencer-partnerships",
+          "marketing/marketing_report_q2_2024#q2-strategic-objectives",
+          "marketing/marketing_report_q2_2024#campaign-highlights--digital-marketing"
+        ],
+        "hits": [
+          "marketing/marketing_report_q2_2024#performance-analysis",
+          "marketing/marketing_report_q2_2024#q2-projections-targets",
+          "marketing/marketing_report_q2_2024#campaign-highlights--influencer-partnerships",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+          "marketing/marketing_report_q2_2024#conclusion",
+          "marketing/marketing_report_q2_2024#q2-marketing-overview",
+          "marketing/marketing_report_q2_2024#q2-strategic-objectives",
+          "marketing/marketing_report_q2_2024#recommendations-for-q3-2024",
+          "marketing/marketing_report_q2_2024#campaign-highlights--digital-marketing",
+          "marketing/marketing_report_q2_2024#executive-summary"
+        ]
+      }
+    },
+    {
+      "id": "T4-07",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "question": "What was the Q2 2024 marketing spend?",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview",
+        "marketing/marketing_report_q2_2024#q2-marketing-overview",
+        "marketing/marketing_report_q2_2024#q2-projections-targets"
+      ],
+      "gold_answer": "The corpus contradicts itself. The quarterly financial report says $550 million for Q2 2024; the Q2 marketing report says $2.5 million. A correct answer surfaces both figures with their sources rather than picking one.",
+      "react": {
+        "answer": "The provided documents do not contain information about the Q2 2024 marketing spend.",
+        "raw_answer": "The provided documents do not contain information about the Q2 2024 marketing spend.",
+        "citations": [],
+        "hop_queries": [
+          "Q2 2024 marketing spend",
+          "Q2 2024 marketing budget"
+        ],
+        "hops": 2,
+        "llm_calls": 3,
+        "hits": [
+          "marketing/marketing_report_q2_2024#q2-projections-targets",
+          "marketing/marketing_report_q2_2024#q2-benchmarks",
+          "marketing/marketing_report_q2_2024#q2-marketing-overview",
+          "marketing/marketing_report_q2_2024#recommendations-for-q3-2024",
+          "marketing/marketing_report_q2_2024#executive-summary",
+          "marketing/marketing_report_q2_2024#conclusion"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": "The Q2 2024 marketing spend was $2.5 million [4][5].",
+        "reason": "ok",
+        "citations": [
+          "marketing/marketing_report_q2_2024#q2-projections-targets",
+          "marketing/marketing_report_q2_2024#q2-marketing-overview"
+        ],
+        "hits": [
+          "marketing/marketing_report_q2_2024#recommendations-for-q3-2024",
+          "marketing/marketing_report_q2_2024#q2-benchmarks",
+          "marketing/marketing_report_q2_2024#executive-summary",
+          "marketing/marketing_report_q2_2024#q2-projections-targets",
+          "marketing/marketing_report_q2_2024#q2-marketing-overview",
+          "marketing/marketing_report_q2_2024#conclusion",
+          "marketing/marketing_report_q2_2024#performance-analysis",
+          "marketing/marketing_report_q2_2024#campaign-highlights--digital-marketing",
+          "marketing/marketing_report_q2_2024#q2-strategic-objectives",
+          "marketing/market_report_q4_2024#executive-summary"
+        ]
+      }
+    },
+    {
+      "id": "T4-08",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "question": "In which year was FinSolve Technologies founded?",
+      "gold_docs": [
+        "engineering/engineering_master_doc",
+        "general/employee_handbook"
+      ],
+      "gold_sections": [
+        "engineering/engineering_master_doc#1-introduction--1-1-company-overview",
+        "general/employee_handbook#welcome-introduction--company-overview"
+      ],
+      "gold_answer": "The corpus contradicts itself. The engineering document says founded in 2018; the employee handbook says founded in 2016. A correct answer surfaces both with their sources.",
+      "react": {
+        "answer": "FinSolve Technologies was founded in 2018 [1].",
+        "raw_answer": "FinSolve Technologies was founded in 2018 [1].",
+        "citations": [
+          "engineering/engineering_master_doc#1-introduction--1-1-company-overview"
+        ],
+        "hop_queries": [
+          "FinSolve Technologies founding year"
+        ],
+        "hops": 1,
+        "llm_calls": 2,
+        "hits": [
+          "engineering/engineering_master_doc#1-introduction--1-1-company-overview",
+          "finance/quarterly_financial_report#executive-summary",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p1",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p1",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-financial-overview",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p6"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": null,
+        "reason": "no_answer",
+        "citations": [],
+        "hits": [
+          "general/employee_handbook#welcome-introduction--company-overview",
+          "engineering/engineering_master_doc#1-introduction--1-1-company-overview",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p1",
+          "finance/quarterly_financial_report#executive-summary",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p3",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p6",
+          "finance/quarterly_financial_report#2024-annual-summary",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p1",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p6",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p2"
+        ]
+      }
+    },
+    {
+      "id": "T4-09",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "question": "What does it cost FinSolve to acquire one new customer?",
+      "gold_docs": [
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q1_2024"
+      ],
+      "gold_sections": [
+        "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024",
+        "marketing/marketing_report_q1_2024#q1-benchmarks"
+      ],
+      "gold_answer": "The corpus contradicts itself by an order of magnitude. The 2024 annual marketing report gives a customer acquisition cost of $150; the Q1 marketing report gives a cost per acquisition of $13.33, and the other quarterlies give $11.11 to $12.50. A correct answer surfaces both scales with their sources.",
+      "react": {
+        "answer": "It costs FinSolve $150 to acquire one new customer in 2024 [1].",
+        "raw_answer": "It costs FinSolve $150 to acquire one new customer in 2024 [1].",
+        "citations": [
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p5"
+        ],
+        "hop_queries": [
+          "cost to acquire new customer FinSolve"
+        ],
+        "hops": 1,
+        "llm_calls": 2,
+        "hits": [
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p5",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p1",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-financial-overview",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p2",
+          "finance/quarterly_financial_report#2024-annual-summary",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p4"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": "FinSolve's Customer Acquisition Cost (CAC) is $150 per new customer [1].",
+        "reason": "ok",
+        "citations": [
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p5"
+        ],
+        "hits": [
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p5",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p1",
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p2",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p1",
+          "marketing/marketing_report_q1_2024#q1-projections-targets",
+          "marketing/marketing_report_q2_2024#q2-projections-targets",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p2",
+          "marketing/marketing_report_2024#marketing-report-for-finsolve-technologies-inc-2024/p4",
+          "marketing/marketing_report_q1_2024#q1-marketing-overview"
+        ]
+      }
+    },
+    {
+      "id": "T4-10",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "question": "What did FinSolve spend on vendor services in 2024?",
+      "gold_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "gold_sections": [
+        "finance/quarterly_financial_report#2024-annual-summary",
+        "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024"
+      ],
+      "gold_answer": "The corpus contradicts itself. The quarterly financial report puts 2024 vendor costs at $510 million, which matches its own quarterly lines of $120M, $125M, $130M and $135M; the financial summary puts vendor services at $30 million for the year. A correct answer surfaces both with their sources.",
+      "react": {
+        "answer": "FinSolve spent a total of $510 million on vendor services in 2024. This is calculated by summing the quarterly expenses: $120 million in Q1 [1], $125 million in Q2 [2], $130 million in Q3 [3], and $135 million in Q4 [4].",
+        "raw_answer": "FinSolve spent a total of $510 million on vendor services in 2024. This is calculated by summing the quarterly expenses: $120 million in Q1 [1], $125 million in Q2 [2], $130 million in Q3 [3], and $135 million in Q4 [4].",
+        "citations": [
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown"
+        ],
+        "hop_queries": [
+          "FinSolve vendor services spending 2024"
+        ],
+        "hops": 1,
+        "llm_calls": 2,
+        "hits": [
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p2",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p1"
+        ]
+      },
+      "hybrid_rerank": {
+        "answer": "FinSolve spent $510 million on vendor services in 2024 [7]. This is comprised of $120 million in Q1 [1], $125 million in Q2 [2], $130 million in Q3 [3], and $135 million in Q4 [4].",
+        "reason": "ok",
+        "citations": [
+          "finance/quarterly_financial_report#2024-annual-summary",
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown"
+        ],
+        "hits": [
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q3-july-to-september-2024--quarterly-expense-breakdown",
+          "finance/quarterly_financial_report#q4-october-to-december-2024--quarterly-expense-breakdown",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p2",
+          "finance/financial_summary#financial-report-for-finsolve-technologies-inc-2024/p1",
+          "finance/quarterly_financial_report#2024-annual-summary",
+          "finance/quarterly_financial_report#executive-summary",
+          "finance/quarterly_financial_report#q1-january-to-march-2024--quarterly-financial-overview",
+          "finance/quarterly_financial_report#q2-april-to-june-2024--quarterly-financial-overview"
+        ]
+      }
+    }
+  ]
+}

@@ -29,18 +29,22 @@ from finrag.graph import build_llm as graph_build_llm
 from finrag.graph import build_structural
 from finrag.graph.store import GraphStore
 from finrag.ingest.pipeline import IngestStats, read_chunks, run_ingest
-from finrag.llm.vertex import build_extraction_llm, build_rerank_llm
+from finrag.llm.vertex import build_agent_llm, build_extraction_llm, build_rerank_llm
 from finrag.policy.engine import PolicyEngine
 from finrag.retrieval.embed import build_embedder
 from finrag.retrieval.registry import IndexBundle, available_modes, build_retriever
 
 # Modes that need to embed a query, so the CLI knows when to build an embedder.
 # Building one may open a Vertex client, and naive and bm25 should not pay for it.
-MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset({"dense", "hybrid", "hybrid_rerank"})
+MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset(
+    {"dense", "hybrid", "hybrid_rerank", "react"}
+)
 
-# Modes that call a generation model. Only the reranker does, and it makes one
-# real API call per question, so no other mode should build a client.
-MODES_NEEDING_AN_LLM: frozenset[str] = frozenset({"hybrid_rerank"})
+# Modes that call a generation model, and how many calls that is per question:
+# one for the reranker, up to five for the agent. No other mode should build a
+# client, because building one may cost money on the first search.
+MODES_NEEDING_AN_LLM: frozenset[str] = frozenset({"hybrid_rerank", "react"})
+REACT_MODE = "react"
 
 # The Streamlit pages live outside the package, next to pyproject.toml.
 REPO_ROOT_UI = Path(__file__).resolve().parents[2] / "ui"
@@ -197,7 +201,9 @@ def command_eval(mode: str, rung: str, k_values: list[int]) -> int:
         # Queries go through the same cache ingest filled, so a repeated run of
         # this eval embeds nothing and makes no API calls.
         bundle.embedder = build_embedder(settings)
-    if mode in MODES_NEEDING_AN_LLM:
+    if mode == REACT_MODE:
+        bundle.llm = build_agent_llm(settings)
+    elif mode in MODES_NEEDING_AN_LLM:
         bundle.llm = build_rerank_llm(settings)
     retriever = build_retriever(mode, bundle)
     policy = PolicyEngine.from_yaml(settings.policy_path)
@@ -215,6 +221,7 @@ def command_eval(mode: str, rung: str, k_values: list[int]) -> int:
 
     report = EvalHarness(retriever, policy, gold.entries).run(k_values=tuple(k_values))
     add_rerank_counters(report, retriever)
+    add_agent_counters(report, retriever)
     path = write_report(report, rung, mode, settings.results_dir)
 
     print_report(report, k_values, path)
@@ -312,6 +319,24 @@ def add_rerank_counters(report: dict[str, Any], retriever: Any) -> None:
     }
 
 
+def add_agent_counters(report: dict[str, Any], retriever: Any) -> None:
+    """Record what the agent spent, when the mode has an agent.
+
+    The whole argument for this rung is that more calls buy better answers, so
+    the number of calls belongs next to the scores rather than in a console line
+    nobody saves. Modes without an agent add nothing.
+    """
+    totals = getattr(retriever, "totals", None)
+    if totals is None:
+        return
+    questions = max(totals.get("questions", 0), 1)
+    agent = dict(totals)
+    agent["mean_hops"] = round(totals["hops"] / questions, 3)
+    agent["mean_llm_calls"] = round(totals["llm_calls"] / questions, 3)
+    agent["last_failure"] = getattr(retriever.agent, "last_failure", None)
+    report["agent"] = agent
+
+
 def print_report(report: dict[str, Any], k_values: list[int], path: Path) -> None:
     """Print the per-tier table, then the headline numbers.
 
@@ -348,6 +373,22 @@ def print_report(report: dict[str, Any], k_values: list[int], path: Path) -> Non
         )
         if rerank["last_failure"]:
             print(f"last rerank failure: {rerank['last_failure']}")
+    if "agent" in report:
+        agent = report["agent"]
+        print(
+            f"agent: {agent['llm_calls']} llm calls over {agent['questions']} questions "
+            f"({agent['mean_llm_calls']} each), {agent['mean_hops']} mean hops, "
+            f"{agent['forced_finishes']} forced finishes"
+        )
+        print(
+            f"agent failures: {agent['parse_failures']} parse, "
+            f"{agent['repeated_queries']} repeated queries, "
+            f"{agent['unknown_actions']} unknown actions, "
+            f"{agent['call_failures']} call failures, "
+            f"{agent['fallback_searches']} fallback searches"
+        )
+        if agent["last_failure"]:
+            print(f"last agent failure: {agent['last_failure']}")
     print()
     print(f"Wrote {path}")
 

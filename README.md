@@ -14,8 +14,15 @@ uv run finrag serve              # the API on http://127.0.0.1:8000, /docs for t
 uv run finrag ui                 # the Streamlit pages, against a running API
 ```
 
-Modes: `naive`, `bm25`, `dense`, `hybrid`, `hybrid_rerank`, `graphrag`.
-Route real questions to `hybrid_rerank`; see the six-mode table in `DECISIONS.md`.
+Modes: `naive`, `bm25`, `dense`, `hybrid`, `hybrid_rerank`, `graphrag`, `react`.
+Route real questions to `react` for ranking and to `hybrid_rerank` when the bill
+matters or the question may have two conflicting answers; see the seven-mode
+table in `DECISIONS.md`.
+
+`react` is an agent, not a pipeline: up to four searches it writes itself, then
+its own cited answer, at about 2.6 Gemini calls per question. Its only way to
+reach a chunk is a `hybrid` retriever that masks before it ranks, and the role is
+never in its prompt.
 
 `hybrid` fuses the BM25 and dense ranked lists with Reciprocal Rank Fusion
 (k=60), which needs no extra credential beyond the embeddings. `hybrid_rerank`

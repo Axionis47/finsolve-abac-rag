@@ -117,13 +117,10 @@ def test_the_graph_mode_is_registered_under_the_name_the_retriever_reports() -> 
     assert GraphRetriever.name in available_modes()
 
 
-def test_the_full_list_of_modes_is_what_this_rung_left_behind() -> None:
-    """Pinned in the newest mode's file, as R2 pinned it in test_dense.py."""
-    assert available_modes() == [
-        "bm25",
-        "dense",
-        "graphrag",
-        "hybrid",
-        "hybrid_rerank",
-        "naive",
-    ]
+def test_graphrag_is_still_one_of_the_modes_a_caller_may_ask_for() -> None:
+    """The full list moved on to tests/test_react.py when R7 added the newest mode.
+
+    Same handover R3 made to test_rerank.py and R2 to test_dense.py: the pin
+    lives with the newest mode, and older files assert only their own name.
+    """
+    assert "graphrag" in available_modes()
