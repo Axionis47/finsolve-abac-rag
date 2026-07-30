@@ -158,7 +158,7 @@ Left out of R6 because `__init__.py` is an existing file.
 
 `vertex_model` defaults to `gemini-2.0-flash`, and Vertex now answers
 `404 NOT_FOUND` for it in this project. Verified from this repo against the real
-API, project `plotpointe`:
+API in the dev project:
 
 | model | result |
 |---|---|

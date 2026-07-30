@@ -48,7 +48,7 @@ DEFAULT_LLM_BACKEND = "vertex"
 
 # Where the model name comes from: VERTEX_MODEL, the same variable `config.py`
 # reads, falling back to the shared default there. Verified against the real API
-# from this repo, in project `plotpointe`, location us-central1:
+# from this repo, in the dev project, location us-central1:
 #
 #   gemini-2.0-flash   404, retired (it was the default until R6)
 #   gemini-2.5-flash   works in us-central1        <- the default
