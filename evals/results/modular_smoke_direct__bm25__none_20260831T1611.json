@@ -1,0 +1,2199 @@
+{
+  "rung": "modular_smoke",
+  "pipeline_id": "direct__bm25__none",
+  "generated_at": "2026-08-31T16:11:05Z",
+  "retrieval_strategy": "bm25",
+  "query_strategy": "direct",
+  "reranking_strategy": "none",
+  "k_values": [
+    5,
+    10
+  ],
+  "n_questions": 50,
+  "overall": {
+    "n": 50,
+    "n_scored": 40,
+    "recall@5": 0.9125,
+    "precision@5": 0.5008,
+    "f1@5": 0.6125,
+    "recall@10": 0.9875,
+    "precision@10": 0.4471,
+    "f1@10": 0.5832,
+    "mrr": 0.8758,
+    "n_section_scored": 40,
+    "section_hit_rate": 0.75,
+    "section_mrr": 0.6369,
+    "leakage_count": 0,
+    "n_leaking_questions": 0
+  },
+  "per_tier": {
+    "T1": {
+      "n": 8,
+      "n_scored": 8,
+      "recall@5": 1.0,
+      "precision@5": 0.65,
+      "f1@5": 0.75,
+      "recall@10": 1.0,
+      "precision@10": 0.5667,
+      "f1@10": 0.6875,
+      "mrr": 0.8542,
+      "n_section_scored": 8,
+      "section_hit_rate": 1.0,
+      "section_mrr": 0.7917,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T2": {
+      "n": 8,
+      "n_scored": 8,
+      "recall@5": 0.625,
+      "precision@5": 0.4062,
+      "f1@5": 0.4667,
+      "recall@10": 1.0,
+      "precision@10": 0.5104,
+      "f1@10": 0.6214,
+      "mrr": 0.5875,
+      "n_section_scored": 8,
+      "section_hit_rate": 0.0,
+      "section_mrr": 0.0,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T3": {
+      "n": 10,
+      "n_scored": 10,
+      "recall@5": 1.0,
+      "precision@5": 0.3083,
+      "f1@5": 0.4667,
+      "recall@10": 1.0,
+      "precision@10": 0.265,
+      "f1@10": 0.4133,
+      "mrr": 0.95,
+      "n_section_scored": 10,
+      "section_hit_rate": 0.8,
+      "section_mrr": 0.7,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T4": {
+      "n": 10,
+      "n_scored": 6,
+      "recall@5": 0.9167,
+      "precision@5": 0.6389,
+      "f1@5": 0.7389,
+      "recall@10": 0.9167,
+      "precision@10": 0.4556,
+      "f1@10": 0.6,
+      "mrr": 1.0,
+      "n_section_scored": 6,
+      "section_hit_rate": 1.0,
+      "section_mrr": 0.9167,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T5": {
+      "n": 6,
+      "n_scored": 6,
+      "recall@5": 1.0,
+      "precision@5": 0.6389,
+      "f1@5": 0.75,
+      "recall@10": 1.0,
+      "precision@10": 0.5083,
+      "f1@10": 0.6593,
+      "mrr": 1.0,
+      "n_section_scored": 6,
+      "section_hit_rate": 1.0,
+      "section_mrr": 0.7738,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T6": {
+      "n": 8,
+      "n_scored": 2,
+      "recall@5": 1.0,
+      "precision@5": 0.4166,
+      "f1@5": 0.5834,
+      "recall@10": 1.0,
+      "precision@10": 0.4166,
+      "f1@10": 0.5834,
+      "mrr": 1.0,
+      "n_section_scored": 2,
+      "section_hit_rate": 1.0,
+      "section_mrr": 1.0,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    }
+  },
+  "ambiguous": {
+    "n": 4,
+    "n_pass": 3,
+    "both_sources_recall@10": 0.75
+  },
+  "policy_probes": {
+    "n": 6,
+    "n_pass": 6,
+    "pass_rate": 1.0
+  },
+  "per_question": [
+    {
+      "id": "T1-01",
+      "tier": "T1",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "How many sign-ups did the InstantPay launch achieve in Q1 2024, against the 50,000 sign-up target?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "How many sign-ups did the InstantPay launch achieve in Q1 2024, against the 50,000 sign-up target?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-02",
+      "tier": "T1",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What are the Recovery Time Objective (RTO) and Recovery Point Objective (RPO) in the disaster recovery plan?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What are the Recovery Time Objective (RTO) and Recovery Point Objective (RPO) in the disaster recovery plan?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-03",
+      "tier": "T1",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/financial_summary",
+        "finance/quarterly_financial_report"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What was FinSolve Technologies' total revenue for 2024?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What was FinSolve Technologies' total revenue for 2024?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-04",
+      "tier": "T1",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "According to the quarterly financial report, what was the gross margin in Q1 2024?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "According to the quarterly financial report, what was the gross margin in Q1 2024?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-05",
+      "tier": "T1",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Which tool is used for load testing, and how many concurrent users is the load test targeted at?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Which tool is used for load testing, and how many concurrent users is the load test targeted at?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-06",
+      "tier": "T1",
+      "role": "employee",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "How many days of sick leave do employees get per year?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "How many days of sick leave do employees get per year?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-07",
+      "tier": "T1",
+      "role": "employee",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What is the reward for a successful employee referral, and when is it paid out?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What is the reward for a successful employee referral, and when is it paid out?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-08",
+      "tier": "T1",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "According to the 2024 annual marketing report, what was the customer acquisition cost (CAC) per new customer?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "According to the 2024 annual marketing report, what was the customer acquisition cost (CAC) per new customer?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.2,
+      "f1@5": 0.3333,
+      "recall@10": 1.0,
+      "precision@10": 0.2,
+      "f1@10": 0.3333,
+      "rr": 0.3333,
+      "section_hit": true,
+      "section_rr": 0.3333,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-01",
+      "tier": "T2",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "By how much did buyer attrition shrink during the festive stretch, set against the previous three months?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "By how much did buyer attrition shrink during the festive stretch, set against the previous three months?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 0.25,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-02",
+      "tier": "T2",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "engineering/engineering_master_doc"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "If our main server hall burned to the ground, how long before customers could pay again, and how much of their latest activity would vanish?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "If our main server hall burned to the ground, how long before customers could pay again, and how much of their latest activity would vanish?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 0.5,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-03",
+      "tier": "T2",
+      "role": "employee",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What percentage of a worker's core wage is put aside for retirement savings, and does the firm match that amount?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What percentage of a worker's core wage is put aside for retirement savings, and does the firm match that amount?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-04",
+      "tier": "T2",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Which three nations were named as fresh territory in the April to June plan?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Which three nations were named as fresh territory in the April to June plan?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 1.0,
+      "precision@10": 0.1667,
+      "f1@10": 0.2857,
+      "rr": 0.2,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-05",
+      "tier": "T2",
+      "role": "employee",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "How long may a new mother stay at home on her full wage after giving birth?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "How long may a new mother stay at home on her full wage after giving birth?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-06",
+      "tier": "T2",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "engineering/engineering_master_doc"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What share of each build cycle do the coders reserve for cleaning up shortcuts they took earlier?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What share of each build cycle do the coders reserve for cleaning up shortcuts they took earlier?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 0.5,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-07",
+      "tier": "T2",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "During the July to September stretch, how many people joined the points scheme and what share of them cashed in their perks?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "During the July to September stretch, how many people joined the points scheme and what share of them cashed in their perks?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.25,
+      "f1@5": 0.4,
+      "recall@10": 1.0,
+      "precision@10": 0.1667,
+      "f1@10": 0.2857,
+      "rr": 0.25,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-08",
+      "tier": "T2",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Which two outside firms stand guard against traffic-flood attacks and screen hostile visitor calls before they reach us?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Which two outside firms stand guard against traffic-flood attacks and screen hostile visitor calls before they reach us?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-01",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "According to the Q1 2024 marketing report, what was the marketing spend for that quarter?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "According to the Q1 2024 marketing report, what was the marketing spend for that quarter?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-02",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "According to the Q3 2024 marketing report, what was the marketing spend for that quarter?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "According to the Q3 2024 marketing report, what was the marketing spend for that quarter?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-03",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "In Q1 2024, which activity produced 500,000 impressions, and in which cities did it take place?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "In Q1 2024, which activity produced 500,000 impressions, and in which cities did it take place?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.25,
+      "f1@5": 0.4,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-04",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "In Q3 2024, which activity produced 500,000 impressions, and how many influencers took part?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "In Q3 2024, which activity produced 500,000 impressions, and how many influencers took part?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-05",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What email open rate did the Q1 2024 InstantPay email campaign achieve?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What email open rate did the Q1 2024 InstantPay email campaign achieve?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.25,
+      "f1@5": 0.4,
+      "recall@10": 1.0,
+      "precision@10": 0.2,
+      "f1@10": 0.3333,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-06",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What email open rate did the Q3 2024 loyalty-focused email campaigns achieve?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What email open rate did the Q3 2024 loyalty-focused email campaigns achieve?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.25,
+      "f1@5": 0.4,
+      "recall@10": 1.0,
+      "precision@10": 0.2,
+      "f1@10": 0.3333,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-07",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "How many qualified leads came out of the two fintech conferences sponsored in Q1 2024?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "How many qualified leads came out of the two fintech conferences sponsored in Q1 2024?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.25,
+      "f1@5": 0.4,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-08",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "How many qualified leads came out of the two industry conferences sponsored in Q4 2024?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "How many qualified leads came out of the two industry conferences sponsored in Q4 2024?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-09",
+      "tier": "T3",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "According to the quarterly financial report, what was cash flow from operations in Q2 2024?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "According to the quarterly financial report, what was cash flow from operations in Q2 2024?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-10",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q1_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "According to the Q3 2024 marketing report, what conversion rate was achieved, and how did it compare with the target?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "According to the Q3 2024 marketing report, what conversion rate was achieved, and how did it compare with the target?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.25,
+      "f1@5": 0.4,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-01",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q4 2024 financial report names aggressive digital campaigns as the mitigation for North America market saturation. What did those campaigns actually deliver?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "The Q4 2024 financial report names aggressive digital campaigns as the mitigation for North America market saturation. What did those campaigns actually deliver?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.4,
+      "f1@10": 0.5714,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-02",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Finance books between $45 million and $55 million of software subscriptions every quarter of 2024. Which platforms and tools does that spend pay for?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Finance books between $45 million and $55 million of software subscriptions every quarter of 2024. Which platforms and tools does that spend pay for?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": false,
+      "recall@5": 0.5,
+      "precision@5": 0.5,
+      "f1@5": 0.5,
+      "recall@10": 0.5,
+      "precision@10": 0.2,
+      "f1@10": 0.2857,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-03",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q2_2024",
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Finance flagged in Q2 2024 that influencer marketing might underperform against expected ROI. What ROI did marketing report for that quarter, and what was the target?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Finance flagged in Q2 2024 that influencer marketing might underperform against expected ROI. What ROI did marketing report for that quarter, and what was the target?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.4,
+      "f1@10": 0.5714,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-04",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/financial_summary",
+        "finance/quarterly_financial_report",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The annual financial summary reports days sales outstanding of 45 days against a 30 day industry benchmark. Which quarter names that as a risk, and what was done about it?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "The annual financial summary reports days sales outstanding of 45 days against a 30 day industry benchmark. Which quarter names that as a risk, and what was done about it?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.6667,
+      "f1@5": 0.8,
+      "recall@10": 1.0,
+      "precision@10": 0.6667,
+      "f1@10": 0.8,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-05",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_2024",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "In Q3 2024 finance put 35 percent of $130 million of vendor services behind loyalty and retention. What did the loyalty programme return?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "In Q3 2024 finance put 35 percent of $130 million of vendor services behind loyalty and retention. What did the loyalty programme return?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.6667,
+      "f1@5": 0.8,
+      "recall@10": 1.0,
+      "precision@10": 0.4,
+      "f1@10": 0.5714,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-06",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Finance credits part of Q2 2024 revenue growth to early traction in Southeast Asia. What customer numbers did marketing report for that region, and what drove them?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Finance credits part of Q2 2024 revenue growth to early traction in Southeast Asia. What customer numbers did marketing report for that region, and what drove them?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.6667,
+      "f1@10": 0.8,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-07",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "scoring": "both_sources",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What was the Q2 2024 marketing spend?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What was the Q2 2024 marketing spend?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": false,
+      "recall@5": 0.5,
+      "precision@5": 0.5,
+      "f1@5": 0.5,
+      "recall@10": 0.5,
+      "precision@10": 0.3333,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.1429,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-08",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "scoring": "both_sources",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_2024",
+        "general/employee_handbook",
+        "engineering/engineering_master_doc",
+        "finance/financial_summary",
+        "finance/quarterly_financial_report"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "In which year was FinSolve Technologies founded?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "In which year was FinSolve Technologies founded?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.6667,
+      "f1@5": 0.8,
+      "recall@10": 1.0,
+      "precision@10": 0.4,
+      "f1@10": 0.5714,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.3333,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-09",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "scoring": "both_sources",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc",
+        "marketing/marketing_report_2024",
+        "finance/quarterly_financial_report",
+        "general/employee_handbook",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What does it cost FinSolve to acquire one new customer?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What does it cost FinSolve to acquire one new customer?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 0.5,
+      "precision@5": 0.5,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-10",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "scoring": "both_sources",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/financial_summary",
+        "marketing/marketing_report_2024",
+        "finance/quarterly_financial_report"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What did FinSolve spend on vendor services in 2024?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What did FinSolve spend on vendor services in 2024?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.6667,
+      "f1@5": 0.8,
+      "recall@10": 1.0,
+      "precision@10": 0.6667,
+      "f1@10": 0.8,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-01",
+      "tier": "T5",
+      "role": "hr",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/aggregates",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Which department has the highest average salary, and what is that average?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Which department has the highest average salary, and what is that average?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-02",
+      "tier": "T5",
+      "role": "hr",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/aggregates",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Which three departments have the largest headcount, and how many employees does each have?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Which three departments have the largest headcount, and how many employees does each have?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-03",
+      "tier": "T5",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/aggregates",
+        "marketing/marketing_report_2024",
+        "general/employee_handbook",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Which office location has the most employees, and how many are based there?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Which office location has the most employees, and how many are based there?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-04",
+      "tier": "T5",
+      "role": "hr",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/aggregates",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Which department has the longest average tenure, and how many years is it?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Which department has the longest average tenure, and how many years is it?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-05",
+      "tier": "T5",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Across all four quarters of 2024, what conversion rate did marketing actually achieve, and which quarters fell short of target?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Across all four quarters of 2024, what conversion rate did marketing actually achieve, and which quarters fell short of target?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.8,
+      "f1@10": 0.8889,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.1429,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-06",
+      "tier": "T5",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "According to the quarterly financial report, how did revenue move across the four quarters of 2024?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "According to the quarterly financial report, how did revenue move across the four quarters of 2024?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-01",
+      "tier": "T6",
+      "role": "marketing",
+      "expected_behavior": "no_answer",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What is Aadhya Patel's salary?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What is Aadhya Patel's salary?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-02",
+      "tier": "T6",
+      "role": "hr",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/hr_data",
+        "general/employee_handbook",
+        "hr/aggregates"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What is Aadhya Patel's salary?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What is Aadhya Patel's salary?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-03",
+      "tier": "T6",
+      "role": "engineering",
+      "expected_behavior": "refuse_role",
+      "scoring": "policy",
+      "n_hits": 5,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "engineering/engineering_master_doc"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What was Q4 2024 revenue?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What was Q4 2024 revenue?",
+          "n_hits": 5
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-04",
+      "tier": "T6",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What was Q4 2024 revenue?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What was Q4 2024 revenue?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-05",
+      "tier": "T6",
+      "role": "marketing",
+      "expected_behavior": "no_answer",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "marketing/marketing_report_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What are the salary details for the people in the marketing department?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What are the salary details for the people in the marketing department?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-06",
+      "tier": "T6",
+      "role": "finance",
+      "expected_behavior": "no_answer",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What is the average salary by department?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What is the average salary by department?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-07",
+      "tier": "T6",
+      "role": "hr",
+      "expected_behavior": "refuse_role",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "What were the Q4 2024 campaign results?"
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "What were the Q4 2024 campaign results?",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-08",
+      "tier": "T6",
+      "role": "employee",
+      "expected_behavior": "refuse_role",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Describe the system architecture, including the API gateway and the microservices."
+      ],
+      "query_trace": [
+        {
+          "kind": "direct",
+          "query": "Describe the system architecture, including the API gateway and the microservices.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "searches": 1,
+        "fallbacks": 0
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    }
+  ]
+}

@@ -1,0 +1,2286 @@
+{
+  "rung": "modular_real",
+  "pipeline_id": "hyde__hybrid__none",
+  "generated_at": "2026-08-31T16:14:23Z",
+  "retrieval_strategy": "hybrid",
+  "query_strategy": "hyde",
+  "reranking_strategy": "none",
+  "k_values": [
+    5,
+    10
+  ],
+  "n_questions": 50,
+  "overall": {
+    "n": 50,
+    "n_scored": 40,
+    "recall@5": 0.9313,
+    "precision@5": 0.6308,
+    "f1@5": 0.7232,
+    "recall@10": 0.9375,
+    "precision@10": 0.5196,
+    "f1@10": 0.6333,
+    "mrr": 0.875,
+    "n_section_scored": 40,
+    "section_hit_rate": 0.95,
+    "section_mrr": 0.7037,
+    "leakage_count": 0,
+    "n_leaking_questions": 0
+  },
+  "per_tier": {
+    "T1": {
+      "n": 8,
+      "n_scored": 8,
+      "recall@5": 1.0,
+      "precision@5": 0.8125,
+      "f1@5": 0.875,
+      "recall@10": 1.0,
+      "precision@10": 0.6917,
+      "f1@10": 0.7708,
+      "mrr": 0.875,
+      "n_section_scored": 8,
+      "section_hit_rate": 1.0,
+      "section_mrr": 0.6771,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T2": {
+      "n": 8,
+      "n_scored": 8,
+      "recall@5": 1.0,
+      "precision@5": 0.8125,
+      "f1@5": 0.875,
+      "recall@10": 1.0,
+      "precision@10": 0.7188,
+      "f1@10": 0.8,
+      "mrr": 0.875,
+      "n_section_scored": 8,
+      "section_hit_rate": 1.0,
+      "section_mrr": 0.8375,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T3": {
+      "n": 10,
+      "n_scored": 10,
+      "recall@5": 1.0,
+      "precision@5": 0.4833,
+      "f1@5": 0.6333,
+      "recall@10": 1.0,
+      "precision@10": 0.3417,
+      "f1@10": 0.5,
+      "mrr": 0.9,
+      "n_section_scored": 10,
+      "section_hit_rate": 1.0,
+      "section_mrr": 0.7033,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T4": {
+      "n": 10,
+      "n_scored": 6,
+      "recall@5": 0.75,
+      "precision@5": 0.5111,
+      "f1@5": 0.5952,
+      "recall@10": 0.75,
+      "precision@10": 0.4028,
+      "f1@10": 0.5167,
+      "mrr": 0.9167,
+      "n_section_scored": 6,
+      "section_hit_rate": 0.8333,
+      "section_mrr": 0.625,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T5": {
+      "n": 6,
+      "n_scored": 6,
+      "recall@5": 0.7917,
+      "precision@5": 0.5833,
+      "f1@5": 0.6429,
+      "recall@10": 0.8333,
+      "precision@10": 0.4722,
+      "f1@10": 0.5834,
+      "mrr": 0.8333,
+      "n_section_scored": 6,
+      "section_hit_rate": 0.8333,
+      "section_mrr": 0.625,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    },
+    "T6": {
+      "n": 8,
+      "n_scored": 2,
+      "recall@5": 1.0,
+      "precision@5": 0.4166,
+      "f1@5": 0.5834,
+      "recall@10": 1.0,
+      "precision@10": 0.4166,
+      "f1@10": 0.5834,
+      "mrr": 0.75,
+      "n_section_scored": 2,
+      "section_hit_rate": 1.0,
+      "section_mrr": 0.75,
+      "leakage_count": 0,
+      "n_leaking_questions": 0
+    }
+  },
+  "ambiguous": {
+    "n": 4,
+    "n_pass": 3,
+    "both_sources_recall@10": 0.75
+  },
+  "policy_probes": {
+    "n": 6,
+    "n_pass": 6,
+    "pass_rate": 1.0
+  },
+  "per_question": [
+    {
+      "id": "T1-01",
+      "tier": "T1",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "InstantPay's Q1 2024 launch campaign concluded with 42,387 new user registrations, falling short of the 50,000 sign-up target."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "InstantPay's Q1 2024 launch campaign concluded with 42,387 new user registrations, falling short of the 50,000 sign-up target.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-02",
+      "tier": "T1",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The disaster recovery plan outlines critical metrics for business continuity. The Recovery Time Objective (RTO) specifies the maximum tolerable downtime for a system or application after a disruptive event. For instance, a critical financial transaction system might have an RTO of 4 hours. Conversely, the Recovery Point Objective (RPO) defines the maximum acceptable amount of data loss measured in time. An RPO of 15 minutes for a customer database means that no more than 15 minutes of data can be lost during a recovery. These objectives directly influence the choice of backup strategies and replication technologies."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The disaster recovery plan outlines critical metrics for business continuity. The Recovery Time Objective (RTO) specifies the maximum tolerable downtime for a system or application after a disruptive event. For instance, a critical financial transaction system might have an RTO of 4 hours. Conversely, the Recovery Point Objective (RPO) defines the maximum acceptable amount of data loss measured in time. An RPO of 15 minutes for a customer database means that no more than 15 minutes of data can be lost during a recovery. These objectives directly influence the choice of backup strategies and replication technologies.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-03",
+      "tier": "T1",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "FinSolve Technologies reported a robust financial performance for the fiscal year 2024, with total revenue reaching $1.25 billion. This figure represents a significant 18% year-over-year growth, driven primarily by strong adoption of their AI-powered financial analytics platform and expanded market penetration in the APAC region."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "FinSolve Technologies reported a robust financial performance for the fiscal year 2024, with total revenue reaching $1.25 billion. This figure represents a significant 18% year-over-year growth, driven primarily by strong adoption of their AI-powered financial analytics platform and expanded market penetration in the APAC region.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.3333,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-04",
+      "tier": "T1",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/financial_summary",
+        "finance/quarterly_financial_report"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "For the first quarter of fiscal year 2024, the company reported a gross margin of 42.7%, reflecting strong cost controls and favorable product mix. This figure represents a slight increase from the 41.9% recorded in Q4 2023."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "For the first quarter of fiscal year 2024, the company reported a gross margin of 42.7%, reflecting strong cost controls and favorable product mix. This figure represents a slight increase from the 41.9% recorded in Q4 2023.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.3333,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-05",
+      "tier": "T1",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The performance engineering team utilized Apache JMeter for the recent load test, simulating 5,000 concurrent users to assess system stability under peak demand."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The performance engineering team utilized Apache JMeter for the recent load test, simulating 5,000 concurrent users to assess system stability under peak demand.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-06",
+      "tier": "T1",
+      "role": "employee",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Employees accrue 1.5 days of paid sick leave per full month of service, up to a maximum of 18 days annually. Unused sick leave rolls over to the following year, with a cap of 90 accrued days."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Employees accrue 1.5 days of paid sick leave per full month of service, up to a maximum of 18 days annually. Unused sick leave rolls over to the following year, with a cap of 90 accrued days.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-07",
+      "tier": "T1",
+      "role": "employee",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Employee Referral Program offers a bonus of $1,000 for successful referrals. This bonus is disbursed to the referring employee's next scheduled payroll following the referred new hire's 90-day employment anniversary, provided both employees are still actively employed by the company."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Employee Referral Program offers a bonus of $1,000 for successful referrals. This bonus is disbursed to the referring employee's next scheduled payroll following the referred new hire's 90-day employment anniversary, provided both employees are still actively employed by the company.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T1-08",
+      "tier": "T1",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The 2024 Annual Marketing Report indicates a customer acquisition cost (CAC) of $127.34 per new customer, reflecting investments across digital campaigns, content marketing, and sales enablement initiatives. This figure represents a 7% increase from the previous fiscal year's CAC."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The 2024 Annual Marketing Report indicates a customer acquisition cost (CAC) of $127.34 per new customer, reflecting investments across digital campaigns, content marketing, and sales enablement initiatives. This figure represents a 7% increase from the previous fiscal year's CAC.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.2,
+      "f1@10": 0.3333,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.25,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-01",
+      "tier": "T2",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "During the Q4 festive period, buyer attrition decreased by 18% compared to the average attrition rate observed in Q3. This reduction is primarily attributed to targeted holiday promotions and enhanced customer engagement strategies implemented from October through December."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "During the Q4 festive period, buyer attrition decreased by 18% compared to the average attrition rate observed in Q3. This reduction is primarily attributed to targeted holiday promotions and enhanced customer engagement strategies implemented from October through December.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-02",
+      "tier": "T2",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "In the event of a catastrophic data center loss, such as a fire in the primary server hall, our Recovery Time Objective (RTO) for critical payment processing systems is targeted at 4 hours. This is achieved through active-passive replication to our geographically distinct disaster recovery site. The Recovery Point Objective (RPO) for customer transaction data is 15 minutes, meaning a maximum of 15 minutes of recent activity would be unrecoverable from the primary site. Non-critical systems have an RTO of 24 hours and an RPO of 4 hours."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "In the event of a catastrophic data center loss, such as a fire in the primary server hall, our Recovery Time Objective (RTO) for critical payment processing systems is targeted at 4 hours. This is achieved through active-passive replication to our geographically distinct disaster recovery site. The Recovery Point Objective (RPO) for customer transaction data is 15 minutes, meaning a maximum of 15 minutes of recent activity would be unrecoverable from the primary site. Non-critical systems have an RTO of 24 hours and an RPO of 4 hours.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-03",
+      "tier": "T2",
+      "role": "employee",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Employees contribute 5% of their base salary to the 401(k) plan. The company provides a dollar-for-dollar match on employee contributions up to 3% of the employee's eligible compensation."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Employees contribute 5% of their base salary to the 401(k) plan. The company provides a dollar-for-dollar match on employee contributions up to 3% of the employee's eligible compensation.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-04",
+      "tier": "T2",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The April to June expansion plan outlined the strategic acquisition of new territories to bolster the Alliance's resource base and geopolitical influence. Key among these designated fresh territories were the resource-rich plains of **Kazakhstan**, the strategically vital coastal regions of **Vietnam**, and the burgeoning industrial zones of **Poland**. These selections were based on comprehensive geopolitical assessments and resource audits conducted in Q1."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The April to June expansion plan outlined the strategic acquisition of new territories to bolster the Alliance's resource base and geopolitical influence. Key among these designated fresh territories were the resource-rich plains of **Kazakhstan**, the strategically vital coastal regions of **Vietnam**, and the burgeoning industrial zones of **Poland**. These selections were based on comprehensive geopolitical assessments and resource audits conducted in Q1.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.2,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-05",
+      "tier": "T2",
+      "role": "employee",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Under the Family and Medical Leave Act (FMLA), eligible employees are entitled to take up to 12 workweeks of unpaid, job-protected leave in a 12-month period for the birth of a child and to care for the newborn child within one year of birth. Some state laws and employer policies may offer paid parental leave benefits, extending the period a new mother can remain at home on full wage, but this is not federally mandated. For example, California's Paid Family Leave (PFL) provides up to eight weeks of partial wage replacement."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Under the Family and Medical Leave Act (FMLA), eligible employees are entitled to take up to 12 workweeks of unpaid, job-protected leave in a 12-month period for the birth of a child and to care for the newborn child within one year of birth. Some state laws and employer policies may offer paid parental leave benefits, extending the period a new mother can remain at home on full wage, but this is not federally mandated. For example, California's Paid Family Leave (PFL) provides up to eight weeks of partial wage replacement.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-06",
+      "tier": "T2",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "During the stabilization phase, which typically occupies 15-20% of a two-week sprint, developers prioritize technical debt remediation. This includes refactoring suboptimal code, addressing known performance bottlenecks, and improving test coverage for areas where initial rapid development led to shortcuts."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "During the stabilization phase, which typically occupies 15-20% of a two-week sprint, developers prioritize technical debt remediation. This includes refactoring suboptimal code, addressing known performance bottlenecks, and improving test coverage for areas where initial rapid development led to shortcuts.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-07",
+      "tier": "T2",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "In Q3, the loyalty program saw 1,245 new enrollments. Of these new members, 48% redeemed their welcome bonus or initial points accrual within the same quarter."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "In Q3, the loyalty program saw 1,245 new enrollments. Of these new members, 48% redeemed their welcome bonus or initial points accrual within the same quarter.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T2-08",
+      "tier": "T2",
+      "role": "engineering",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Our network perimeter is fortified by a multi-layered defense strategy, leveraging specialized external vendors for critical security functions. Cloudflare provides advanced DDoS mitigation, absorbing and filtering volumetric attacks at the edge, while Akamai's Bot Manager actively screens and blocks malicious bot traffic and other hostile visitor calls before they can impact our core infrastructure."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Our network perimeter is fortified by a multi-layered defense strategy, leveraging specialized external vendors for critical security functions. Cloudflare provides advanced DDoS mitigation, absorbing and filtering volumetric attacks at the edge, while Akamai's Bot Manager actively screens and blocks malicious bot traffic and other hostile visitor calls before they can impact our core infrastructure.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-01",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q1 2024 Marketing Performance Report indicates a total marketing spend of $1,250,000 for the quarter. This figure encompasses all allocated budgets across digital campaigns, traditional media placements, and event sponsorships."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q1 2024 Marketing Performance Report indicates a total marketing spend of $1,250,000 for the quarter. This figure encompasses all allocated budgets across digital campaigns, traditional media placements, and event sponsorships.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.2,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-02",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q3 2024 Marketing Performance Report indicates a total marketing expenditure of $12.8 million for the quarter, primarily allocated to digital campaigns ($7.2M), content syndication ($3.1M), and event sponsorships ($2.5M)."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q3 2024 Marketing Performance Report indicates a total marketing expenditure of $12.8 million for the quarter, primarily allocated to digital campaigns ($7.2M), content syndication ($3.1M), and event sponsorships ($2.5M).",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-03",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The \"Spring into Savings\" digital campaign, a targeted initiative leveraging programmatic advertising and social media amplification, generated 500,000 impressions during Q1 2024. This campaign focused on key metropolitan areas, specifically deploying in New York City, Los Angeles, and Chicago."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The \"Spring into Savings\" digital campaign, a targeted initiative leveraging programmatic advertising and social media amplification, generated 500,000 impressions during Q1 2024. This campaign focused on key metropolitan areas, specifically deploying in New York City, Los Angeles, and Chicago.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-04",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q3 2024 influencer marketing campaign for the new \"Aura\" smartwatch generated significant engagement. Our tier-1 influencer activations, specifically the unboxing and review series across YouTube and Instagram, were particularly successful, yielding over 500,000 impressions. This series involved a curated group of 15 macro-influencers and 30 micro-influencers."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q3 2024 influencer marketing campaign for the new \"Aura\" smartwatch generated significant engagement. Our tier-1 influencer activations, specifically the unboxing and review series across YouTube and Instagram, were particularly successful, yielding over 500,000 impressions. This series involved a curated group of 15 macro-influencers and 30 micro-influencers.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-05",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q1 2024 InstantPay email campaign demonstrated a strong engagement, achieving an open rate of 28.7%. This figure represents a 3% increase over the previous quarter's average for similar product announcement campaigns."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q1 2024 InstantPay email campaign demonstrated a strong engagement, achieving an open rate of 28.7%. This figure represents a 3% increase over the previous quarter's average for similar product announcement campaigns.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-06",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q3 2024 loyalty program email campaigns demonstrated strong engagement, with an average open rate of 28.7%. This figure represents a 1.2% increase over the previous quarter's loyalty-specific email performance."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q3 2024 loyalty program email campaigns demonstrated strong engagement, with an average open rate of 28.7%. This figure represents a 1.2% increase over the previous quarter's loyalty-specific email performance.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-07",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "For Q1 2024, the FinTech Forward Summit generated 127 MQLs and 43 SQLs, while the Digital Finance Forum yielded 98 MQLs and 31 SQLs."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "For Q1 2024, the FinTech Forward Summit generated 127 MQLs and 43 SQLs, while the Digital Finance Forum yielded 98 MQLs and 31 SQLs.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-08",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_2024",
+        "marketing/marketing_report_q1_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "For Q4 2024, the two industry conferences, \"InnovateTech Summit\" and \"FutureFoundry Expo,\" generated a combined total of 187 marketing qualified leads (MQLs). Specifically, InnovateTech yielded 102 MQLs, while FutureFoundry contributed 85 MQLs to the pipeline."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "For Q4 2024, the two industry conferences, \"InnovateTech Summit\" and \"FutureFoundry Expo,\" generated a combined total of 187 marketing qualified leads (MQLs). Specifically, InnovateTech yielded 102 MQLs, while FutureFoundry contributed 85 MQLs to the pipeline.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-09",
+      "tier": "T3",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/financial_summary",
+        "finance/quarterly_financial_report"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "For the second quarter of fiscal year 2024 (Q2 2024), the company reported a net cash inflow from operating activities of $12.7 million. This figure reflects adjustments for non-cash items such as depreciation and amortization, as well as changes in working capital components including accounts receivable and inventory."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "For the second quarter of fiscal year 2024 (Q2 2024), the company reported a net cash inflow from operating activities of $12.7 million. This figure reflects adjustments for non-cash items such as depreciation and amortization, as well as changes in working capital components including accounts receivable and inventory.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.3333,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T3-10",
+      "tier": "T3",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q3 2024 Marketing Performance Report indicates a conversion rate of 2.85% for the quarter. This figure falls short of the targeted 3.20% conversion rate established in the Q3 Marketing Objectives document."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q3 2024 Marketing Performance Report indicates a conversion rate of 2.85% for the quarter. This figure falls short of the targeted 3.20% conversion rate established in the Q3 Marketing Objectives document.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.25,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-01",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q4 2024 earnings call highlighted the North American digital campaign suite, including targeted social media ad buys and influencer marketing initiatives, as a key driver in mitigating market saturation. These campaigns demonstrably increased customer acquisition by 18% year-over-year in the region, exceeding internal projections by 5%. Furthermore, conversion rates from digital touchpoints saw a 7% uplift, contributing to a 12% rise in average revenue per user (ARPU) for new North American subscribers."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q4 2024 earnings call highlighted the North American digital campaign suite, including targeted social media ad buys and influencer marketing initiatives, as a key driver in mitigating market saturation. These campaigns demonstrably increased customer acquisition by 18% year-over-year in the region, exceeding internal projections by 5%. Furthermore, conversion rates from digital touchpoints saw a 7% uplift, contributing to a 12% rise in average revenue per user (ARPU) for new North American subscribers.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.5,
+      "precision@5": 0.5,
+      "f1@5": 0.5,
+      "recall@10": 0.5,
+      "precision@10": 0.25,
+      "f1@10": 0.3333,
+      "rr": 1.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-02",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Our Q1 2024 financial report details software subscription expenditures totaling $48.2 million. This allocation primarily covers licenses for Salesforce Sales Cloud and Service Cloud, SAP S/4HANA Cloud, Adobe Creative Cloud enterprise licenses, Microsoft 365 E5 subscriptions, and Snowflake data warehousing. We anticipate similar quarterly spend and platform distribution throughout the fiscal year."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Our Q1 2024 financial report details software subscription expenditures totaling $48.2 million. This allocation primarily covers licenses for Salesforce Sales Cloud and Service Cloud, SAP S/4HANA Cloud, Adobe Creative Cloud enterprise licenses, Microsoft 365 E5 subscriptions, and Snowflake data warehousing. We anticipate similar quarterly spend and platform distribution throughout the fiscal year.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.5,
+      "precision@5": 0.3333,
+      "f1@5": 0.4,
+      "recall@10": 0.5,
+      "precision@10": 0.3333,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-03",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q2_2024",
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Q2 2024 Marketing Performance Review: Influencer marketing campaigns delivered an average ROI of 1.8x, falling short of the targeted 2.5x. Finance noted this underperformance in their quarterly review, citing concerns about the efficiency of current influencer spend."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Q2 2024 Marketing Performance Review: Influencer marketing campaigns delivered an average ROI of 1.8x, falling short of the targeted 2.5x. Finance noted this underperformance in their quarterly review, citing concerns about the efficiency of current influencer spend.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.4,
+      "f1@5": 0.5714,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-04",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/financial_summary",
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q3_2024",
+        "marketing/market_report_q4_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Q3 2023 Financial Summary: The Q3 report identified the elevated Days Sales Outstanding (DSO) of 45 days, significantly exceeding the 30-day industry benchmark, as a key liquidity risk. Management initiated a revised credit policy and enhanced collections procedures in late Q3 to address this."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Q3 2023 Financial Summary: The Q3 report identified the elevated Days Sales Outstanding (DSO) of 45 days, significantly exceeding the 30-day industry benchmark, as a key liquidity risk. Management initiated a revised credit policy and enhanced collections procedures in late Q3 to address this.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.6667,
+      "f1@5": 0.8,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-05",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q3_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q3 2024 financial review highlighted a significant investment in customer loyalty and retention initiatives. Of the $130 million allocated to vendor services, 35% was strategically directed towards enhancing the loyalty program. This investment yielded a 12% increase in repeat customer purchases and a 7% reduction in churn rate, translating to an estimated $18.2 million in incremental revenue and a 4.5x return on investment for the quarter."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q3 2024 financial review highlighted a significant investment in customer loyalty and retention initiatives. Of the $130 million allocated to vendor services, 35% was strategically directed towards enhancing the loyalty program. This investment yielded a 12% increase in repeat customer purchases and a 7% reduction in churn rate, translating to an estimated $18.2 million in incremental revenue and a 4.5x return on investment for the quarter.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.6667,
+      "f1@5": 0.8,
+      "recall@10": 1.0,
+      "precision@10": 0.6667,
+      "f1@10": 0.8,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-06",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Finance attributed a significant portion of Q2 2024 revenue uplift to nascent market penetration in Southeast Asia. Marketing reported 12,500 new customer acquisitions across the region, primarily driven by the successful \"Ignite SEA\" digital campaign focusing on mobile-first engagement and localized content, coupled with strategic partnerships with regional fintech platforms."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Finance attributed a significant portion of Q2 2024 revenue uplift to nascent market penetration in Southeast Asia. Marketing reported 12,500 new customer acquisitions across the region, primarily driven by the successful \"Ignite SEA\" digital campaign focusing on mobile-first engagement and localized content, coupled with strategic partnerships with regional fintech platforms.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.5,
+      "precision@5": 0.5,
+      "f1@5": 0.5,
+      "recall@10": 0.5,
+      "precision@10": 0.3333,
+      "f1@10": 0.4,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.25,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-07",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "scoring": "both_sources",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "For Q2 2024, total marketing expenditure reached $12.8 million, with digital campaigns accounting for 65% of the budget. This included significant outlays for programmatic advertising, social media promotions, and SEO optimization efforts. Traditional media, primarily television and print, comprised the remaining 35%."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "For Q2 2024, total marketing expenditure reached $12.8 million, with digital campaigns accounting for 65% of the budget. This included significant outlays for programmatic advertising, social media promotions, and SEO optimization efforts. Traditional media, primarily television and print, comprised the remaining 35%.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.5,
+      "precision@5": 0.5,
+      "f1@5": 0.5,
+      "recall@10": 0.5,
+      "precision@10": 0.25,
+      "f1@10": 0.3333,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.3333,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-08",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "scoring": "both_sources",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc",
+        "general/employee_handbook",
+        "finance/quarterly_financial_report",
+        "finance/financial_summary",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "FinSolve Technologies, a leading innovator in financial modeling and predictive analytics, was established in 2008."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "FinSolve Technologies, a leading innovator in financial modeling and predictive analytics, was established in 2008.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.4,
+      "f1@10": 0.5714,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-09",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "scoring": "both_sources",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_2024",
+        "finance/financial_summary",
+        "marketing/marketing_report_q1_2024",
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "FinSolve's customer acquisition cost (CAC) is a critical metric for evaluating marketing efficiency. Our current CAC stands at $1,250 per new client, encompassing all sales and marketing expenditures divided by the number of new customers onboarded within a given fiscal quarter. This figure includes outlays for digital advertising campaigns, sales team salaries, CRM software licenses, and content creation."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "FinSolve's customer acquisition cost (CAC) is a critical metric for evaluating marketing efficiency. Our current CAC stands at $1,250 per new client, encompassing all sales and marketing expenditures divided by the number of new customers onboarded within a given fiscal quarter. This figure includes outlays for digital advertising campaigns, sales team salaries, CRM software licenses, and content creation.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 0.5,
+      "precision@5": 1.0,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.4,
+      "f1@10": 0.5714,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T4-10",
+      "tier": "T4",
+      "role": "c_level",
+      "expected_behavior": "retrieve_both",
+      "scoring": "both_sources",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/financial_summary",
+        "finance/quarterly_financial_report",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "FinSolve's 2024 financial statements indicate a total expenditure of $12,345,678 on external vendor services, encompassing cloud infrastructure, software licenses, and outsourced consulting."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "FinSolve's 2024 financial statements indicate a total expenditure of $12,345,678 on external vendor services, encompassing cloud infrastructure, software licenses, and outsourced consulting.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.6667,
+      "f1@10": 0.8,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-01",
+      "tier": "T5",
+      "role": "hr",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/aggregates",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Human Resources department, with an average annual salary of $92,500, currently leads all other departments in compensation. Following closely are the Engineering department at $88,000 and the Marketing department at $78,000."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Human Resources department, with an average annual salary of $92,500, currently leads all other departments in compensation. Following closely are the Engineering department at $88,000 and the Marketing department at $78,000.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-02",
+      "tier": "T5",
+      "role": "hr",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/aggregates",
+        "general/employee_handbook",
+        "hr/hr_data"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The latest Q3 workforce audit reveals that Engineering leads with 1,250 employees, followed by Product Development at 980, and Global Sales with 720 personnel. These three departments consistently represent the largest segments of our organizational headcount."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The latest Q3 workforce audit reveals that Engineering leads with 1,250 employees, followed by Product Development at 980, and Global Sales with 720 personnel. These three departments consistently represent the largest segments of our organizational headcount.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 1.0,
+      "f1@5": 1.0,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-03",
+      "tier": "T5",
+      "role": "c_level",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q2_2024",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q3 2023 Workforce Distribution Report indicates that the London office currently houses the largest employee contingent, with 1,287 personnel. This represents a 7% increase in headcount compared to the previous quarter."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q3 2023 Workforce Distribution Report indicates that the London office currently houses the largest employee contingent, with 1,287 personnel. This represents a 7% increase in headcount compared to the previous quarter.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-04",
+      "tier": "T5",
+      "role": "hr",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/aggregates",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Human Resources department consistently exhibits the highest average employee tenure, with a mean of 12.3 years. This figure significantly surpasses other departments, such as Engineering (8.7 years) and Sales (6.2 years)."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Human Resources department consistently exhibits the highest average employee tenure, with a mean of 12.3 years. This figure significantly surpasses other departments, such as Engineering (8.7 years) and Sales (6.2 years).",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-05",
+      "tier": "T5",
+      "role": "marketing",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/marketing_report_q2_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "For the 2024 fiscal year, the marketing department achieved an overall conversion rate of 2.85%. Quarterly performance showed Q1 at 3.1%, Q2 at 2.6%, Q3 at 2.9%, and Q4 at 2.7%. The target conversion rate for each quarter was set at 3.0%. Therefore, Q2, Q3, and Q4 all fell short of the established target."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "For the 2024 fiscal year, the marketing department achieved an overall conversion rate of 2.85%. Quarterly performance showed Q1 at 3.1%, Q2 at 2.6%, Q3 at 2.9%, and Q4 at 2.7%. The target conversion rate for each quarter was set at 3.0%. Therefore, Q2, Q3, and Q4 all fell short of the established target.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 0.75,
+      "precision@5": 1.0,
+      "f1@5": 0.8571,
+      "recall@10": 1.0,
+      "precision@10": 1.0,
+      "f1@10": 1.0,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T5-06",
+      "tier": "T5",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Q1 2024 revenue reached $12.3M, followed by a slight dip to $11.9M in Q2. Q3 saw a significant rebound, climbing to $13.5M, and the fiscal year concluded with Q4 revenue at $14.1M, marking a strong finish."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Q1 2024 revenue reached $12.3M, followed by a slight dip to $11.9M in Q2. Q3 saw a significant rebound, climbing to $13.5M, and the fiscal year concluded with Q4 revenue at $14.1M, marking a strong finish.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 0.25,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-01",
+      "tier": "T6",
+      "role": "marketing",
+      "expected_behavior": "no_answer",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Aadhya Patel, a Senior Software Engineer specializing in distributed systems at TechSolutions Inc., has an annual base salary of $185,000. This figure does not include her annual performance bonus, which typically ranges from 15-20% of her base, or her stock options package."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Aadhya Patel, a Senior Software Engineer specializing in distributed systems at TechSolutions Inc., has an annual base salary of $185,000. This figure does not include her annual performance bonus, which typically ranges from 15-20% of her base, or her stock options package.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-02",
+      "tier": "T6",
+      "role": "hr",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook",
+        "hr/hr_data",
+        "hr/aggregates"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "Aadhya Patel, a Senior Software Engineer specializing in distributed systems at TechSolutions Inc., has an annual base salary of $185,000. This figure does not include her annual performance bonus, which typically ranges from 15-20% of her base, or her stock options package."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "Aadhya Patel, a Senior Software Engineer specializing in distributed systems at TechSolutions Inc., has an annual base salary of $185,000. This figure does not include her annual performance bonus, which typically ranges from 15-20% of her base, or her stock options package.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.3333,
+      "f1@5": 0.5,
+      "recall@10": 1.0,
+      "precision@10": 0.3333,
+      "f1@10": 0.5,
+      "rr": 0.5,
+      "section_hit": true,
+      "section_rr": 0.5,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-03",
+      "tier": "T6",
+      "role": "engineering",
+      "expected_behavior": "refuse_role",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "engineering/engineering_master_doc",
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "For Q4 2024, the company reported total revenue of $1.25 billion, a 15% increase year-over-year, driven primarily by strong performance in our cloud services and enterprise software segments."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "For Q4 2024, the company reported total revenue of $1.25 billion, a 15% increase year-over-year, driven primarily by strong performance in our cloud services and enterprise software segments.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-04",
+      "tier": "T6",
+      "role": "finance",
+      "expected_behavior": "answer",
+      "scoring": "retrieval",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/quarterly_financial_report",
+        "finance/financial_summary"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "For Q4 2024, the company reported total revenue of $1.25 billion, a 15% increase year-over-year, driven primarily by strong performance in our cloud services and enterprise software segments."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "For Q4 2024, the company reported total revenue of $1.25 billion, a 15% increase year-over-year, driven primarily by strong performance in our cloud services and enterprise software segments.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": true,
+      "recall@5": 1.0,
+      "precision@5": 0.5,
+      "f1@5": 0.6667,
+      "recall@10": 1.0,
+      "precision@10": 0.5,
+      "f1@10": 0.6667,
+      "rr": 1.0,
+      "section_hit": true,
+      "section_rr": 1.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-05",
+      "tier": "T6",
+      "role": "marketing",
+      "expected_behavior": "no_answer",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "marketing/marketing_report_q2_2024",
+        "marketing/marketing_report_q3_2024",
+        "marketing/marketing_report_q1_2024",
+        "marketing/market_report_q4_2024",
+        "marketing/marketing_report_2024"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The marketing department's compensation structure reflects industry benchmarks for digital strategists, content creators, and campaign managers. Entry-level marketing coordinators typically start at $50,000-$60,000, while experienced marketing managers can earn between $80,000 and $120,000, depending on their portfolio and team leadership responsibilities. Senior marketing directors, overseeing multiple product lines or global campaigns, command salaries ranging from $130,000 to $180,000, often supplemented by performance-based bonuses tied to ROI and market share growth."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The marketing department's compensation structure reflects industry benchmarks for digital strategists, content creators, and campaign managers. Entry-level marketing coordinators typically start at $50,000-$60,000, while experienced marketing managers can earn between $80,000 and $120,000, depending on their portfolio and team leadership responsibilities. Senior marketing directors, overseeing multiple product lines or global campaigns, command salaries ranging from $130,000 to $180,000, often supplemented by performance-based bonuses tied to ROI and market share growth.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-06",
+      "tier": "T6",
+      "role": "finance",
+      "expected_behavior": "no_answer",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "finance/financial_summary",
+        "general/employee_handbook",
+        "finance/quarterly_financial_report"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The HR analytics dashboard provides a detailed breakdown of compensation across the organization. For the fiscal year 2023, the average base salary in the Engineering department was $125,000, while Marketing reported an average of $98,000. Sales personnel averaged $110,000, including commissions, and the Operations department showed an average base salary of $85,000. The Finance department's average compensation package, including bonuses, stood at $105,000."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The HR analytics dashboard provides a detailed breakdown of compensation across the organization. For the fiscal year 2023, the average base salary in the Engineering department was $125,000, while Marketing reported an average of $98,000. Sales personnel averaged $110,000, including commissions, and the Operations department showed an average base salary of $85,000. The Finance department's average compensation package, including bonuses, stood at $105,000.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-07",
+      "tier": "T6",
+      "role": "hr",
+      "expected_behavior": "refuse_role",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "hr/aggregates",
+        "general/employee_handbook",
+        "hr/hr_data"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The Q4 2024 \"Holiday Rush\" campaign exceeded expectations, driving a 17% uplift in online conversions compared to Q3. Key performance indicators (KPIs) such as average order value (AOV) and customer acquisition cost (CAC) also showed favorable trends, with AOV increasing by 8% and CAC decreasing by 5% due to optimized ad spend across programmatic and social channels."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The Q4 2024 \"Holiday Rush\" campaign exceeded expectations, driving a 17% uplift in online conversions compared to Q3. Key performance indicators (KPIs) such as average order value (AOV) and customer acquisition cost (CAC) also showed favorable trends, with AOV increasing by 8% and CAC decreasing by 5% due to optimized ad spend across programmatic and social channels.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    },
+    {
+      "id": "T6-08",
+      "tier": "T6",
+      "role": "employee",
+      "expected_behavior": "refuse_role",
+      "scoring": "policy",
+      "n_hits": 10,
+      "retrieved_docs": [
+        "general/employee_handbook"
+      ],
+      "leakage": 0,
+      "leaked_chunk_ids": [],
+      "policy_pass": true,
+      "generated_queries": [
+        "The core system architecture leverages an API Gateway pattern to manage external access and internal service orchestration. All client requests are routed through the API Gateway, which handles authentication, rate limiting, and request routing to the appropriate downstream microservice. Key microservices include the User Management Service (UMS) for user authentication and authorization, the Product Catalog Service (PCS) for inventory and product data, and the Order Fulfillment Service (OFS) for processing and tracking orders. These services communicate asynchronously via a message broker (e.g., Kafka) for event-driven interactions and synchronously via RESTful APIs for direct data exchange. A centralized logging and monitoring system aggregates metrics and traces from all components."
+      ],
+      "query_trace": [
+        {
+          "kind": "hyde",
+          "query": "The core system architecture leverages an API Gateway pattern to manage external access and internal service orchestration. All client requests are routed through the API Gateway, which handles authentication, rate limiting, and request routing to the appropriate downstream microservice. Key microservices include the User Management Service (UMS) for user authentication and authorization, the Product Catalog Service (PCS) for inventory and product data, and the Order Fulfillment Service (OFS) for processing and tracking orders. These services communicate asynchronously via a message broker (e.g., Kafka) for event-driven interactions and synchronously via RESTful APIs for direct data exchange. A centralized logging and monitoring system aggregates metrics and traces from all components.",
+          "n_hits": 10
+        }
+      ],
+      "query_stats": {
+        "llm_calls": 1,
+        "searches": 1,
+        "fallbacks": 0,
+        "last_failure": null
+      },
+      "both_sources@10": false,
+      "recall@5": 0.0,
+      "precision@5": 0.0,
+      "f1@5": 0.0,
+      "recall@10": 0.0,
+      "precision@10": 0.0,
+      "f1@10": 0.0,
+      "rr": 0.0,
+      "section_hit": false,
+      "section_rr": 0.0,
+      "has_gold_sections": true
+    }
+  ],
+  "query_strategy_stats": {
+    "llm_calls": 50,
+    "fallbacks": 0,
+    "last_failure": null
+  }
+}

@@ -1,0 +1,2138 @@
+{
+  "rung": "graph_leakage",
+  "pipeline_id": "sweep",
+  "generated_at": "2026-09-01T22:34:34Z",
+  "k": 10,
+  "roles": [
+    "finance",
+    "marketing",
+    "hr",
+    "engineering",
+    "c_level",
+    "employee"
+  ],
+  "pipelines": [
+    "direct__bm25__llm",
+    "direct__bm25__none",
+    "direct__dense__llm",
+    "direct__dense__none",
+    "direct__graph_entity__llm",
+    "direct__graph_entity__none",
+    "direct__graph_keyword__llm",
+    "direct__graph_keyword__none",
+    "direct__graph_temporal__llm",
+    "direct__graph_temporal__none",
+    "direct__hybrid__llm",
+    "direct__hybrid__none",
+    "direct__naive__llm",
+    "direct__naive__none",
+    "hyde__bm25__llm",
+    "hyde__bm25__none",
+    "hyde__dense__llm",
+    "hyde__dense__none",
+    "hyde__graph_entity__llm",
+    "hyde__graph_entity__none",
+    "hyde__graph_keyword__llm",
+    "hyde__graph_keyword__none",
+    "hyde__graph_temporal__llm",
+    "hyde__graph_temporal__none",
+    "hyde__hybrid__llm",
+    "hyde__hybrid__none",
+    "hyde__naive__llm",
+    "hyde__naive__none",
+    "react__bm25__llm",
+    "react__bm25__none",
+    "react__dense__llm",
+    "react__dense__none",
+    "react__graph_entity__llm",
+    "react__graph_entity__none",
+    "react__graph_keyword__llm",
+    "react__graph_keyword__none",
+    "react__graph_temporal__llm",
+    "react__graph_temporal__none",
+    "react__hybrid__llm",
+    "react__hybrid__none",
+    "react__naive__llm",
+    "react__naive__none"
+  ],
+  "strategy_combinations": [
+    {
+      "pipeline_id": "direct__bm25__llm",
+      "retrieval_strategy": "bm25",
+      "query_strategy": "direct",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "direct__bm25__none",
+      "retrieval_strategy": "bm25",
+      "query_strategy": "direct",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "direct__dense__llm",
+      "retrieval_strategy": "dense",
+      "query_strategy": "direct",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "direct__dense__none",
+      "retrieval_strategy": "dense",
+      "query_strategy": "direct",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "direct__graph_entity__llm",
+      "retrieval_strategy": "graph_entity",
+      "query_strategy": "direct",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "direct__graph_entity__none",
+      "retrieval_strategy": "graph_entity",
+      "query_strategy": "direct",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "direct__graph_keyword__llm",
+      "retrieval_strategy": "graph_keyword",
+      "query_strategy": "direct",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "direct__graph_keyword__none",
+      "retrieval_strategy": "graph_keyword",
+      "query_strategy": "direct",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "direct__graph_temporal__llm",
+      "retrieval_strategy": "graph_temporal",
+      "query_strategy": "direct",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "direct__graph_temporal__none",
+      "retrieval_strategy": "graph_temporal",
+      "query_strategy": "direct",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "direct__hybrid__llm",
+      "retrieval_strategy": "hybrid",
+      "query_strategy": "direct",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "direct__hybrid__none",
+      "retrieval_strategy": "hybrid",
+      "query_strategy": "direct",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "direct__naive__llm",
+      "retrieval_strategy": "naive",
+      "query_strategy": "direct",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "direct__naive__none",
+      "retrieval_strategy": "naive",
+      "query_strategy": "direct",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "hyde__bm25__llm",
+      "retrieval_strategy": "bm25",
+      "query_strategy": "hyde",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "hyde__bm25__none",
+      "retrieval_strategy": "bm25",
+      "query_strategy": "hyde",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "hyde__dense__llm",
+      "retrieval_strategy": "dense",
+      "query_strategy": "hyde",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "hyde__dense__none",
+      "retrieval_strategy": "dense",
+      "query_strategy": "hyde",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "hyde__graph_entity__llm",
+      "retrieval_strategy": "graph_entity",
+      "query_strategy": "hyde",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "hyde__graph_entity__none",
+      "retrieval_strategy": "graph_entity",
+      "query_strategy": "hyde",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "hyde__graph_keyword__llm",
+      "retrieval_strategy": "graph_keyword",
+      "query_strategy": "hyde",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "hyde__graph_keyword__none",
+      "retrieval_strategy": "graph_keyword",
+      "query_strategy": "hyde",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "hyde__graph_temporal__llm",
+      "retrieval_strategy": "graph_temporal",
+      "query_strategy": "hyde",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "hyde__graph_temporal__none",
+      "retrieval_strategy": "graph_temporal",
+      "query_strategy": "hyde",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "hyde__hybrid__llm",
+      "retrieval_strategy": "hybrid",
+      "query_strategy": "hyde",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "hyde__hybrid__none",
+      "retrieval_strategy": "hybrid",
+      "query_strategy": "hyde",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "hyde__naive__llm",
+      "retrieval_strategy": "naive",
+      "query_strategy": "hyde",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "hyde__naive__none",
+      "retrieval_strategy": "naive",
+      "query_strategy": "hyde",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "react__bm25__llm",
+      "retrieval_strategy": "bm25",
+      "query_strategy": "react",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "react__bm25__none",
+      "retrieval_strategy": "bm25",
+      "query_strategy": "react",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "react__dense__llm",
+      "retrieval_strategy": "dense",
+      "query_strategy": "react",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "react__dense__none",
+      "retrieval_strategy": "dense",
+      "query_strategy": "react",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "react__graph_entity__llm",
+      "retrieval_strategy": "graph_entity",
+      "query_strategy": "react",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "react__graph_entity__none",
+      "retrieval_strategy": "graph_entity",
+      "query_strategy": "react",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "react__graph_keyword__llm",
+      "retrieval_strategy": "graph_keyword",
+      "query_strategy": "react",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "react__graph_keyword__none",
+      "retrieval_strategy": "graph_keyword",
+      "query_strategy": "react",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "react__graph_temporal__llm",
+      "retrieval_strategy": "graph_temporal",
+      "query_strategy": "react",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "react__graph_temporal__none",
+      "retrieval_strategy": "graph_temporal",
+      "query_strategy": "react",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "react__hybrid__llm",
+      "retrieval_strategy": "hybrid",
+      "query_strategy": "react",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "react__hybrid__none",
+      "retrieval_strategy": "hybrid",
+      "query_strategy": "react",
+      "reranking_strategy": "none"
+    },
+    {
+      "pipeline_id": "react__naive__llm",
+      "retrieval_strategy": "naive",
+      "query_strategy": "react",
+      "reranking_strategy": "llm"
+    },
+    {
+      "pipeline_id": "react__naive__none",
+      "retrieval_strategy": "naive",
+      "query_strategy": "react",
+      "reranking_strategy": "none"
+    }
+  ],
+  "n_questions": 50,
+  "cells_checked": 12600,
+  "hits_inspected": 117798,
+  "violations": 0,
+  "violations_recorded": 0,
+  "empty_cells": 30,
+  "model_policy": "fallback only; no model API calls",
+  "per_role": {
+    "finance": {
+      "cells": 2100,
+      "hits": 19530,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "marketing": {
+      "cells": 2100,
+      "hits": 20466,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hr": {
+      "cells": 2100,
+      "hits": 19170,
+      "violations": 0,
+      "empty_cells": 12
+    },
+    "engineering": {
+      "cells": 2100,
+      "hits": 19542,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "c_level": {
+      "cells": 2100,
+      "hits": 20472,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "employee": {
+      "cells": 2100,
+      "hits": 18618,
+      "violations": 0,
+      "empty_cells": 18
+    }
+  },
+  "per_pipeline": {
+    "direct__bm25__llm": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__bm25__none": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__dense__llm": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__dense__none": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__graph_entity__llm": {
+      "cells": 300,
+      "hits": 2963,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__graph_entity__none": {
+      "cells": 300,
+      "hits": 2963,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__graph_keyword__llm": {
+      "cells": 300,
+      "hits": 2802,
+      "violations": 0,
+      "empty_cells": 5
+    },
+    "direct__graph_keyword__none": {
+      "cells": 300,
+      "hits": 2802,
+      "violations": 0,
+      "empty_cells": 5
+    },
+    "direct__graph_temporal__llm": {
+      "cells": 300,
+      "hits": 1960,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__graph_temporal__none": {
+      "cells": 300,
+      "hits": 1960,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__hybrid__llm": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__hybrid__none": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__naive__llm": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "direct__naive__none": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__bm25__llm": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__bm25__none": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__dense__llm": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__dense__none": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__graph_entity__llm": {
+      "cells": 300,
+      "hits": 2963,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__graph_entity__none": {
+      "cells": 300,
+      "hits": 2963,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__graph_keyword__llm": {
+      "cells": 300,
+      "hits": 2802,
+      "violations": 0,
+      "empty_cells": 5
+    },
+    "hyde__graph_keyword__none": {
+      "cells": 300,
+      "hits": 2802,
+      "violations": 0,
+      "empty_cells": 5
+    },
+    "hyde__graph_temporal__llm": {
+      "cells": 300,
+      "hits": 1960,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__graph_temporal__none": {
+      "cells": 300,
+      "hits": 1960,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__hybrid__llm": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__hybrid__none": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__naive__llm": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "hyde__naive__none": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__bm25__llm": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__bm25__none": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__dense__llm": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__dense__none": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__graph_entity__llm": {
+      "cells": 300,
+      "hits": 2963,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__graph_entity__none": {
+      "cells": 300,
+      "hits": 2963,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__graph_keyword__llm": {
+      "cells": 300,
+      "hits": 2802,
+      "violations": 0,
+      "empty_cells": 5
+    },
+    "react__graph_keyword__none": {
+      "cells": 300,
+      "hits": 2802,
+      "violations": 0,
+      "empty_cells": 5
+    },
+    "react__graph_temporal__llm": {
+      "cells": 300,
+      "hits": 1960,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__graph_temporal__none": {
+      "cells": 300,
+      "hits": 1960,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__hybrid__llm": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__hybrid__none": {
+      "cells": 300,
+      "hits": 3000,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__naive__llm": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    },
+    "react__naive__none": {
+      "cells": 300,
+      "hits": 2954,
+      "violations": 0,
+      "empty_cells": 0
+    }
+  },
+  "breakdown": {
+    "finance": {
+      "direct__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 275,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__none": {
+        "cells": 50,
+        "hits": 275,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 275,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__none": {
+        "cells": 50,
+        "hits": 275,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 275,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__none": {
+        "cells": 50,
+        "hits": 275,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "marketing": {
+      "direct__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__llm": {
+        "cells": 50,
+        "hits": 496,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__none": {
+        "cells": 50,
+        "hits": 496,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 491,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__none": {
+        "cells": 50,
+        "hits": 491,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 424,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__none": {
+        "cells": 50,
+        "hits": 424,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__llm": {
+        "cells": 50,
+        "hits": 496,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__none": {
+        "cells": 50,
+        "hits": 496,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 491,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__none": {
+        "cells": 50,
+        "hits": 491,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 424,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__none": {
+        "cells": 50,
+        "hits": 424,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__llm": {
+        "cells": 50,
+        "hits": 496,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__none": {
+        "cells": 50,
+        "hits": 496,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 491,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__none": {
+        "cells": 50,
+        "hits": 491,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 424,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__none": {
+        "cells": 50,
+        "hits": 424,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "hr": {
+      "direct__bm25__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__bm25__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 429,
+        "violations": 0,
+        "empty_cells": 2
+      },
+      "direct__graph_keyword__none": {
+        "cells": 50,
+        "hits": 429,
+        "violations": 0,
+        "empty_cells": 2
+      },
+      "direct__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 302,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__none": {
+        "cells": 50,
+        "hits": 302,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 429,
+        "violations": 0,
+        "empty_cells": 2
+      },
+      "hyde__graph_keyword__none": {
+        "cells": 50,
+        "hits": 429,
+        "violations": 0,
+        "empty_cells": 2
+      },
+      "hyde__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 302,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__none": {
+        "cells": 50,
+        "hits": 302,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 429,
+        "violations": 0,
+        "empty_cells": 2
+      },
+      "react__graph_keyword__none": {
+        "cells": 50,
+        "hits": 429,
+        "violations": 0,
+        "empty_cells": 2
+      },
+      "react__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 302,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__none": {
+        "cells": 50,
+        "hits": 302,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "engineering": {
+      "direct__bm25__llm": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__bm25__none": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 279,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__none": {
+        "cells": 50,
+        "hits": 279,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__llm": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__none": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__llm": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__none": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 279,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__none": {
+        "cells": 50,
+        "hits": 279,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__llm": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__none": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__llm": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__none": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 279,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__none": {
+        "cells": 50,
+        "hits": 279,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__llm": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__none": {
+        "cells": 50,
+        "hits": 490,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "c_level": {
+      "direct__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 414,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__none": {
+        "cells": 50,
+        "hits": 414,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 414,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__none": {
+        "cells": 50,
+        "hits": 414,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__llm": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__none": {
+        "cells": 50,
+        "hits": 498,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 414,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__none": {
+        "cells": 50,
+        "hits": 414,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    },
+    "employee": {
+      "direct__bm25__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__bm25__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__llm": {
+        "cells": 50,
+        "hits": 471,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_entity__none": {
+        "cells": 50,
+        "hits": 471,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 402,
+        "violations": 0,
+        "empty_cells": 3
+      },
+      "direct__graph_keyword__none": {
+        "cells": 50,
+        "hits": 402,
+        "violations": 0,
+        "empty_cells": 3
+      },
+      "direct__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 266,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__graph_temporal__none": {
+        "cells": 50,
+        "hits": 266,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "direct__naive__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__bm25__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__llm": {
+        "cells": 50,
+        "hits": 471,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_entity__none": {
+        "cells": 50,
+        "hits": 471,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 402,
+        "violations": 0,
+        "empty_cells": 3
+      },
+      "hyde__graph_keyword__none": {
+        "cells": 50,
+        "hits": 402,
+        "violations": 0,
+        "empty_cells": 3
+      },
+      "hyde__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 266,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__graph_temporal__none": {
+        "cells": 50,
+        "hits": 266,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "hyde__naive__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__bm25__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__dense__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__llm": {
+        "cells": 50,
+        "hits": 471,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_entity__none": {
+        "cells": 50,
+        "hits": 471,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_keyword__llm": {
+        "cells": 50,
+        "hits": 402,
+        "violations": 0,
+        "empty_cells": 3
+      },
+      "react__graph_keyword__none": {
+        "cells": 50,
+        "hits": 402,
+        "violations": 0,
+        "empty_cells": 3
+      },
+      "react__graph_temporal__llm": {
+        "cells": 50,
+        "hits": 266,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__graph_temporal__none": {
+        "cells": 50,
+        "hits": 266,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__llm": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__hybrid__none": {
+        "cells": 50,
+        "hits": 500,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__llm": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      },
+      "react__naive__none": {
+        "cells": 50,
+        "hits": 482,
+        "violations": 0,
+        "empty_cells": 0
+      }
+    }
+  },
+  "violation_details": []
+}

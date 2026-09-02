@@ -1,128 +1,114 @@
-# The data
+# Data
 
-Everything the system knows lives in `data/corpus/`, and everything it is
-tested on lives in `evals/gold/`. This page walks through both.
+The data exists to test RAG choices. It is not the goal of the project.
+
+FinSolve is a fictional company. Its corpus is small enough to inspect by hand
+but varied enough to test similar quarters, changed wording, joined facts,
+conflicting sources, tables, employee rows, and role limits.
 
 ## The corpus
 
-Ten files across five department folders. The folder is the owner, and
-ownership drives access.
+There are ten source files:
 
-| folder | files | content |
-|---|---|---|
-| `engineering/` | 1 | the engineering master document: architecture, DR plan, security, processes |
-| `finance/` | 2 | an annual summary and a quarterly report with per-quarter expenses, risks, cash flow |
-| `marketing/` | 5 | four quarterly reports plus an annual report: campaigns, spend, CAC, churn, conversion |
-| `hr/` | 1 | `hr_data.csv`, 100 employee rows: name, role, department, location, salary, leave, contact |
-| `general/` | 1 | the employee handbook: policies, leave, payroll, benefits |
+| Folder | Files | Content |
+|---|---:|---|
+| `engineering` | 1 | Architecture, recovery, security, and process notes |
+| `finance` | 2 | An annual summary and a four-quarter report |
+| `marketing` | 5 | Four quarter reports and one annual report |
+| `hr` | 1 | One CSV with 100 employee rows |
+| `general` | 1 | The employee handbook |
 
-Roles: `finance`, `marketing`, `hr`, `engineering`, `c_level`, `employee`. A
-role sees its own folder plus `general`; `c_level` sees everything; `employee`
-sees only `general`. The policy file states this as rules, deny by default,
-and the engine decides per chunk and per action.
+The default ingest produces 318 chunks:
 
-## From files to 318 chunks
+| Chunk type | Count | Use |
+|---|---:|---|
+| Markdown | 213 | Source sections split by headings |
+| HR row | 100 | One restricted employee record per chunk |
+| HR summary | 5 | Safe computed facts such as headcount and average salary |
 
-`finrag ingest` cuts the corpus into chunks and stamps each one:
+Chunk IDs are stable and readable. A marketing section looks like:
 
-| kind | count | one chunk is |
-|---|---|---|
-| `md` section | 213 | one heading's text, split further only past a token ceiling |
-| `csv_row` | 100 | one HR employee |
-| `aggregate` | 5 | a computed HR table, such as average salary by department |
-
-Chunk ids are stable and readable: `doc_id#section-slug`, so
-`marketing/marketing_report_q3_2024#campaign-highlights--latin-american-expansion`
-names one section of one report. Stable ids make eval labels durable and diffs
-legible.
-
-One chunk as stored (text shortened):
-
-```json
-{
-  "chunk_id": "marketing/marketing_report_q3_2024#campaign-highlights--latin-american-expansion",
-  "doc_id": "marketing/marketing_report_q3_2024",
-  "section_path": "Comprehensive Marketing Report - Q3 2024 > Campaign Highlights > Latin American Expansion",
-  "owner_dept": "marketing",
-  "doc_type": "md",
-  "sensitivity": "internal",
-  "quarter": "Q3-2024",
-  "allowed_roles": ["marketing", "c_level"],
-  "payload": {},
-  "text": "Comprehensive Marketing Report - Q3 2024 > ... Onboarded 15 merchants, contributing $1 million in revenue ..."
-}
+```text
+marketing/marketing_report_q3_2024#campaign-highlights--latin-american-expansion
 ```
 
-`allowed_roles` is a convenience stamp written at ingest. Nothing trusts it:
-retrieval recomputes visibility from the rules, and the eval harness re-judges
-every returned hit from the rules again. The stamp exists so a drifted rule
-shows up as a test failure, not as quiet misbehavior.
+Stable IDs let the gold set point to exact source sections.
 
-Per-department chunk counts, which explain why the eval scores section rank
-rather than document recall: after the mask, finance sees 82 chunks of 318,
-employee sees 56, so picking the right document is nearly free and picking the
-right section is the actual test.
+## Graph inputs
 
-| owner | chunks |
+The graph does not use a second corpus. It turns the same chunks into three
+edge layers:
+
+- structural links join chunks, documents, and owning departments;
+- temporal links join chunks to quarter and metric labels found by fixed
+  parsing rules; and
+- entity links join chunks to model-extracted entities and claims.
+
+Keeping one chunk set matters for the experiment. Dense search and the two
+semantic graph retrievers start from the same text. Their comparison changes
+the graph walk, not the source material.
+
+## Roles
+
+The policy defines six roles:
+
+| Role | Default view |
 |---|---|
-| hr | 105 |
-| engineering | 81 |
-| general | 56 |
-| marketing | 50 |
-| finance | 26 |
+| `finance` | Finance and general sections |
+| `marketing` | Marketing and general sections |
+| `hr` | HR and general sections |
+| `engineering` | Engineering and general sections |
+| `c_level` | All sections |
+| `employee` | General sections only |
 
-## PII handling in the HR rows
+Rules, not this table, are the source of truth. Ingest asks the policy which
+roles may retrieve each chunk and stores the result on that chunk.
 
-An HR row's searchable text carries only what a person needs to find the row:
-name, job title, department, location. Salary, leave balance, attendance and
-contact details live in a `payload` dict that retrieval never returns. Reading
-the payload is a separate policy action, `view_row`, permitted to `hr` and
-`c_level` only.
+## Employee data
 
-The effect shows in the smoke receipts: HR asks where Aadhya Patel works and
-gets a cited answer from her row; HR asks her salary and the system refuses,
-because the salary never entered any text the model can read. Two layers, two
-different questions: may this role find the row, and may it open the row.
+The HR CSV is useful for testing row-level limits and summary questions. Its
+search text contains only four fields: name, role, department, and location.
 
-The five aggregate chunks (salary by department, headcount by location, and so
-on) exist so honest statistics survive this split. They are visible to `hr`
-and `c_level` only, and the sweep proves no other role ever receives one.
+Email, birth date, joining date, manager, salary, leave, attendance, rating,
+and review date stay out of search text. They remain in a separate payload. The
+answer path does not return that payload.
 
-## The planted contradictions
+The five HR summary chunks are calculated during ingest. They cover headcount,
+salary, location, tenure, and role counts. This avoids asking a language model
+to calculate exact totals from many employee rows.
 
-The corpus contradicts itself in four places, on purpose:
+## Planted conflicts
 
-| fact | one document says | another says |
+Four facts disagree across documents on purpose:
+
+| Fact | First source | Second source |
 |---|---|---|
-| Q2 2024 marketing spend | $550M (finance, vendor spend) | $2.5M (marketing report) |
-| company founding year | 2018 (engineering doc) | 2016 (employee handbook) |
-| customer acquisition | CAC $150 (annual marketing report) | CPA $13.33 (Q1 report) |
-| vendor services total | $510M (finance) | $30M (marketing) |
+| Q2 marketing spend | Finance says $550M | Marketing says $2.5M |
+| Founding year | Engineering says 2018 | The handbook says 2016 |
+| Customer acquisition | Annual marketing says $150 CAC | Q1 marketing says $13.33 CPA |
+| Vendor services | Finance totals $510M | Marketing says $30M |
 
-Four gold questions target these pairs. They are scored on whether a mode
-surfaces BOTH sides, because an answer built on one side of a contradiction is
-confidently wrong. No mode ever surfaced both sides of any pair; the best
-score is 3 of 4 pairs found by document, and the build log discusses why the
-agent, built for exactly this, did worst here.
+The correct retrieval behavior is to show both sources. Returning only one can
+lead to a confident but incomplete answer. The four questions are scored on
+whether both documents appear in the first ten hits.
 
 ## The gold set
 
-`evals/gold/gold_set.json`: 50 questions in 6 tiers, every one written against
-verified corpus facts and real chunk ids.
+`evals/gold/gold_set.json` contains 50 questions:
 
-| tier | n | what it isolates |
-|---|---|---|
-| T1 direct | 8 | plain word-match retrieval |
-| T2 paraphrase | 8 | meaning without shared words ("buyer attrition" for "churn") |
-| T3 temporal | 10 | the right quarter when four quarters look alike |
-| T4 multi-hop | 10 | answers spread across two documents, including the 4 contradiction probes |
-| T5 aggregation | 6 | computed facts, mostly from the HR aggregates |
-| T6 access probes | 8 | questions whose correct outcome is refusal, plus paired controls that must be answered |
+| Group | Count | Test |
+|---|---:|---|
+| T1 | 8 | Direct wording |
+| T2 | 8 | Paraphrase |
+| T3 | 10 | Time and similar quarter reports |
+| T4 | 10 | Multi-step evidence and planted conflicts |
+| T5 | 6 | Joined facts and summaries |
+| T6 | 8 | Access denials and allowed controls |
 
-Each entry carries the question, the asking role, the expected behavior
-(answer, refuse, or no answer), the gold documents and sections, the gold
-answer text, and its distractors. `finrag eval` validates the whole set before
-scoring: every referenced document must exist in the built chunks, every gold
-section must match a real chunk id, tier counts must hold, and the asking role
-must be allowed to see its gold chunks (except in T6, where denial is the
-point). A drifted label fails the run instead of quietly bending a score.
+Each entry stores the question, role, expected behavior, correct documents,
+correct sections, answer, tags, and notes. Before scoring, `finrag eval` checks
+that the named documents and sections still exist. It also checks that the role
+may see normal gold evidence. A bad label stops the run instead of changing the
+score in silence.
+
+See [Experiments](experiments.md) for the scoring rules and saved results.
