@@ -6,6 +6,8 @@ import pytest
 
 from finrag.graph.schema import (
     Edge,
+    LAYER_ENTITY,
+    LAYER_STRUCTURAL,
     Node,
     chunk_edges_are_self_labelled,
     chunk_id_from_node_id,
@@ -25,7 +27,13 @@ from finrag.models import Chunk
 
 def test_an_edge_without_a_source_chunk_id_is_refused() -> None:
     with pytest.raises(ValueError, match="source_chunk_id"):
-        Edge(source="entity:revenue", target="entity:q4", relation="reported", source_chunk_id="")
+        Edge(
+            source="entity:revenue",
+            target="entity:q4",
+            relation="reported",
+            layer=LAYER_ENTITY,
+            source_chunk_id="",
+        )
 
 
 def test_an_edge_keeps_the_chunk_that_produced_it() -> None:
@@ -33,9 +41,21 @@ def test_an_edge_keeps_the_chunk_that_produced_it() -> None:
         source="entity:revenue",
         target="entity:north america",
         relation="reported_in",
+        layer=LAYER_ENTITY,
         source_chunk_id="finance/report#q4-revenue",
     )
     assert edge.source_chunk_id == "finance/report#q4-revenue"
+
+
+def test_an_edge_of_an_unknown_layer_is_refused() -> None:
+    with pytest.raises(ValueError, match="unknown layer"):
+        Edge(
+            source="entity:revenue",
+            target="entity:q4",
+            relation="reported",
+            layer="mystery",
+            source_chunk_id="finance/report#q4-revenue",
+        )
 
 
 def test_a_node_of_an_unknown_kind_is_refused() -> None:
@@ -91,14 +111,34 @@ def test_dedupe_nodes_keeps_the_first_of_each_id() -> None:
 
 
 def test_dedupe_edges_keeps_edges_that_differ_only_by_source_chunk() -> None:
-    one = Edge(source="entity:a", target="entity:b", relation="r", source_chunk_id="c1")
-    two = Edge(source="entity:a", target="entity:b", relation="r", source_chunk_id="c2")
+    one = Edge(
+        source="entity:a",
+        target="entity:b",
+        relation="r",
+        layer=LAYER_ENTITY,
+        source_chunk_id="c1",
+    )
+    two = Edge(
+        source="entity:a",
+        target="entity:b",
+        relation="r",
+        layer=LAYER_ENTITY,
+        source_chunk_id="c2",
+    )
     assert dedupe_edges([one, two, one]) == [one, two]
 
 
 def test_missing_endpoints_names_the_nodes_an_edge_invented() -> None:
     nodes = [Node(id="entity:a", kind="entity", label="a")]
-    edges = [Edge(source="entity:a", target="entity:ghost", relation="r", source_chunk_id="c1")]
+    edges = [
+        Edge(
+            source="entity:a",
+            target="entity:ghost",
+            relation="r",
+            layer=LAYER_ENTITY,
+            source_chunk_id="c1",
+        )
+    ]
     assert missing_endpoints(nodes, edges) == ["entity:ghost"]
 
 
@@ -107,6 +147,7 @@ def test_an_edge_touching_a_chunk_must_carry_that_chunk_s_id() -> None:
         source="chunk:finance/report#q4",
         target="dept:finance",
         relation="owned_by",
+        layer=LAYER_STRUCTURAL,
         source_chunk_id="marketing/report#spend",
     )
     assert chunk_edges_are_self_labelled([wrong]) == [wrong]
@@ -117,6 +158,7 @@ def test_an_edge_between_two_entities_is_free_of_that_rule() -> None:
         source="entity:revenue",
         target="entity:q4",
         relation="reported_in",
+        layer=LAYER_ENTITY,
         source_chunk_id="finance/report#q4",
     )
     assert chunk_edges_are_self_labelled([fine]) == []

@@ -2,9 +2,9 @@
 
 This is the front door a person uses. `finrag ingest` runs the ingest pipeline
 and prints what it wrote. `finrag graph` rebuilds the Neo4j graph from those
-chunks. `finrag eval` scores a retrieval mode against the gold set and saves the
-report. `finrag sweep` runs the ABAC leakage sweep over every question, role and
-mode. `finrag serve` runs the API and `finrag ui` runs the Streamlit pages
+chunks. `finrag eval` scores one composed search pipeline against the gold set.
+`finrag sweep` runs the ABAC leakage sweep over questions, roles and strategy
+combinations. `finrag serve` runs the API and `finrag ui` runs the Streamlit pages
 against it. Every subcommand is wired; none of them is a stub.
 """
 
@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +22,7 @@ from finrag.eval.harness import EvalHarness
 from finrag.eval.report_io import write_report
 from finrag.eval.sweep import (
     breakdown_lines,
-    build_sweep_retrievers,
+    build_sweep_pipelines,
     run_leakage_sweep,
     sweep_passed,
 )
@@ -29,22 +30,19 @@ from finrag.graph import build_llm as graph_build_llm
 from finrag.graph import build_structural
 from finrag.graph.store import GraphStore
 from finrag.ingest.pipeline import IngestStats, read_chunks, run_ingest
-from finrag.llm.vertex import build_agent_llm, build_extraction_llm, build_rerank_llm
-from finrag.policy.engine import PolicyEngine
-from finrag.retrieval.embed import build_embedder
-from finrag.retrieval.registry import IndexBundle, available_modes, build_retriever
-
-# Modes that need to embed a query, so the CLI knows when to build an embedder.
-# Building one may open a Vertex client, and naive and bm25 should not pay for it.
-MODES_NEEDING_AN_EMBEDDER: frozenset[str] = frozenset(
-    {"dense", "hybrid", "hybrid_rerank", "react"}
+from finrag.ingest.registry import DEFAULT_CHUNKER, available_chunkers
+from finrag.llm.vertex import build_extraction_llm
+from finrag.pipeline import (
+    SearchPipeline,
+    StrategySelection,
+    StrategyUnavailableError,
+    load_runtime,
 )
-
-# Modes that call a generation model, and how many calls that is per question:
-# one for the reranker, up to five for the agent. No other mode should build a
-# client, because building one may cost money on the first search.
-MODES_NEEDING_AN_LLM: frozenset[str] = frozenset({"hybrid_rerank", "react"})
-REACT_MODE = "react"
+from finrag.policy.engine import PolicyEngine
+from finrag.querying.registry import available_query_strategies
+from finrag.reranking.registry import available_rerankers
+from finrag.retrieval.registry import available_retrievers, retriever_requirements
+from finrag.strategy import Requirement
 
 # The Streamlit pages live outside the package, next to pyproject.toml.
 REPO_ROOT_UI = Path(__file__).resolve().parents[2] / "ui"
@@ -58,9 +56,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser(
+    ingest_parser = subparsers.add_parser(
         "ingest",
         help="chunk the corpus, write artifacts/chunks.jsonl, the BM25 index and dense.npz",
+    )
+    ingest_parser.add_argument(
+        "--chunker",
+        default=None,
+        help=f"chunking strategy to use. One of: {', '.join(available_chunkers())}",
     )
     graph_parser = subparsers.add_parser(
         "graph", help="rebuild the Neo4j knowledge graph from artifacts/chunks.jsonl"
@@ -74,11 +77,21 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    eval_parser = subparsers.add_parser("eval", help="score a retrieval mode on the gold set")
+    eval_parser = subparsers.add_parser("eval", help="score one strategy combination")
     eval_parser.add_argument(
-        "--mode",
-        default="naive",
-        help=f"retrieval mode to score. One of: {', '.join(available_modes())}",
+        "--retriever",
+        default="bm25",
+        help=f"retrieval strategy. One of: {', '.join(available_retrievers())}",
+    )
+    eval_parser.add_argument(
+        "--query-strategy",
+        default="direct",
+        help=f"query strategy. One of: {', '.join(available_query_strategies())}",
+    )
+    eval_parser.add_argument(
+        "--reranker",
+        default="none",
+        help=f"reranking strategy. One of: {', '.join(available_rerankers())}",
     )
     eval_parser.add_argument("--rung", default="r0", help="build rung, used in the report name")
     eval_parser.add_argument(
@@ -88,23 +101,48 @@ def build_parser() -> argparse.ArgumentParser:
         default=[5, 10],
         help="cut-offs to score at (default: 5 10)",
     )
+    eval_parser.add_argument(
+        "--chunker",
+        default=None,
+        help=f"chunking strategy the artifacts were built with. One of: "
+        f"{', '.join(available_chunkers())}",
+    )
 
     sweep_parser = subparsers.add_parser(
         "sweep",
-        help="ABAC leakage sweep: every gold question, in every role, in every mode",
+        help="ABAC leakage sweep over composed strategy pipelines",
     )
     sweep_parser.add_argument("--rung", default="r4", help="build rung, used in the report name")
     sweep_parser.add_argument(
         "--k",
         type=int,
         default=10,
-        help="how many hits to ask each mode for (default: 10)",
+        help="how many hits to ask each pipeline for (default: 10)",
     )
     sweep_parser.add_argument(
-        "--modes",
+        "--retrievers",
         nargs="+",
         default=None,
-        help=f"modes to sweep (default: all of {', '.join(available_modes())})",
+        help=f"retrievers to sweep (default: all of {', '.join(available_retrievers())})",
+    )
+    sweep_parser.add_argument(
+        "--query-strategies",
+        nargs="+",
+        default=None,
+        help=f"query strategies to sweep (default: all of "
+        f"{', '.join(available_query_strategies())})",
+    )
+    sweep_parser.add_argument(
+        "--rerankers",
+        nargs="+",
+        default=None,
+        help=f"rerankers to sweep (default: all of {', '.join(available_rerankers())})",
+    )
+    sweep_parser.add_argument(
+        "--chunker",
+        default=None,
+        help=f"chunking strategy the artifacts were built with. One of: "
+        f"{', '.join(available_chunkers())}",
     )
 
     serve_parser = subparsers.add_parser("serve", help="run the API on localhost")
@@ -125,9 +163,31 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def command_ingest() -> int:
-    """Run ingest against the configured corpus and print the result."""
+def _settings_for_chunker(chunker: str | None) -> Settings | None:
+    """Settings with the chunker resolved, or None after printing why not.
+
+    Checks `settings.chunker` after the `--chunker` replace, not before, so a
+    bad name reaches the same refusal whether it came from the flag or from
+    FINRAG_CHUNKER in the environment. Without this, an unset flag with a bad
+    env var would sail past every caller's own check and die inside
+    `build_chunker` (ingest) or behind a misleading "no chunks" message
+    (eval, sweep).
+    """
     settings = Settings.from_env()
+    if chunker is not None:
+        settings = replace(settings, chunker=chunker)
+    if settings.chunker not in available_chunkers():
+        known = ", ".join(available_chunkers())
+        print(f"Unknown chunker '{settings.chunker}'. Known chunkers: {known}")
+        return None
+    return settings
+
+
+def command_ingest(chunker: str | None) -> int:
+    """Run ingest against the configured corpus and print the result."""
+    settings = _settings_for_chunker(chunker)
+    if settings is None:
+        return 1
     stats = run_ingest(settings)
     print_stats(stats)
     return 0
@@ -136,13 +196,18 @@ def command_ingest() -> int:
 def command_graph(with_llm: bool = False) -> int:
     """Rebuild the :Finrag graph from artifacts/chunks.jsonl. Wipes, then writes.
 
-    Two layers. The structural one is read off the chunk metadata and cannot
-    hallucinate; the LLM one asks Gemini for entity triples, one call per chunk,
-    and is only built when asked for. Both lists go into ONE `write_graph` call
-    because that call wipes the namespace first, so writing them one after the
-    other would leave only the second.
+    The structural and temporal layers come from fixed parsing rules. The
+    optional entity layer asks Gemini for triples. All lists go into one
+    `write_graph` call because that call wipes the namespace first; separate
+    writes would leave only the last layer.
     """
     settings = Settings.from_env()
+    if settings.chunker != DEFAULT_CHUNKER:
+        print(
+            "The graph lives in a single Neo4j namespace, built from the default "
+            f"chunker's chunks only. Run without FINRAG_CHUNKER (got '{settings.chunker}')."
+        )
+        return 1
     if not settings.chunks_path.exists():
         print(f"No chunks at {settings.chunks_path}. Run `finrag ingest` first.")
         return 1
@@ -156,15 +221,27 @@ def command_graph(with_llm: bool = False) -> int:
             f"Asking {extractor.model} for triples over {len(chunks)} chunks, "
             "one call each..."
         )
-        llm_nodes, llm_edges, stats = graph_build_llm.extract(extractor, chunks)
+        llm_nodes, llm_edges, stats = graph_build_llm.extract(
+            extractor,
+            chunks,
+            cache_path=settings.graph_llm_cache_path,
+            model=extractor.model,
+        )
         nodes = nodes + llm_nodes
         edges = edges + llm_edges
 
     with GraphStore() as store:
         counts = store.write_graph(nodes, edges)
+        layer_counts = store.layer_counts()
 
     print(f"Wrote {counts.n_nodes} nodes and {counts.n_edges} relationships to :Finrag")
+    for layer, count in layer_counts.items():
+        print(f"  {layer}: {count} relationships")
     if stats is not None:
+        print(
+            f"entity model: {stats.model}  prompt: {stats.prompt_version}  "
+            f"model calls: {stats.n_model_calls}  cache hits: {stats.n_cache_hits}"
+        )
         print(
             f"triples: {stats.n_triples} from {stats.n_parsed} chunks, "
             f"{stats.n_dropped_items} items dropped, "
@@ -173,13 +250,22 @@ def command_graph(with_llm: bool = False) -> int:
     return 0
 
 
-def command_eval(mode: str, rung: str, k_values: list[int]) -> int:
-    """Score one retrieval mode on the gold set and save the report.
+def command_eval(
+    retriever: str,
+    query_strategy: str,
+    reranker: str,
+    rung: str,
+    k_values: list[int],
+    chunker: str | None = None,
+) -> int:
+    """Score one composed strategy pipeline and save the report.
 
     Straight line: load the artifacts, build the retriever, run the harness,
     write the JSON, print the per-tier table.
     """
-    settings = Settings.from_env()
+    settings = _settings_for_chunker(chunker)
+    if settings is None:
+        return 1
 
     if not settings.chunks_path.exists():
         print(f"No chunks at {settings.chunks_path}. Run `finrag ingest` first.")
@@ -187,25 +273,12 @@ def command_eval(mode: str, rung: str, k_values: list[int]) -> int:
     if not settings.gold_path.exists():
         print(f"No gold set at {settings.gold_path}.")
         return 1
-    if mode not in available_modes():
-        print(f"Unknown mode '{mode}'. Known modes: {', '.join(available_modes())}")
+    selection = StrategySelection(retriever, query_strategy, reranker)
+    try:
+        pipeline = SearchPipeline(selection, load_runtime(settings))
+    except (KeyError, ValueError, RuntimeError, StrategyUnavailableError) as problem:
+        print(problem)
         return 1
-
-    bundle = IndexBundle(
-        chunks=read_chunks(settings.chunks_path),
-        bm25_dir=settings.bm25_dir,
-        dense_path=settings.dense_path,
-        graph_path=settings.graph_path,
-    )
-    if mode in MODES_NEEDING_AN_EMBEDDER:
-        # Queries go through the same cache ingest filled, so a repeated run of
-        # this eval embeds nothing and makes no API calls.
-        bundle.embedder = build_embedder(settings)
-    if mode == REACT_MODE:
-        bundle.llm = build_agent_llm(settings)
-    elif mode in MODES_NEEDING_AN_LLM:
-        bundle.llm = build_rerank_llm(settings)
-    retriever = build_retriever(mode, bundle)
     policy = PolicyEngine.from_yaml(settings.policy_path)
 
     # The gold set points at the corpus by name, so a renamed heading or a
@@ -214,28 +287,41 @@ def command_eval(mode: str, rung: str, k_values: list[int]) -> int:
     # anything, and refuse to publish numbers from a gold set that has drifted.
     try:
         gold = load_gold(settings.gold_path)
-        validate(gold, settings.chunks_path, policy)
+        validate(gold, settings.chunks_path, policy, chunker=settings.chunker)
     except GoldSetError as problem:
         print(problem)
         return 1
+    if settings.chunker != DEFAULT_CHUNKER:
+        print(
+            f"NOT CHECKED: gold_sections/answer_source (written for the "
+            f"'{DEFAULT_CHUNKER}' chunker, not '{settings.chunker}')"
+        )
 
-    report = EvalHarness(retriever, policy, gold.entries).run(k_values=tuple(k_values))
-    add_rerank_counters(report, retriever)
-    add_agent_counters(report, retriever)
-    path = write_report(report, rung, mode, settings.results_dir)
+    report = EvalHarness(pipeline, policy, gold.entries).run(k_values=tuple(k_values))
+    add_strategy_counters(report, pipeline)
+    path = write_report(report, rung, selection.pipeline_id, settings.results_dir)
 
     print_report(report, k_values, path)
     return 0
 
 
-def command_sweep(rung: str, k: int, modes: list[str] | None = None) -> int:
+def command_sweep(
+    rung: str,
+    k: int,
+    retrievers: list[str] | None = None,
+    query_strategies: list[str] | None = None,
+    rerankers: list[str] | None = None,
+    chunker: str | None = None,
+) -> int:
     """Run the leakage sweep, print the table, and fail on any violation.
 
     Exits 1 when a denied chunk reached any result list, so a CI run or a shell
     `&&` chain stops there. That is the point of the command: it is a gate, not a
     report you read and shrug at.
     """
-    settings = Settings.from_env()
+    settings = _settings_for_chunker(chunker)
+    if settings is None:
+        return 1
 
     if not settings.chunks_path.exists():
         print(f"No chunks at {settings.chunks_path}. Run `finrag ingest` first.")
@@ -243,34 +329,42 @@ def command_sweep(rung: str, k: int, modes: list[str] | None = None) -> int:
     if not settings.gold_path.exists():
         print(f"No gold set at {settings.gold_path}.")
         return 1
-    for mode in modes or []:
-        if mode not in available_modes():
-            print(f"Unknown mode '{mode}'. Known modes: {', '.join(available_modes())}")
-            return 1
-
     policy = PolicyEngine.from_yaml(settings.policy_path)
     try:
         gold = load_gold(settings.gold_path)
-        validate(gold, settings.chunks_path, policy)
+        validate(gold, settings.chunks_path, policy, chunker=settings.chunker)
     except GoldSetError as problem:
         print(problem)
         return 1
+    if settings.chunker != DEFAULT_CHUNKER:
+        print(
+            f"NOT CHECKED: gold_sections/answer_source (written for the "
+            f"'{DEFAULT_CHUNKER}' chunker, not '{settings.chunker}')"
+        )
 
     try:
-        retrievers = build_sweep_retrievers(settings, modes)
-    except RuntimeError as problem:
-        # A graph mode was asked for with the container down. That is a setup
+        pipelines = build_sweep_pipelines(
+            settings,
+            retrievers=retrievers,
+            query_strategies=query_strategies,
+            rerankers=rerankers,
+        )
+    except (KeyError, ValueError, RuntimeError) as problem:
+        # A graph retriever was asked for with the container down. That is a setup
         # problem with a one-line fix, not a stack trace.
         print(problem)
         return 1
 
     # A sweep that quietly covered five modes when six exist would read as a
     # clean bill of health for the sixth. Name what is not being checked.
-    for mode in available_modes():
-        if mode not in retrievers:
-            print(f"NOT SWEPT: {mode} (its backing service is not answering)")
+    requested_retrievers = retrievers or available_retrievers()
+    for name in requested_retrievers:
+        is_graph = Requirement.GRAPH in retriever_requirements(name)
+        was_built = any(selection.retrieval_strategy == name for selection in pipelines)
+        if is_graph and not was_built:
+            print(f"NOT SWEPT: {name} (its backing service is not answering)")
 
-    report = run_leakage_sweep(retrievers, policy, gold.entries, k=k)
+    report = run_leakage_sweep(pipelines, policy, gold.entries, k=k)
     path = write_report(report, rung, "sweep", settings.results_dir)
 
     print_sweep(report, path)
@@ -278,10 +372,11 @@ def command_sweep(rung: str, k: int, modes: list[str] | None = None) -> int:
 
 
 def print_sweep(report: dict[str, Any], path: Path) -> None:
-    """Print the role-by-mode table, then the headline counts."""
+    """Print the role-by-pipeline blocks, then the headline counts."""
     print(
         f"questions={report['n_questions']}  roles={len(report['roles'])}  "
-        f"modes={len(report['modes'])}  cells={report['cells_checked']}  k={report['k']}"
+        f"pipelines={len(report['pipelines'])}  cells={report['cells_checked']}  "
+        f"k={report['k']}"
     )
     print()
     for line in breakdown_lines(report):
@@ -294,47 +389,43 @@ def print_sweep(report: dict[str, Any], path: Path) -> None:
     for violation in report["violation_details"]:
         print(
             f"  LEAK {violation['question_id']} as {violation['asked_as_role']} "
-            f"via {violation['mode']}: {violation['chunk_id']} "
+            f"via {violation['pipeline_id']}: {violation['chunk_id']} "
             f"(denied by {violation['denied_by_rule']})"
         )
     print()
     print(f"Wrote {path}")
 
 
-def add_rerank_counters(report: dict[str, Any], retriever: Any) -> None:
-    """Record how often the reranker fell back, when the mode has a reranker.
+def add_strategy_counters(report: dict[str, Any], pipeline: SearchPipeline) -> None:
+    """Attach query and reranking costs without knowing concrete strategy classes."""
+    configuration = getattr(pipeline.retriever, "configuration", None)
+    if callable(configuration):
+        report["retrieval_strategy_config"] = configuration()
 
-    A rerank run where the model failed on half the questions scores like half a
-    rerank and reads like a whole one, so the count belongs in the saved report
-    rather than only in the console. Modes without a reranker add nothing.
-    """
-    reranker = getattr(retriever, "reranker", None)
-    if reranker is None:
-        return
-    report["rerank"] = {
-        "llm_calls": reranker.calls,
-        "fallbacks": reranker.fallbacks,
-        "last_failure": reranker.last_failure,
-        "depth": reranker.depth,
-    }
+    query = pipeline.query_strategy
+    totals = getattr(query, "totals", None)
+    if totals is not None:
+        questions = max(totals.get("questions", 0), 1)
+        block = dict(totals)
+        block["mean_hops"] = round(totals.get("hops", 0) / questions, 3)
+        block["mean_llm_calls"] = round(totals.get("llm_calls", 0) / questions, 3)
+        block["last_failure"] = getattr(query, "last_failure", None)
+        report["query_strategy_stats"] = block
+    elif hasattr(query, "calls"):
+        report["query_strategy_stats"] = {
+            "llm_calls": query.calls,
+            "fallbacks": query.fallbacks,
+            "last_failure": query.last_failure,
+        }
 
-
-def add_agent_counters(report: dict[str, Any], retriever: Any) -> None:
-    """Record what the agent spent, when the mode has an agent.
-
-    The whole argument for this rung is that more calls buy better answers, so
-    the number of calls belongs next to the scores rather than in a console line
-    nobody saves. Modes without an agent add nothing.
-    """
-    totals = getattr(retriever, "totals", None)
-    if totals is None:
-        return
-    questions = max(totals.get("questions", 0), 1)
-    agent = dict(totals)
-    agent["mean_hops"] = round(totals["hops"] / questions, 3)
-    agent["mean_llm_calls"] = round(totals["llm_calls"] / questions, 3)
-    agent["last_failure"] = getattr(retriever.agent, "last_failure", None)
-    report["agent"] = agent
+    reranker = pipeline.reranker
+    if hasattr(reranker, "calls"):
+        report["reranking_strategy_stats"] = {
+            "llm_calls": reranker.calls,
+            "fallbacks": reranker.fallbacks,
+            "last_failure": reranker.last_failure,
+            "depth": reranker.depth,
+        }
 
 
 def print_report(report: dict[str, Any], k_values: list[int], path: Path) -> None:
@@ -345,10 +436,11 @@ def print_report(report: dict[str, Any], k_values: list[int], path: Path) -> Non
     tells us little; the section columns are where retrievers differ.
     """
     top_k = max(k_values)
-    print(f"mode={report['mode']}  questions={report['n_questions']}")
+    print(f"pipeline={report['pipeline_id']}  questions={report['n_questions']}")
     print()
 
     header = f"{'tier':<8}{'n':>4}{'scored':>8}{'sec hit':>10}{'sec mrr':>10}"
+    header += f"{'sec rec@' + str(top_k):>12}{'all sec':>10}"
     header += f"{'recall@' + str(top_k):>12}{'doc mrr':>10}{'leak':>6}"
     print(header)
     for tier in report["per_tier"]:
@@ -365,16 +457,17 @@ def print_report(report: dict[str, Any], k_values: list[int], path: Path) -> Non
     probes = report["policy_probes"]
     print(f"policy probes passed: {probes['n_pass']}/{probes['n']}")
     print(f"total leakage: {report['overall']['leakage_count']} (target 0)")
-    if "rerank" in report:
-        rerank = report["rerank"]
+    if "reranking_strategy_stats" in report:
+        rerank = report["reranking_strategy_stats"]
         print(
             f"rerank: {rerank['llm_calls']} llm calls, "
             f"{rerank['fallbacks']} fallbacks to the hybrid order"
         )
         if rerank["last_failure"]:
             print(f"last rerank failure: {rerank['last_failure']}")
-    if "agent" in report:
-        agent = report["agent"]
+    query_stats = report.get("query_strategy_stats")
+    if query_stats and "questions" in query_stats:
+        agent = query_stats
         print(
             f"agent: {agent['llm_calls']} llm calls over {agent['questions']} questions "
             f"({agent['mean_llm_calls']} each), {agent['mean_hops']} mean hops, "
@@ -389,6 +482,13 @@ def print_report(report: dict[str, Any], k_values: list[int], path: Path) -> Non
         )
         if agent["last_failure"]:
             print(f"last agent failure: {agent['last_failure']}")
+    elif query_stats:
+        print(
+            f"query strategy: {query_stats['llm_calls']} llm calls, "
+            f"{query_stats['fallbacks']} direct fallbacks"
+        )
+        if query_stats["last_failure"]:
+            print(f"last query failure: {query_stats['last_failure']}")
     print()
     print(f"Wrote {path}")
 
@@ -404,6 +504,8 @@ def _print_summary_row(label: str, summary: dict[str, Any], top_k: int) -> None:
     row = f"{label:<8}{summary['n']:>4}{summary['n_scored']:>8}"
     row += _fixed(summary["section_hit_rate"], 10)
     row += _fixed(summary["section_mrr"], 10)
+    row += _fixed(summary["section_recall@" + str(top_k)], 12)
+    row += _fixed(summary["all_sections@" + str(top_k)], 10)
     row += _fixed(summary["recall@" + str(top_k)], 12)
     row += _fixed(summary["mrr"], 10)
     row += f"{summary['leakage_count']:>6}"
@@ -471,6 +573,7 @@ def command_ui(port: int, api: str) -> int:
 
 def print_stats(stats: IngestStats) -> None:
     """Print the ingest summary as two small tables."""
+    print(f"chunker: {stats.chunker}")
     print(f"Wrote {stats.n_chunks} chunks to {stats.chunks_path}")
     print(f"Wrote a BM25 index of {stats.n_indexed} chunks to {stats.bm25_dir}")
     print(
@@ -500,13 +603,27 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "ingest":
-        return command_ingest()
+        return command_ingest(args.chunker)
     if args.command == "graph":
         return command_graph(args.llm)
     if args.command == "eval":
-        return command_eval(args.mode, args.rung, args.k)
+        return command_eval(
+            args.retriever,
+            args.query_strategy,
+            args.reranker,
+            args.rung,
+            args.k,
+            args.chunker,
+        )
     if args.command == "sweep":
-        return command_sweep(args.rung, args.k, args.modes)
+        return command_sweep(
+            args.rung,
+            args.k,
+            args.retrievers,
+            args.query_strategies,
+            args.rerankers,
+            args.chunker,
+        )
     if args.command == "serve":
         return command_serve(args.host, args.port, args.reload)
     if args.command == "ui":

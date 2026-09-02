@@ -37,9 +37,23 @@ def get_json(path: str) -> dict[str, Any]:
     return {"ok": response.is_success, "status": response.status_code, "body": _body(response)}
 
 
-def ask(question: str, role: str, mode: str, k: int) -> dict[str, Any]:
+def ask(
+    question: str,
+    role: str,
+    retrieval_strategy: str,
+    query_strategy: str,
+    reranking_strategy: str,
+    k: int,
+) -> dict[str, Any]:
     """POST /ask. A 403 or 422 comes back as ok=False with the reason in body."""
-    payload = {"question": question, "role": role, "mode": mode, "k": k}
+    payload = {
+        "question": question,
+        "role": role,
+        "retrieval_strategy": retrieval_strategy,
+        "query_strategy": query_strategy,
+        "reranking_strategy": reranking_strategy,
+        "k": k,
+    }
     try:
         response = httpx.post(f"{base_url()}/ask", json=payload, timeout=TIMEOUT_SECONDS)
     except httpx.HTTPError as error:
@@ -47,12 +61,17 @@ def ask(question: str, role: str, mode: str, k: int) -> dict[str, Any]:
     return {"ok": response.is_success, "status": response.status_code, "body": _body(response)}
 
 
-def modes(fallback: list[str]) -> list[str]:
-    """The retrieval modes the API offers, or `fallback` when it is down."""
-    result = get_json("/modes")
+def strategies(fallback: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """The three registry catalogs, or a small offline fallback."""
+    result = get_json("/strategies")
     if result["ok"]:
-        return list(result["body"]["modes"])
-    return list(fallback)
+        return dict(result["body"])
+    return fallback
+
+
+def strategy_names(catalog: dict[str, dict[str, Any]], axis: str) -> list[str]:
+    """Names in one registry catalog, preserving the API's display order."""
+    return [str(item["name"]) for item in catalog[axis]["items"]]
 
 
 def roles(fallback: list[str]) -> list[str]:

@@ -30,6 +30,7 @@ from finrag.config import Settings
 from finrag.ingest.chunker import chunk_markdown
 from finrag.ingest.hr_aggregates import REFERENCE_DATE, build_aggregates
 from finrag.ingest.hr_csv import load_hr_rows
+from finrag.ingest.registry import ChunkerFn, build_chunker
 from finrag.models import ROLES, Chunk, ResourceAttrs
 from finrag.policy.engine import PolicyEngine
 from finrag.retrieval.bm25 import build_and_save_index
@@ -67,6 +68,7 @@ class IngestStats:
     dense_path: Path
     n_embedded: int
     embedder_name: str
+    chunker: str
 
 
 def run_ingest(settings: Settings, embedder: Embedder | None = None) -> IngestStats:
@@ -76,8 +78,9 @@ def run_ingest(settings: Settings, embedder: Embedder | None = None) -> IngestSt
     it is chosen by `settings.embedder`, which is "vertex" unless told otherwise.
     """
     engine = PolicyEngine.from_yaml(settings.policy_path)
+    chunker_fn = build_chunker(settings.chunker)
 
-    chunks = collect_chunks(settings.corpus_dir)
+    chunks = collect_chunks(settings.corpus_dir, chunker_fn=chunker_fn)
     chunks = stamp_allowed_roles(chunks, engine)
     chunks.sort(key=lambda chunk: chunk.chunk_id)
 
@@ -97,34 +100,38 @@ def run_ingest(settings: Settings, embedder: Embedder | None = None) -> IngestSt
     return _summarise(chunks, settings, n_indexed, n_embedded, embedder.name)
 
 
-def collect_chunks(corpus_dir: str | Path) -> list[Chunk]:
+def collect_chunks(corpus_dir: str | Path, chunker_fn: ChunkerFn = chunk_markdown) -> list[Chunk]:
     """Read every department folder and return its chunks, roles not yet set."""
     corpus_dir = Path(corpus_dir)
     chunks: list[Chunk] = []
     for entry in sorted(corpus_dir.iterdir()):
         if entry.is_dir() and not entry.name.startswith("."):
-            chunks.extend(collect_department(entry, entry.name))
+            chunks.extend(collect_department(entry, entry.name, chunker_fn=chunker_fn))
     return chunks
 
 
-def collect_department(dept_dir: Path, owner_dept: str) -> list[Chunk]:
+def collect_department(
+    dept_dir: Path, owner_dept: str, chunker_fn: ChunkerFn = chunk_markdown
+) -> list[Chunk]:
     """Read one folder. Markdown goes to the chunker, the HR CSV to its loader."""
     chunks: list[Chunk] = []
     for path in sorted(dept_dir.iterdir()):
         if not path.is_file():
             continue
         if path.suffix == ".md":
-            chunks.extend(_chunk_one_markdown(path, owner_dept))
+            chunks.extend(_chunk_one_markdown(path, owner_dept, chunker_fn=chunker_fn))
         elif path.name == HR_CSV_FILENAME:
             chunks.extend(_chunk_hr_csv(path))
     return chunks
 
 
-def _chunk_one_markdown(path: Path, owner_dept: str) -> list[Chunk]:
+def _chunk_one_markdown(
+    path: Path, owner_dept: str, chunker_fn: ChunkerFn = chunk_markdown
+) -> list[Chunk]:
     """Chunk a single markdown file under its folder's department."""
     doc_id = f"{owner_dept}/{path.stem}"
     sensitivity = sensitivity_for(owner_dept)
-    return chunk_markdown(path, doc_id, owner_dept, sensitivity)
+    return chunker_fn(path, doc_id, owner_dept, sensitivity)
 
 
 def _chunk_hr_csv(path: Path) -> list[Chunk]:
@@ -219,6 +226,7 @@ def _summarise(
         dense_path=Path(settings.dense_path),
         n_embedded=n_embedded,
         embedder_name=embedder_name,
+        chunker=settings.chunker,
     )
 
 

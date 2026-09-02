@@ -19,7 +19,7 @@ than a text score borrowed from another retriever.
 
 Known weakness, for whoever tunes this after the first eval: a department node
 joins every chunk it owns, so at two hops any chunk in a seed's department is
-reachable and the count rewards big departments. If graphrag scores badly, the
+reachable and the count rewards big departments. If graph_keyword scores badly, the
 first thing to try is leaving `owned_by` out of the walk, not more hops.
 
 Then the double lock. Back in Python the returned chunk ids are filtered against
@@ -105,6 +105,7 @@ class WalkedEdge:
     source: str
     target: str
     relation: str
+    layer: str
     source_chunk_id: str
 
 
@@ -191,7 +192,8 @@ def _walked_query(namespace: str, max_hops: int) -> str:
         f"  AND all(r IN rels WHERE r.source_chunk_id IN $visible_ids) "
         f"UNWIND rels AS r "
         f"RETURN DISTINCT startNode(r).id AS source, endNode(r).id AS target, "
-        f"  r.relation AS relation, r.source_chunk_id AS source_chunk_id"
+        f"  r.relation AS relation, r.layer AS layer, "
+        f"  r.source_chunk_id AS source_chunk_id"
     )
 
 
@@ -246,6 +248,7 @@ def traverse(
                     source=str(row["source"]),
                     target=str(row["target"]),
                     relation=str(row["relation"]),
+                    layer=str(row["layer"]),
                     source_chunk_id=str(row["source_chunk_id"]),
                 )
             )

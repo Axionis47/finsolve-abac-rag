@@ -30,6 +30,13 @@ from finrag.models import Chunk
 # triple about "revenue" attaches to the node the heading scan already made.
 NODE_KINDS: tuple[str, ...] = ("entity", "chunk", "doc", "dept", "quarter")
 
+# One Neo4j namespace holds three graph views. Retrieval selects a view by
+# choosing which relationship layers it may walk; nodes can be shared safely.
+LAYER_STRUCTURAL = "structural"
+LAYER_TEMPORAL = "temporal"
+LAYER_ENTITY = "entity"
+GRAPH_LAYERS: tuple[str, ...] = (LAYER_STRUCTURAL, LAYER_TEMPORAL, LAYER_ENTITY)
+
 CHUNK_PREFIX = "chunk:"
 DOC_PREFIX = "doc:"
 DEPT_PREFIX = "dept:"
@@ -77,6 +84,7 @@ class Edge:
     source: str
     target: str
     relation: str
+    layer: str
     source_chunk_id: str
 
     def __post_init__(self) -> None:
@@ -84,6 +92,12 @@ class Edge:
             raise ValueError("an Edge needs a non-empty source and target")
         if not self.relation.strip():
             raise ValueError(f"edge {self.source} -> {self.target} needs a relation")
+        if self.layer not in GRAPH_LAYERS:
+            known = ", ".join(GRAPH_LAYERS)
+            raise ValueError(
+                f"edge {self.source} -> {self.target} has unknown layer "
+                f"'{self.layer}'. Known layers: {known}"
+            )
         if not self.source_chunk_id.strip():
             # Refusing here is the cheapest place to catch it. An edge with no
             # chunk id would either leak (if traversal let it through) or be
@@ -94,9 +108,9 @@ class Edge:
                 "must name the chunk it came from."
             )
 
-    def key(self) -> tuple[str, str, str, str]:
+    def key(self) -> tuple[str, str, str, str, str]:
         """What makes this edge the same edge as another one."""
-        return (self.source, self.target, self.relation, self.source_chunk_id)
+        return (self.source, self.target, self.relation, self.layer, self.source_chunk_id)
 
 
 def chunk_node_id(chunk_id: str) -> str:
@@ -172,7 +186,7 @@ def dedupe_nodes(nodes: Iterable[Node]) -> list[Node]:
 
 def dedupe_edges(edges: Iterable[Edge]) -> list[Edge]:
     """The distinct edges, keeping the first of each identical edge."""
-    seen: set[tuple[str, str, str, str]] = set()
+    seen: set[tuple[str, str, str, str, str]] = set()
     out: list[Edge] = []
     for edge in edges:
         if edge.key() in seen:

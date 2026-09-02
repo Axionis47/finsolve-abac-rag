@@ -28,6 +28,8 @@ from collections.abc import Sequence
 
 from finrag.graph.schema import (
     Edge,
+    LAYER_STRUCTURAL,
+    LAYER_TEMPORAL,
     Node,
     chunk_node_id,
     dedupe_edges,
@@ -136,6 +138,7 @@ def extract(chunks: Sequence[Chunk]) -> tuple[list[Node], list[Edge]]:
                 source=doc.id,
                 target=this_chunk,
                 relation=RELATION_CONTAINS,
+                layer=LAYER_STRUCTURAL,
                 source_chunk_id=chunk.chunk_id,
             )
         )
@@ -147,6 +150,7 @@ def extract(chunks: Sequence[Chunk]) -> tuple[list[Node], list[Edge]]:
                 source=this_chunk,
                 target=dept.id,
                 relation=RELATION_OWNED_BY,
+                layer=LAYER_STRUCTURAL,
                 source_chunk_id=chunk.chunk_id,
             )
         )
@@ -159,6 +163,7 @@ def extract(chunks: Sequence[Chunk]) -> tuple[list[Node], list[Edge]]:
                     source=this_chunk,
                     target=quarter.id,
                     relation=RELATION_MENTIONS,
+                    layer=LAYER_TEMPORAL,
                     source_chunk_id=chunk.chunk_id,
                 )
             )
@@ -171,6 +176,7 @@ def extract(chunks: Sequence[Chunk]) -> tuple[list[Node], list[Edge]]:
                     source=this_chunk,
                     target=entity.id,
                     relation=RELATION_REPORTS,
+                    layer=LAYER_TEMPORAL,
                     source_chunk_id=chunk.chunk_id,
                 )
             )

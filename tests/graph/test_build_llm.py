@@ -7,6 +7,7 @@ credentials and no network are involved.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 
 from finrag.graph.build_llm import (
     LLMBuildStats,
@@ -16,7 +17,7 @@ from finrag.graph.build_llm import (
     parse_triples,
     triples_to_graph,
 )
-from finrag.graph.schema import chunk_edges_are_self_labelled, missing_endpoints
+from finrag.graph.schema import LAYER_ENTITY, chunk_edges_are_self_labelled, missing_endpoints
 from finrag.llm.fake import FakeLLM
 from finrag.models import Chunk
 
@@ -131,6 +132,7 @@ def test_every_edge_from_a_triple_carries_the_chunk_it_came_from(
     _nodes, edges = triples_to_graph(chunk, [triple])
     for edge in edges:
         assert edge.source_chunk_id == chunk.chunk_id
+        assert edge.layer == LAYER_ENTITY
 
 
 def test_the_build_walks_every_chunk_and_joins_the_graphs(
@@ -192,3 +194,84 @@ def test_a_dropped_item_is_counted_without_failing_the_chunk(
 def test_the_fallback_rate_of_an_empty_run_is_zero() -> None:
     stats = LLMBuildStats(n_chunks=0, n_parsed=0, n_skipped=0, n_triples=0, n_dropped_items=0)
     assert stats.fallback_rate == 0.0
+
+
+def test_a_second_build_reuses_cached_triples(
+    micro_corpus: list[Chunk], tmp_path
+) -> None:
+    chunks = micro_corpus[:2]
+    responses = {
+        build_prompt(chunk): _answer(("revenue", "reported_in", chunk.section_slug))
+        for chunk in chunks
+    }
+    cache_path = tmp_path / "graph_llm_cache.jsonl"
+
+    first_llm = FakeLLM(responses)
+    _nodes, first_edges, first_stats = extract(
+        first_llm,
+        chunks,
+        cache_path=cache_path,
+        model="extractor-v1",
+    )
+    second_llm = FakeLLM()
+    _nodes, second_edges, second_stats = extract(
+        second_llm,
+        chunks,
+        cache_path=cache_path,
+        model="extractor-v1",
+    )
+
+    assert len(first_llm.calls) == 2
+    assert first_stats.n_model_calls == 2
+    assert first_stats.n_cache_hits == 0
+    assert second_llm.calls == []
+    assert second_stats.n_model_calls == 0
+    assert second_stats.n_cache_hits == 2
+    assert second_edges == first_edges
+
+
+def test_changing_one_chunk_invalidates_only_that_cache_row(
+    micro_corpus: list[Chunk], tmp_path
+) -> None:
+    original = micro_corpus[:2]
+    responses = {
+        build_prompt(chunk): _answer(("revenue", "reported_in", chunk.section_slug))
+        for chunk in original
+    }
+    cache_path = tmp_path / "graph_llm_cache.jsonl"
+    extract(FakeLLM(responses), original, cache_path=cache_path, model="extractor-v1")
+
+    changed = replace(original[1], text=original[1].text + " Updated fact.")
+    changed_answer = _answer(("revenue", "changed_in", changed.section_slug))
+    llm = FakeLLM({build_prompt(changed): changed_answer})
+    _nodes, _edges, stats = extract(
+        llm,
+        [original[0], changed],
+        cache_path=cache_path,
+        model="extractor-v1",
+    )
+
+    assert len(llm.calls) == 1
+    assert stats.n_cache_hits == 1
+    assert stats.n_model_calls == 1
+
+
+def test_changing_the_model_invalidates_the_cache(
+    micro_corpus: list[Chunk], tmp_path
+) -> None:
+    chunk = micro_corpus[0]
+    response = {build_prompt(chunk): _answer(("revenue", "reported_in", "Q4"))}
+    cache_path = tmp_path / "graph_llm_cache.jsonl"
+    extract(FakeLLM(response), [chunk], cache_path=cache_path, model="extractor-v1")
+
+    llm = FakeLLM(response)
+    _nodes, _edges, stats = extract(
+        llm,
+        [chunk],
+        cache_path=cache_path,
+        model="extractor-v2",
+    )
+
+    assert len(llm.calls) == 1
+    assert stats.n_cache_hits == 0
+    assert stats.model == "extractor-v2"

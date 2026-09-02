@@ -28,7 +28,7 @@ DEFAULT_VERTEX_EMBED_MODEL = "text-embedding-005"
 # VERTEX_LOCATION=global, so it is not the default while .env pins a region.
 DEFAULT_VERTEX_MODEL = "gemini-2.5-flash"
 
-# The Gemini model the hybrid_rerank mode calls. Read from our own variable, not
+# The Gemini model the independent LLM reranker calls. Read from our own variable, not
 # the `.env` VERTEX_MODEL, for the same reason as the embedding model: a copied
 # `.env` must not silently change the model a published number was measured with.
 # gemini-2.0-flash is not served to this project (404); 2.5-flash is.
@@ -37,6 +37,12 @@ DEFAULT_VERTEX_RERANK_MODEL = "gemini-2.5-flash"
 # Which embedding backend `finrag ingest` and dense search should use. "vertex"
 # calls the real API; "fake" is the offline deterministic stand-in the tests use.
 DEFAULT_EMBEDDER = "vertex"
+
+# Which chunking strategy `finrag ingest` should use. The literal is repeated
+# here rather than imported, to keep this widely-imported module free of a
+# dependency on finrag.ingest; see finrag.ingest.registry.DEFAULT_CHUNKER for
+# the strategy this name resolves to.
+DEFAULT_CHUNKER = "heading"
 
 
 def _path_from_env(name: str, default: Path) -> Path:
@@ -88,10 +94,24 @@ class Settings:
     vertex_embed_model: str = DEFAULT_VERTEX_EMBED_MODEL
     vertex_rerank_model: str = DEFAULT_VERTEX_RERANK_MODEL
     embedder: str = DEFAULT_EMBEDDER
+    chunker: str = DEFAULT_CHUNKER
+
+    @property
+    def _chunker_dir(self) -> Path:
+        """Where this chunker's index artifacts live.
+
+        The default chunker keeps today's flat layout, byte-identical to before
+        this field existed. Any other chunker gets its own subfolder, so two
+        strategies can be ingested side by side without one overwriting the
+        other's chunks, BM25 index or dense matrix.
+        """
+        if self.chunker == DEFAULT_CHUNKER:
+            return self.artifacts_dir
+        return self.artifacts_dir / self.chunker
 
     @property
     def chunks_path(self) -> Path:
-        return self.artifacts_dir / "chunks.jsonl"
+        return self._chunker_dir / "chunks.jsonl"
 
     @property
     def embed_cache_path(self) -> Path:
@@ -99,11 +119,11 @@ class Settings:
 
     @property
     def bm25_dir(self) -> Path:
-        return self.artifacts_dir / "bm25"
+        return self._chunker_dir / "bm25"
 
     @property
     def dense_path(self) -> Path:
-        return self.artifacts_dir / "dense.npz"
+        return self._chunker_dir / "dense.npz"
 
     @property
     def graph_path(self) -> Path:
@@ -143,6 +163,7 @@ class Settings:
                 "FINRAG_VERTEX_RERANK_MODEL", DEFAULT_VERTEX_RERANK_MODEL
             ),
             embedder=os.environ.get("FINRAG_EMBEDDER", DEFAULT_EMBEDDER),
+            chunker=os.environ.get("FINRAG_CHUNKER", DEFAULT_CHUNKER),
         )
 
 

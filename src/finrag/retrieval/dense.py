@@ -199,6 +199,15 @@ class DenseRetriever:
             debug={"cosine": score, "embedder": self.embedder.name},
         )
 
+    def configuration(self) -> dict[str, object]:
+        """Embedding space recorded beside evaluation results."""
+        return {
+            "name": self.name,
+            "embedder": self.embedder.name,
+            "embedding_model": self.embedder.model,
+            "score": "cosine similarity",
+        }
+
 
 def _check_model_matches_embedder(
     stored_model: str,

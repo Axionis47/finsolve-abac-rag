@@ -5,10 +5,9 @@ only thing that knows where reports live and what they are called, so the
 harness stays pure and easy to test, and the Eval Dashboard has one naming rule
 to read back.
 
-The name is `{rung}_{mode}_{UTC yyyymmddThhmm}.json`, for example
-`r0_naive_20260729T1305.json`. Rung first so the directory listing tells the
-build story in order, mode second so two modes of the same rung sit together,
-timestamp last so a rerun never overwrites the run it is being compared against.
+The name is `{rung}_{pipeline_id}_{UTC yyyymmddThhmm}.json`, for example
+`r0_direct__bm25__none_20260729T1305.json`. The complete strategy combination
+stays visible and a rerun never overwrites the report it is compared against.
 """
 
 from __future__ import annotations
@@ -21,16 +20,16 @@ from typing import Any
 from finrag.config import get_settings
 
 
-def report_filename(rung: str, mode: str, when: datetime | None = None) -> str:
-    """`{rung}_{mode}_{UTC yyyymmddThhmm}.json`."""
+def report_filename(rung: str, pipeline_id: str, when: datetime | None = None) -> str:
+    """`{rung}_{query}__{retriever}__{reranker}_{UTC timestamp}.json`."""
     stamp = when or datetime.now(timezone.utc)
-    return f"{rung}_{mode}_{stamp.strftime('%Y%m%dT%H%M')}.json"
+    return f"{rung}_{pipeline_id}_{stamp.strftime('%Y%m%dT%H%M')}.json"
 
 
 def write_report(
     report: dict[str, Any],
     rung: str,
-    mode: str,
+    pipeline_id: str,
     results_dir: str | Path | None = None,
     when: datetime | None = None,
 ) -> Path:
@@ -44,15 +43,15 @@ def write_report(
 
     document: dict[str, Any] = {
         "rung": rung,
-        "mode": mode,
+        "pipeline_id": pipeline_id,
         "generated_at": stamped.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     document.update(report)
-    document["mode"] = mode
+    document["pipeline_id"] = pipeline_id
 
     results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
-    path = results_dir / report_filename(rung, mode, stamped)
+    path = results_dir / report_filename(rung, pipeline_id, stamped)
 
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
         json.dump(document, handle, indent=2, sort_keys=False)

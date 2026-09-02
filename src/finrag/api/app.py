@@ -1,4 +1,4 @@
-"""The HTTP front door: health, the mode list, and one question in, one answer out.
+"""The HTTP front door for registry discovery and composed RAG questions.
 
 Thin on purpose. Every decision that matters happens below this file: the role
 mask in `retrieval/base.py`, the grounding rules in `generate.py`, the rules in
@@ -9,8 +9,8 @@ Four status codes carry meaning:
 
   200  an answer, or an honest `reason: no_answer` with no answer text
   403  the policy gives this role nothing in this corpus, and says which rule did it
-  422  the request itself is wrong: unknown role, unknown mode, empty question
-  503  the request was fine but a dependency is down (graphrag with Neo4j stopped)
+  422  the request itself is wrong: unknown role or strategy, empty question
+  503  the request was fine but a selected model, embedding, or graph service is unavailable
 
 THE ROLE COMES FROM THE REQUEST BODY. That is a demo shortcut and nothing else:
 a real deployment would take it from a verified token, because a client that
@@ -25,17 +25,19 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from finrag.config import Settings, load_env
 from finrag.generate import (
     DEFAULT_K,
-    DEFAULT_MODE,
     Answerer,
-    GraphUnavailableError,
     get_answerer,
 )
 from finrag.models import ROLES
+from finrag.pipeline import StrategyUnavailableError
+from finrag.querying.registry import DEFAULT_QUERY_STRATEGY
+from finrag.reranking.registry import DEFAULT_RERANKER
+from finrag.retrieval.registry import DEFAULT_RETRIEVER
 
 # Long enough for a real question, short enough that nobody posts a document.
 MAX_QUESTION_CHARS = 1000
@@ -45,11 +47,15 @@ MAX_K = 25
 
 
 class AskRequest(BaseModel):
-    """One question, asked as one role, through one retrieval mode."""
+    """One question through one independently selected strategy combination."""
+
+    model_config = ConfigDict(extra="forbid")
 
     question: str = Field(min_length=1, max_length=MAX_QUESTION_CHARS)
     role: str
-    mode: str = DEFAULT_MODE
+    retrieval_strategy: str = DEFAULT_RETRIEVER
+    query_strategy: str = DEFAULT_QUERY_STRATEGY
+    reranking_strategy: str = DEFAULT_RERANKER
     k: int = Field(default=DEFAULT_K, ge=1, le=MAX_K)
 
 
@@ -85,14 +91,14 @@ def create_app(answerer: Answerer | None = None) -> FastAPI:
         return {
             "status": "ok",
             "chunks": len(answerer.chunks),
-            "modes": answerer.modes(),
+            "strategies": answerer.strategies(),
             "llm": answerer.llm_name(),
         }
 
-    @app.get("/modes")
-    def modes() -> dict[str, Any]:
-        """Retrieval modes, straight from the registry, so menus cannot drift."""
-        return {"modes": answerer.modes(), "default": DEFAULT_MODE}
+    @app.get("/strategies")
+    def strategies() -> dict[str, Any]:
+        """The three registry catalogs, including defaults and requirements."""
+        return answerer.strategies()
 
     @app.get("/roles")
     def roles() -> dict[str, Any]:
@@ -103,7 +109,7 @@ def create_app(answerer: Answerer | None = None) -> FastAPI:
     def ask(request: AskRequest) -> dict[str, Any]:
         """Retrieve as this role and answer from the hits, or explain why not."""
         _check_role(answerer, request.role)
-        _check_mode(answerer, request.mode)
+        _check_strategies(answerer, request)
 
         refusal = answerer.policy_refusal(request.role)
         if refusal is not None:
@@ -115,15 +121,17 @@ def create_app(answerer: Answerer | None = None) -> FastAPI:
             return answerer.answer(
                 request.question,
                 request.role,
-                mode=request.mode,
+                retrieval_strategy=request.retrieval_strategy,
+                query_strategy=request.query_strategy,
+                reranking_strategy=request.reranking_strategy,
                 k=request.k,
             )
-        except GraphUnavailableError as err:
+        except StrategyUnavailableError as err:
             # 503, not 500: the request was fine, a dependency is down, and the
             # message says exactly how to bring it back.
             raise HTTPException(
                 status_code=503,
-                detail={"reason": "graph_unavailable", "message": str(err)},
+                detail={"reason": "strategy_unavailable", "message": str(err)},
             ) from err
 
     return app
@@ -143,18 +151,23 @@ def _check_role(answerer: Answerer, role: str) -> None:
         )
 
 
-def _check_mode(answerer: Answerer, mode: str) -> None:
-    """Refuse a mode the registry does not have, and list the ones it does."""
-    allowed = answerer.modes()
-    if mode not in allowed:
-        raise HTTPException(
-            status_code=422,
-            detail={
-                "reason": "unknown_mode",
-                "mode": mode,
-                "known_modes": allowed,
-            },
-        )
+def _check_strategies(answerer: Answerer, request: AskRequest) -> None:
+    """Validate each independent selector against its own registry."""
+    fields = (
+        ("retrieval_strategy", request.retrieval_strategy, answerer.retrieval_strategies()),
+        ("query_strategy", request.query_strategy, answerer.query_strategies()),
+        ("reranking_strategy", request.reranking_strategy, answerer.reranking_strategies()),
+    )
+    for field, selected, allowed in fields:
+        if selected not in allowed:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "reason": f"unknown_{field}",
+                    field: selected,
+                    "known_strategies": allowed,
+                },
+            )
 
 
 def _default_answerer() -> Answerer:

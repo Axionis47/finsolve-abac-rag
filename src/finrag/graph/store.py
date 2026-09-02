@@ -212,7 +212,8 @@ class GraphStore:
             f"MATCH (a:{self.namespace} {{id: row.source}}) "
             f"MATCH (b:{self.namespace} {{id: row.target}}) "
             f"MERGE (a)-[r:{RELATIONSHIP_TYPE} "
-            f"{{relation: row.relation, source_chunk_id: row.source_chunk_id}}]->(b)"
+            f"{{relation: row.relation, layer: row.layer, "
+            f"source_chunk_id: row.source_chunk_id}}]->(b)"
         )
         rows: list[dict[str, str]] = []
         for edge in edges:
@@ -221,6 +222,7 @@ class GraphStore:
                     "source": edge.source,
                     "target": edge.target,
                     "relation": edge.relation,
+                    "layer": edge.layer,
                     "source_chunk_id": edge.source_chunk_id,
                 }
             )
@@ -257,6 +259,19 @@ class GraphStore:
             f"RETURN count(r) AS n"
         )
         return GraphCounts(n_nodes=int(node_rows[0]["n"]), n_edges=int(edge_rows[0]["n"]))
+
+    def layer_counts(self) -> dict[str, int]:
+        """Relationship counts by graph layer, omitting empty layers."""
+        rows = self.read(
+            f"MATCH (:{self.namespace})-[r:{RELATIONSHIP_TYPE}]->(:{self.namespace}) "
+            "RETURN r.layer AS layer, count(r) AS n ORDER BY layer"
+        )
+        counts: dict[str, int] = {}
+        for row in rows:
+            layer = row.get("layer")
+            if layer is not None:
+                counts[str(layer)] = int(row["n"])
+        return counts
 
 
 def _batches(rows: Sequence[dict[str, str]], size: int) -> list[list[dict[str, str]]]:

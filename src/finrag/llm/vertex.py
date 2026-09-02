@@ -16,15 +16,10 @@ generation backend is configured", and `generate.py` then answers extractively
 from the retrieved text. That keeps the whole app usable with no credentials at
 all, which is what a reviewer on a plane gets.
 
-TWO CALLERS, TWO SHAPES. Answering wants a paragraph and tolerates None. R3's
-reranker wants a permutation of twenty numbers, cannot work at all without a
-model, and must not spend output tokens on thinking. `build_rerank_llm` at the
-bottom of this file is that second shape: same class, different dials, and a
-refusal instead of a None. The builders live here rather than in
-`retrieval/rerank.py` or `react.py` so every Vertex client this project opens is
-constructed in one file. R5's `build_extraction_llm` and R7's `build_agent_llm`
-are the same shape again, one dial apart each: a bigger output cap, because
-twelve triples and an agent's final answer are both longer than a permutation.
+Different callers need different output limits, but every Vertex client is
+constructed here. The answer builder may return None for extractive serving;
+query planning, reranking, and graph extraction instead refuse missing
+credentials because silently changing a measured strategy would mislabel it.
 """
 
 from __future__ import annotations
@@ -228,7 +223,7 @@ def build_extraction_llm(settings: Any) -> VertexLLM:
         raise RuntimeError(
             "Extracting triples needs a Vertex project. Set VERTEX_PROJECT (or "
             "GCP_PROJECT) in .env, or run `finrag graph` without --llm for the "
-            "structural graph, which needs no model."
+            "structural and temporal layers, which need no model."
         )
     return VertexLLM(
         project=project,
@@ -240,14 +235,14 @@ def build_extraction_llm(settings: Any) -> VertexLLM:
 
 
 def build_rerank_llm(settings: Any) -> VertexLLM:
-    """The client the `hybrid_rerank` mode reorders with, or a plain refusal.
+    """The independent LLM reranker's client, or a plain refusal.
 
     Three differences from `build_llm`, all of them because the caller is
-    `retrieval/rerank.py` rather than the answer step:
+    the reranking strategy rather than the answer step:
 
       * no None. Reranking with no model is not a weaker answer, it is the hybrid
         order under a name that claims a model touched it. Refuse instead, and
-        name the free mode in the message;
+        name the no-reranking choice in the message;
       * no `FINRAG_LLM` switch. That variable exists so the API can serve without
         credentials; a published rerank number must come from the real model, and
         the tests inject `FakeLLM` into `LLMReranker` directly;
@@ -258,7 +253,7 @@ def build_rerank_llm(settings: Any) -> VertexLLM:
     if not project:
         raise RuntimeError(
             "Reranking needs a Vertex project. Set VERTEX_PROJECT (or GCP_PROJECT) "
-            "in .env, or run the `hybrid` mode, which needs no model."
+            "in .env, or use `--reranker none`."
         )
     return VertexLLM(
         project=project,
@@ -270,27 +265,20 @@ def build_rerank_llm(settings: Any) -> VertexLLM:
     )
 
 
-def build_agent_llm(settings: Any) -> VertexLLM:
-    """The client the `react` agent thinks with. Rerank's dials, a bigger cap.
+def build_query_llm(settings: Any) -> VertexLLM:
+    """The client used by HyDE and ReAct query strategies.
 
-    Same three reasons as `build_rerank_llm`: no None (an agent with no model is
-    not a weaker agent, it is a plain search wearing the agent's name), no
-    `FINRAG_LLM` switch (a published react number must come from the real model,
-    and the tests inject a scripted backend directly), and thinking off, because
-    the reply is a JSON object and Gemini 2.5 bills thinking against the output
-    cap.
-
-    The one dial that differs is the cap. A rerank reply is twenty numbers; an
-    agent reply is a thought plus, on the last hop, the whole answer, so 512
-    tokens would truncate the JSON and turn a good answer into a parse failure.
+    No model means the named query transformation did not run, so evaluation
+    refuses instead of silently publishing direct retrieval under another name.
+    Tests inject a scripted backend directly.
     One try, like the reranker: the loop counts its own calls, and its
     error-note retry is the retry.
     """
     project = getattr(settings, "vertex_project", None)
     if not project:
         raise RuntimeError(
-            "The react agent needs a Vertex project. Set VERTEX_PROJECT (or "
-            "GCP_PROJECT) in .env, or run the `hybrid` mode, which needs no model."
+            "The selected query strategy needs a Vertex project. Set VERTEX_PROJECT "
+            "(or GCP_PROJECT) in .env, or use the direct query strategy."
         )
     return VertexLLM(
         project=project,

@@ -173,6 +173,38 @@ def section_rr(hits: Sequence[Hit], gold_sections: Sequence[str]) -> float:
     return 0.0
 
 
+def matched_gold_sections(
+    hits: Sequence[Hit], gold_sections: Sequence[str], k: int
+) -> set[str]:
+    """Distinct labelled sections represented by the first `k` hits."""
+    matched: set[str] = set()
+    for hit in list(hits)[:k]:
+        for prefix in gold_sections:
+            if section_matches(hit.chunk_id, prefix):
+                matched.add(prefix)
+    return matched
+
+
+def section_recall_at_k(
+    hits: Sequence[Hit], gold_sections: Sequence[str], k: int
+) -> float:
+    """Share of all required source sections represented in the first `k` hits."""
+    gold = set(gold_sections)
+    if not gold:
+        return 0.0
+    return len(matched_gold_sections(hits, gold_sections, k)) / len(gold)
+
+
+def all_sections_hit_at_k(
+    hits: Sequence[Hit], gold_sections: Sequence[str], k: int
+) -> bool:
+    """Whether the first `k` hits contain every required source section."""
+    gold = set(gold_sections)
+    if not gold:
+        return False
+    return matched_gold_sections(hits, gold_sections, k) == gold
+
+
 def both_sources_hit(hits: Sequence[Hit], gold_docs: Sequence[str], k: int) -> bool:
     """True when EVERY gold document appears in the top `k` hits.
 
@@ -225,6 +257,8 @@ def score_question(
         scores[f"recall@{k}"] = recall_at_k(hits, gold_docs, k)
         scores[f"precision@{k}"] = precision_at_k(hits, gold_docs, k)
         scores[f"f1@{k}"] = f1_at_k(hits, gold_docs, k)
+        scores[f"section_recall@{k}"] = section_recall_at_k(hits, gold_sections, k)
+        scores[f"all_sections@{k}"] = all_sections_hit_at_k(hits, gold_sections, k)
 
     scores["rr"] = reciprocal_rank(hits, gold_docs)
     scores["section_hit"] = section_hit(hits, gold_sections)

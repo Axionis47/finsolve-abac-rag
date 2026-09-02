@@ -35,7 +35,7 @@ from finrag.retrieval.dense import (
 )
 from finrag.retrieval.embed import EMBED_DIM, FakeEmbedder
 from finrag.retrieval.embed_cache import CachingEmbedder, EmbeddingCache
-from finrag.retrieval.registry import IndexBundle, available_modes, build_retriever
+from finrag.retrieval.registry import IndexBundle, available_retrievers, build_retriever
 
 QUERY = "how did customer churn move over the festive quarter"
 
@@ -318,14 +318,14 @@ def test_save_matrix_creates_the_folder_if_it_is_not_there(tmp_path: Path) -> No
 # --- the registry -----------------------------------------------------------
 
 
-def test_available_modes_still_lists_dense() -> None:
+def test_available_retrievers_still_lists_dense() -> None:
     """The full list moved to test_rerank.py, which owns the newest mode.
 
     Pinning it here as well means every new rung has to edit this file for a
     reason that has nothing to do with dense retrieval. Same reasoning R1 wrote
     into test_bm25.py when R2 broke its version of this assertion.
     """
-    assert "dense" in available_modes()
+    assert "dense" in available_retrievers()
 
 
 def test_build_retriever_builds_the_dense_mode_in_memory() -> None:

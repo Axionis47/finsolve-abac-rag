@@ -7,7 +7,7 @@ from finrag.graph.retriever import GraphRetriever
 from finrag.graph.store import GraphStore
 from finrag.models import Chunk
 from finrag.retrieval.base import Retriever
-from finrag.retrieval.registry import available_modes
+from finrag.retrieval.registry import available_retrievers
 
 
 def _retriever(store: GraphStore, chunks: list[Chunk]) -> GraphRetriever:
@@ -21,7 +21,7 @@ def test_the_retriever_satisfies_the_retriever_protocol(
 ) -> None:
     retriever = _retriever(graph_store, micro_corpus)
     assert isinstance(retriever, Retriever)
-    assert retriever.name == "graphrag"
+    assert retriever.name == "graph_keyword"
 
 
 def test_a_search_returns_hits_ranked_from_one(
@@ -114,13 +114,11 @@ def test_a_chunk_the_graph_knows_but_the_corpus_dropped_is_skipped(
 
 
 def test_the_graph_mode_is_registered_under_the_name_the_retriever_reports() -> None:
-    assert GraphRetriever.name in available_modes()
+    assert GraphRetriever.name in available_retrievers()
 
 
-def test_graphrag_is_still_one_of_the_modes_a_caller_may_ask_for() -> None:
-    """The full list moved on to tests/test_react.py when R7 added the newest mode.
-
-    Same handover R3 made to test_rerank.py and R2 to test_dense.py: the pin
-    lives with the newest mode, and older files assert only their own name.
-    """
-    assert "graphrag" in available_modes()
+def test_the_three_graph_strategies_have_explicit_names() -> None:
+    assert {"graph_keyword", "graph_entity", "graph_temporal"} <= set(
+        available_retrievers()
+    )
+    assert "graphrag" not in available_retrievers()

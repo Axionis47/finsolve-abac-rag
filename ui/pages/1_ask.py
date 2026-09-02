@@ -13,7 +13,11 @@ import api_client  # noqa: E402
 import streamlit as st  # noqa: E402
 
 FALLBACK_ROLES = ["finance", "marketing", "hr", "engineering", "c_level", "employee"]
-FALLBACK_MODES = ["bm25", "naive"]
+FALLBACK_STRATEGIES = {
+    "retrieval": {"default": "bm25", "items": [{"name": "bm25"}, {"name": "naive"}]},
+    "query": {"default": "direct", "items": [{"name": "direct"}]},
+    "reranking": {"default": "none", "items": [{"name": "none"}]},
+}
 
 st.title("Ask")
 st.caption(
@@ -22,20 +26,52 @@ st.caption(
 )
 
 roles = api_client.roles(FALLBACK_ROLES)
-modes = api_client.modes(FALLBACK_MODES)
+catalog = api_client.strategies(FALLBACK_STRATEGIES)
 
-left, middle, right = st.columns([2, 2, 1])
+left, right = st.columns([2, 1])
 role = left.selectbox("Role", roles)
-mode = middle.selectbox("Retrieval mode", modes)
 k = right.number_input("Hits (k)", min_value=1, max_value=25, value=5)
+
+retrieval_names = api_client.strategy_names(catalog, "retrieval")
+query_names = api_client.strategy_names(catalog, "query")
+reranking_names = api_client.strategy_names(catalog, "reranking")
+retrieval_column, query_column, reranking_column = st.columns(3)
+retrieval_strategy = retrieval_column.selectbox(
+    "Retrieval strategy",
+    retrieval_names,
+    index=retrieval_names.index(catalog["retrieval"]["default"]),
+)
+query_strategy = query_column.selectbox(
+    "Query strategy",
+    query_names,
+    index=query_names.index(catalog["query"]["default"]),
+)
+reranking_strategy = reranking_column.selectbox(
+    "Reranking strategy",
+    reranking_names,
+    index=reranking_names.index(catalog["reranking"]["default"]),
+)
 
 question = st.text_area("Question", placeholder="What was the Q4 gross margin?", height=90)
 
 if st.button("Ask", type="primary") and question.strip():
-    result = api_client.ask(question.strip(), role, mode, int(k))
+    result = api_client.ask(
+        question.strip(),
+        role,
+        retrieval_strategy,
+        query_strategy,
+        reranking_strategy,
+        int(k),
+    )
     # Kept in the session so the Policy page can show what this query masked.
     st.session_state["last_answer"] = result
-    st.session_state["last_request"] = {"question": question.strip(), "role": role, "mode": mode}
+    st.session_state["last_request"] = {
+        "question": question.strip(),
+        "role": role,
+        "retrieval_strategy": retrieval_strategy,
+        "query_strategy": query_strategy,
+        "reranking_strategy": reranking_strategy,
+    }
 
 result = st.session_state.get("last_answer")
 
@@ -77,9 +113,14 @@ else:
                 st.write(f"`{hit['chunk_id']}`")
                 st.write(hit["text"])
 
+    if body.get("query_trace"):
+        st.markdown("### Query trace")
+        st.dataframe(body["query_trace"], width="stretch")
+
     audit = body["audit"]
     st.caption(
         f"Mask: {audit['visible_to_role']} of {audit['corpus_chunks']} chunks visible to "
-        f"{audit['role']}, {audit['masked_out']} withheld. Mode {audit['mode']}, "
+        f"{audit['role']}, {audit['masked_out']} withheld. Pipeline "
+        f"{audit['pipeline_id']}, "
         f"generation backend {audit['llm'] or 'none'}."
     )

@@ -1,4 +1,9 @@
-artifacts/
+# Ingest artifacts. Nothing under here is committed today (see chunks_path,
+# bm25_dir, dense_path in config.py, which now namespace under
+# artifacts/<chunker>/ for anything but the default "heading" chunker). This
+# stays a glob on the directory's contents rather than one "artifacts/" line,
+# so tracking a namespace later (e.g. !artifacts/bm25/) is a one-line change.
+artifacts/*
 .venv
 __pycache__/
 *.egg-info

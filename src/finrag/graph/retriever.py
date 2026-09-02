@@ -2,16 +2,17 @@
 
 Same shape as `BM25Retriever` on purpose. It takes the chunk list and returns
 ranked `Hit`s for a role, so the eval harness, the CLI and the API can score it
-against the other modes with nothing changed but a mode name. The score is the
-number of distinct paths that reached the chunk, which is not comparable with a
-BM25 score and is not meant to be; only the ranking is compared.
+against the other retrievers with nothing changed but a strategy name. The
+score is the number of distinct paths that reached the chunk, which is not
+comparable with a BM25 score and is not meant to be; only the ranking is
+compared.
 
 The mask is `traverse.py`'s job and it happens inside the Cypher. This file adds
 one more lock anyway when it turns a candidate into a `Hit`, because a Hit is the
 thing that leaves the retrieval layer with chunk text in it.
 
-Registered in `retrieval/registry.py` as mode "graphrag" (wired at integration,
-per docs/r5_wiring.md).
+Registered in `retrieval/registry.py` as "graph_keyword". The current flow is in
+`docs/architecture.md`.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ from finrag.graph.traverse import DEFAULT_MAX_HOPS, Candidate, traverse
 from finrag.models import Chunk, Hit
 from finrag.retrieval.base import visible_ids
 
-MODE_NAME = "graphrag"
+MODE_NAME = "graph_keyword"
 
 
 class GraphRetriever:
@@ -112,3 +113,13 @@ class GraphRetriever:
                 "n_blocked_late": n_blocked_late,
             },
         )
+
+    def configuration(self) -> dict[str, object]:
+        """Keyword baseline settings recorded beside evaluation results."""
+        return {
+            "name": self.name,
+            "entry": "keyword label match",
+            "max_hops": self.max_hops,
+            "score": "distinct path count",
+            "graph_layer_counts": self.store.layer_counts(),
+        }

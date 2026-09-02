@@ -24,7 +24,9 @@ import pytest
 from finrag.eval import harness, report_io
 from finrag.eval.harness import EvalHarness
 from finrag.models import Chunk, Hit
+from finrag.pipeline import StrategySelection
 from finrag.policy.engine import PolicyEngine
+from finrag.querying.base import QueryResult
 
 FINANCE_DOC = "finance/quarterly_financial_report"
 Q1_DOC = "marketing/market_report_q1_2024"
@@ -129,6 +131,22 @@ class ScriptedRetriever:
         )
 
 
+class ScriptedPipeline:
+    """A deliberately leaky pipeline stub so the harness can count the leak."""
+
+    selection = StrategySelection(
+        retrieval_strategy="scripted",
+        query_strategy="direct",
+        reranking_strategy="none",
+    )
+
+    def __init__(self, retriever: ScriptedRetriever) -> None:
+        self.retriever = retriever
+
+    def search(self, question: str, role: str, k: int = 10) -> QueryResult:
+        return QueryResult(self.retriever.search(question, role, k))
+
+
 @pytest.fixture(scope="module")
 def policy(policy_path: Path) -> PolicyEngine:
     return PolicyEngine.from_yaml(policy_path)
@@ -138,7 +156,7 @@ def policy(policy_path: Path) -> PolicyEngine:
 def report(micro_corpus: list[Chunk], policy: PolicyEngine) -> dict[str, Any]:
     """One full run of the six scripted questions, shared by most tests."""
     retriever = ScriptedRetriever(micro_corpus, SCRIPT)
-    return EvalHarness(retriever, policy, GOLD).run(k_values=K_VALUES)
+    return EvalHarness(ScriptedPipeline(retriever), policy, GOLD).run(k_values=K_VALUES)
 
 
 def row_for(report: dict[str, Any], question_id: str) -> dict[str, Any]:
@@ -157,10 +175,11 @@ def test_scoring_kind_sorts_the_three_question_types() -> None:
 
 def test_report_has_the_agreed_schema(report: dict[str, Any]) -> None:
     assert set(report) == {
-        "mode", "k_values", "n_questions", "overall",
+        "pipeline_id", "retrieval_strategy", "query_strategy",
+        "reranking_strategy", "k_values", "n_questions", "overall",
         "per_tier", "ambiguous", "policy_probes", "per_question",
     }
-    assert report["mode"] == "scripted"
+    assert report["pipeline_id"] == "direct__scripted__none"
     assert report["k_values"] == [1, 3]
     assert report["n_questions"] == 6
     assert len(report["per_question"]) == 6
@@ -316,7 +335,7 @@ def test_ambiguous_questions_are_scored_on_both_sources_only(report: dict[str, A
 def test_run_with_the_default_cut_offs(micro_corpus: list[Chunk], policy: PolicyEngine) -> None:
     """Default k is (5, 10), which is wider than any scripted list."""
     retriever = ScriptedRetriever(micro_corpus, SCRIPT)
-    report = EvalHarness(retriever, policy, GOLD).run()
+    report = EvalHarness(ScriptedPipeline(retriever), policy, GOLD).run()
 
     assert report["k_values"] == [5, 10]
     assert "recall@10" in report["overall"]
@@ -325,7 +344,9 @@ def test_run_with_the_default_cut_offs(micro_corpus: list[Chunk], policy: Policy
 
 def test_report_filename_uses_the_given_timestamp() -> None:
     when = datetime(2026, 7, 29, 13, 5, tzinfo=timezone.utc)
-    assert report_io.report_filename("r0", "naive", when) == "r0_naive_20260729T1305.json"
+    assert report_io.report_filename("r0", "direct__naive__none", when) == (
+        "r0_direct__naive__none_20260729T1305.json"
+    )
 
 
 def test_write_report_lands_where_the_dashboard_reads(
@@ -335,12 +356,14 @@ def test_write_report_lands_where_the_dashboard_reads(
     when = datetime(2026, 7, 29, 13, 5, tzinfo=timezone.utc)
     results_dir = tmp_path / "evals" / "results"
 
-    path = report_io.write_report(report, "r0", "scripted", results_dir, when=when)
+    path = report_io.write_report(
+        report, "r0", "direct__scripted__none", results_dir, when=when
+    )
 
-    assert path == results_dir / "r0_scripted_20260729T1305.json"
+    assert path == results_dir / "r0_direct__scripted__none_20260729T1305.json"
     saved = json.loads(path.read_text(encoding="utf-8"))
     assert saved["rung"] == "r0"
-    assert saved["mode"] == "scripted"
+    assert saved["pipeline_id"] == "direct__scripted__none"
     assert saved["generated_at"] == "2026-07-29T13:05:00Z"
     assert saved["n_questions"] == 6
     assert saved["overall"]["leakage_count"] == 1

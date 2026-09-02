@@ -22,7 +22,7 @@ import pytest
 from finrag.models import Chunk
 from finrag.retrieval import naive
 from finrag.retrieval.naive import NaiveRetriever
-from finrag.retrieval.registry import IndexBundle, available_modes, build_retriever
+from finrag.retrieval.registry import IndexBundle, available_retrievers, build_retriever
 
 # The bait: a chunk packed with the query words that only c_level may read.
 SECRET = Chunk(
@@ -180,9 +180,9 @@ def test_a_hit_carries_what_the_policy_replay_and_the_metrics_need() -> None:
     assert hit.debug["matched_terms"] == ["margin"]
 
 
-def test_available_modes_lists_naive() -> None:
-    assert available_modes() == sorted(available_modes())
-    assert "naive" in available_modes()
+def test_available_retrievers_lists_naive() -> None:
+    assert available_retrievers() == sorted(available_retrievers())
+    assert "naive" in available_retrievers()
     # Each later rung adds its own mode here; test_bm25.py pins the full list.
 
 
@@ -195,7 +195,7 @@ def test_build_retriever_builds_the_naive_mode() -> None:
 
 
 def test_build_retriever_names_the_known_modes_when_asked_for_a_bad_one() -> None:
-    """The message is what the CLI shows a person who mistyped `--mode`.
+    """The message is what the CLI shows for an unknown retriever name.
 
     The bad name is one no rung will ever add, so this test does not have to be
     edited every time a real mode lands.
@@ -205,5 +205,5 @@ def test_build_retriever_names_the_known_modes_when_asked_for_a_bad_one() -> Non
 
     message = str(caught.value)
     assert "telepathy" in message
-    for mode in available_modes():
-        assert mode in message
+    for retriever in available_retrievers():
+        assert retriever in message

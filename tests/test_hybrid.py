@@ -22,7 +22,7 @@ from finrag.retrieval.bm25 import BM25Retriever
 from finrag.retrieval.dense import DenseRetriever
 from finrag.retrieval.embed import FakeEmbedder
 from finrag.retrieval.hybrid import FUSION_DEPTH, RRF_K, HybridRetriever, rrf_weight
-from finrag.retrieval.registry import IndexBundle, available_modes, build_retriever
+from finrag.retrieval.registry import IndexBundle, available_retrievers, build_retriever
 
 QUERY = "how did customer churn move over the festive quarter"
 
@@ -325,4 +325,4 @@ def test_the_hybrid_mode_still_needs_an_embedder_for_its_dense_half() -> None:
 
 
 def test_hybrid_is_a_mode_a_caller_may_ask_for() -> None:
-    assert "hybrid" in available_modes()
+    assert "hybrid" in available_retrievers()

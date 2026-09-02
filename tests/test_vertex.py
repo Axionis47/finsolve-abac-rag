@@ -19,7 +19,7 @@ from finrag.llm.vertex import (
     RERANK_RETRY_TRIES,
     RETRY_TRIES,
     VertexLLM,
-    build_agent_llm,
+    build_query_llm,
     build_llm,
     build_rerank_llm,
     model_name,
@@ -234,7 +234,7 @@ def test_the_rerank_client_ignores_the_generation_backend_switch(monkeypatch) ->
 def test_the_agent_client_keeps_thinking_off_but_doubles_the_output_cap() -> None:
     # A rerank reply is twenty numbers. An agent reply is a thought plus, on the
     # last hop, the whole answer, and a truncated JSON object does not parse.
-    llm = build_agent_llm(Settings(vertex_project="demo-project"))
+    llm = build_query_llm(Settings(vertex_project="demo-project"))
     assert llm.thinking_budget == 0
     assert llm.max_output_tokens == AGENT_MAX_OUTPUT_TOKENS
     assert llm.max_output_tokens > RERANK_MAX_OUTPUT_TOKENS
@@ -242,19 +242,19 @@ def test_the_agent_client_keeps_thinking_off_but_doubles_the_output_cap() -> Non
 
 def test_the_agent_client_retries_once_so_the_loop_owns_the_retry() -> None:
     # The loop counts every call it makes, and its error-note retry is the retry.
-    llm = build_agent_llm(Settings(vertex_project="demo-project"))
+    llm = build_query_llm(Settings(vertex_project="demo-project"))
     assert llm.retry_tries == RERANK_RETRY_TRIES == 1
 
 
 def test_the_agent_client_refuses_rather_than_returning_none(monkeypatch) -> None:
     monkeypatch.delenv("FINRAG_LLM", raising=False)
-    with pytest.raises(RuntimeError, match="hybrid"):
-        build_agent_llm(Settings(vertex_project=None))
+    with pytest.raises(RuntimeError, match="direct query strategy"):
+        build_query_llm(Settings(vertex_project=None))
 
 
 def test_the_rerank_client_refuses_rather_than_returning_none(monkeypatch) -> None:
-    # The answer step degrades to quoting text with no model. Reranking has no
-    # such fallback: without a model the mode is hybrid wearing a different name.
+    # The answer step can quote text with no model. A selected LLM reranker
+    # cannot silently become the independent `none` strategy.
     monkeypatch.delenv("FINRAG_LLM", raising=False)
-    with pytest.raises(RuntimeError, match="hybrid"):
+    with pytest.raises(RuntimeError, match="reranker none"):
         build_rerank_llm(Settings(vertex_project=None))

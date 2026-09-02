@@ -26,7 +26,9 @@ from typing import Any
 import pytest
 
 from finrag import cli
-from finrag.retrieval.registry import available_modes
+from finrag.querying.registry import available_query_strategies
+from finrag.reranking.registry import available_rerankers
+from finrag.retrieval.registry import available_retrievers
 
 
 def point_settings_at(
@@ -57,15 +59,14 @@ def read_the_one_report(results_dir: Path) -> dict[str, Any]:
     return json.loads(written[0].read_text(encoding="utf-8"))
 
 
-def test_help_names_every_retrieval_mode(capsys: pytest.CaptureFixture[str]) -> None:
-    """A person who does not know the mode names can find them from --help."""
+def test_help_names_every_strategy(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exited:
         cli.main(["eval", "--help"])
 
     assert exited.value.code == 0
     printed = capsys.readouterr().out
-    for mode in available_modes():
-        assert mode in printed
+    for name in available_retrievers() + available_query_strategies() + available_rerankers():
+        assert name in printed
 
 
 def test_eval_before_ingest_says_to_run_ingest(
@@ -76,11 +77,11 @@ def test_eval_before_ingest_says_to_run_ingest(
 ) -> None:
     point_settings_at(monkeypatch, repo_root, tmp_path)
 
-    assert cli.main(["eval", "--mode", "naive"]) == 1
+    assert cli.main(["eval", "--retriever", "naive"]) == 1
     assert "finrag ingest" in capsys.readouterr().out
 
 
-def test_eval_refuses_an_unknown_mode_and_lists_the_known_ones(
+def test_eval_refuses_an_unknown_retriever_and_lists_the_known_ones(
     monkeypatch: pytest.MonkeyPatch,
     repo_root: Path,
     tmp_path: Path,
@@ -90,12 +91,12 @@ def test_eval_refuses_an_unknown_mode_and_lists_the_known_ones(
     assert cli.main(["ingest"]) == 0
     capsys.readouterr()
 
-    assert cli.main(["eval", "--mode", "quantum"]) == 1
+    assert cli.main(["eval", "--retriever", "quantum"]) == 1
 
     printed = capsys.readouterr().out
     assert "quantum" in printed
-    for mode in available_modes():
-        assert mode in printed
+    for retriever in available_retrievers():
+        assert retriever in printed
 
 
 def test_eval_refuses_a_gold_set_that_no_longer_matches_the_corpus(
@@ -123,7 +124,7 @@ def test_eval_refuses_a_gold_set_that_no_longer_matches_the_corpus(
     assert cli.main(["ingest"]) == 0
     capsys.readouterr()
 
-    assert cli.main(["eval", "--mode", "naive"]) == 1
+    assert cli.main(["eval", "--retriever", "naive"]) == 1
 
     printed = capsys.readouterr().out
     assert "gold set is invalid" in printed
@@ -148,7 +149,7 @@ def test_eval_refuses_a_gold_file_that_is_not_a_question_paper(
     assert cli.main(["ingest"]) == 0
     capsys.readouterr()
 
-    assert cli.main(["eval", "--mode", "naive"]) == 1
+    assert cli.main(["eval", "--retriever", "naive"]) == 1
     assert "expected a JSON object" in capsys.readouterr().out
 
 
@@ -171,7 +172,7 @@ def test_ingest_then_eval_runs_end_to_end_on_the_real_corpus(
     assert "chunks.jsonl" in ingest_output
     assert (tmp_path / "artifacts" / "chunks.jsonl").exists()
 
-    assert cli.main(["eval", "--mode", "naive", "--rung", "r0"]) == 0
+    assert cli.main(["eval", "--retriever", "naive", "--rung", "r0"]) == 0
     eval_output = capsys.readouterr().out
 
     # The printed table leads with the section columns, which is the headline.
@@ -182,13 +183,72 @@ def test_ingest_then_eval_runs_end_to_end_on_the_real_corpus(
 
     report = read_the_one_report(tmp_path / "results")
     assert report["rung"] == "r0"
-    assert report["mode"] == "naive"
+    assert report["pipeline_id"] == "direct__naive__none"
+    assert report["retrieval_strategy"] == "naive"
+    assert report["query_strategy"] == "direct"
+    assert report["reranking_strategy"] == "none"
     assert report["n_questions"] == 50
     assert report["overall"]["leakage_count"] == 0
     assert report["overall"]["section_mrr"] is not None
     assert sorted(report["per_tier"]) == ["T1", "T2", "T3", "T4", "T5", "T6"]
     # Every T6 policy probe has to pass at every rung, R0 included.
     assert report["policy_probes"]["pass_rate"] == 1.0
+
+
+def test_ingest_refuses_an_unknown_chunker_flag_and_lists_the_known_ones(
+    monkeypatch: pytest.MonkeyPatch,
+    repo_root: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    point_settings_at(monkeypatch, repo_root, tmp_path)
+
+    assert cli.main(["ingest", "--chunker", "nope"]) == 1
+
+    printed = capsys.readouterr().out
+    assert "nope" in printed
+    assert "heading" in printed
+    assert not (tmp_path / "artifacts" / "chunks.jsonl").exists()
+
+
+def test_ingest_refuses_an_unknown_chunker_from_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+    repo_root: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """FINRAG_CHUNKER is checked the same way as --chunker: a plain refusal,
+    not a KeyError traceback out of build_chunker.
+    """
+    point_settings_at(monkeypatch, repo_root, tmp_path)
+    monkeypatch.setenv("FINRAG_CHUNKER", "nope")
+
+    assert cli.main(["ingest"]) == 1
+
+    printed = capsys.readouterr().out
+    assert "nope" in printed
+    assert "heading" in printed
+    assert not (tmp_path / "artifacts" / "chunks.jsonl").exists()
+
+
+def test_eval_refuses_an_unknown_chunker_from_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+    repo_root: Path,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Off a bad FINRAG_CHUNKER, eval must name the chunker, not print the
+    misleading "No chunks at artifacts/nope/chunks.jsonl" it would otherwise
+    hit first.
+    """
+    point_settings_at(monkeypatch, repo_root, tmp_path)
+    monkeypatch.setenv("FINRAG_CHUNKER", "nope")
+
+    assert cli.main(["eval", "--retriever", "naive"]) == 1
+
+    printed = capsys.readouterr().out
+    assert "Unknown chunker 'nope'" in printed
+    assert "No chunks at" not in printed
 
 
 def test_sweep_before_ingest_says_to_run_ingest(
@@ -203,7 +263,7 @@ def test_sweep_before_ingest_says_to_run_ingest(
     assert "finrag ingest" in capsys.readouterr().out
 
 
-def test_sweep_refuses_an_unknown_mode_and_lists_the_known_ones(
+def test_sweep_refuses_an_unknown_retriever_and_lists_the_known_ones(
     monkeypatch: pytest.MonkeyPatch,
     repo_root: Path,
     tmp_path: Path,
@@ -213,7 +273,7 @@ def test_sweep_refuses_an_unknown_mode_and_lists_the_known_ones(
     assert cli.main(["ingest"]) == 0
     capsys.readouterr()
 
-    assert cli.main(["sweep", "--modes", "quantum"]) == 1
+    assert cli.main(["sweep", "--retrievers", "quantum"]) == 1
     assert "quantum" in capsys.readouterr().out
 
 
@@ -233,13 +293,20 @@ def test_sweep_on_the_real_corpus_reports_no_leakage(
     assert cli.main(["ingest"]) == 0
     capsys.readouterr()
 
-    assert cli.main(["sweep", "--modes", "naive", "--k", "5"]) == 0
+    assert cli.main([
+        "sweep",
+        "--retrievers", "naive",
+        "--query-strategies", "direct",
+        "--rerankers", "none",
+        "--k", "5",
+    ]) == 0
     printed = capsys.readouterr().out
     assert "VIOLATIONS:      0" in printed
 
     report = read_the_one_report(tmp_path / "results")
     assert report["rung"] == "r4"
-    assert report["mode"] == "sweep"
+    assert report["pipeline_id"] == "sweep"
+    assert report["pipelines"] == ["direct__naive__none"]
     assert report["cells_checked"] == 50 * 6
     assert report["violations"] == 0
     assert report["hits_inspected"] > 0

@@ -20,13 +20,16 @@ instead of as a mysteriously thin graph.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from finrag.graph.schema import (
     Edge,
+    LAYER_ENTITY,
     Node,
     chunk_node_id,
     dedupe_edges,
@@ -65,6 +68,10 @@ Passage:
 # enough that one chunk cannot flood the graph with near-duplicates.
 DEFAULT_MAX_TRIPLES = 12
 
+# Bump this when the extraction instructions or parsing contract change. It is
+# part of every cache key, so an old answer is never reused under a new prompt.
+PROMPT_VERSION = "1"
+
 # Longest entity name or relation we accept. A model that answers with a whole
 # paragraph in the "object" field is malfunctioning, and a node labelled with a
 # paragraph would match every query term in the seed scan.
@@ -93,6 +100,10 @@ class LLMBuildStats:
     n_skipped: int
     n_triples: int
     n_dropped_items: int
+    n_cache_hits: int = 0
+    n_model_calls: int = 0
+    model: str = "unknown"
+    prompt_version: str = PROMPT_VERSION
 
     @property
     def fallback_rate(self) -> float:
@@ -100,6 +111,100 @@ class LLMBuildStats:
         if self.n_chunks == 0:
             return 0.0
         return self.n_skipped / self.n_chunks
+
+
+def _model_name(llm: LLMBackend, explicit: str | None = None) -> str:
+    if explicit:
+        return explicit
+    return str(getattr(llm, "model", None) or getattr(llm, "name", "unknown"))
+
+
+def _input_hash(chunk: Chunk) -> str:
+    """Hash every chunk field that reaches the extraction prompt."""
+    material = f"{chunk.section_path}\0{chunk.text}".encode("utf-8")
+    return hashlib.sha256(material).hexdigest()
+
+
+def _read_cache(path: str | Path) -> dict[str, dict[str, Any]]:
+    """Usable cache rows by chunk id; malformed derived rows are ignored."""
+    cache_path = Path(path)
+    if not cache_path.exists():
+        return {}
+    rows: dict[str, dict[str, Any]] = {}
+    with open(cache_path, encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(row, dict) and isinstance(row.get("chunk_id"), str):
+                rows[row["chunk_id"]] = row
+    return rows
+
+
+def _cached_answer(
+    row: dict[str, Any] | None,
+    chunk: Chunk,
+    model: str,
+    max_triples: int,
+) -> ParsedAnswer | None:
+    """Read a current usable cache row, or return None to call the model."""
+    if row is None:
+        return None
+    expected = {
+        "input_hash": _input_hash(chunk),
+        "model": model,
+        "prompt_version": PROMPT_VERSION,
+        "max_triples": max_triples,
+    }
+    for key, value in expected.items():
+        if row.get(key) != value:
+            return None
+    triples_raw = row.get("triples")
+    if not isinstance(triples_raw, list):
+        return None
+    parsed = parse_triples(json.dumps(triples_raw))
+    if parsed.triples is None:
+        return None
+    dropped = row.get("n_dropped", 0)
+    if not isinstance(dropped, int) or isinstance(dropped, bool) or dropped < 0:
+        dropped = 0
+    return ParsedAnswer(triples=parsed.triples, n_dropped=dropped)
+
+
+def _cache_row(
+    chunk: Chunk,
+    model: str,
+    max_triples: int,
+    parsed: ParsedAnswer,
+) -> dict[str, Any]:
+    triples = parsed.triples or []
+    return {
+        "chunk_id": chunk.chunk_id,
+        "input_hash": _input_hash(chunk),
+        "model": model,
+        "prompt_version": PROMPT_VERSION,
+        "max_triples": max_triples,
+        "n_dropped": parsed.n_dropped,
+        "triples": [
+            {"subject": item.subject, "relation": item.relation, "object": item.object}
+            for item in triples
+        ],
+    }
+
+
+def _write_cache(path: str | Path, rows: Sequence[dict[str, Any]]) -> None:
+    """Replace the local derived cache with deterministic JSONL."""
+    cache_path = Path(path)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = cache_path.with_suffix(cache_path.suffix + ".tmp")
+    with open(temporary, "w", encoding="utf-8", newline="\n") as handle:
+        for row in sorted(rows, key=lambda item: str(item["chunk_id"])):
+            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True))
+            handle.write("\n")
+    temporary.replace(cache_path)
 
 
 def build_prompt(chunk: Chunk, max_triples: int = DEFAULT_MAX_TRIPLES) -> str:
@@ -223,6 +328,7 @@ def triples_to_graph(chunk: Chunk, triples: Sequence[Triple]) -> tuple[list[Node
                 source=subject.id,
                 target=object_.id,
                 relation=triple.relation,
+                layer=LAYER_ENTITY,
                 source_chunk_id=chunk.chunk_id,
             )
         )
@@ -232,6 +338,7 @@ def triples_to_graph(chunk: Chunk, triples: Sequence[Triple]) -> tuple[list[Node
                     source=this_chunk,
                     target=entity.id,
                     relation=RELATION_MENTIONS_ENTITY,
+                    layer=LAYER_ENTITY,
                     source_chunk_id=chunk.chunk_id,
                 )
             )
@@ -243,6 +350,8 @@ def extract(
     llm: LLMBackend,
     chunks: Sequence[Chunk],
     max_triples: int = DEFAULT_MAX_TRIPLES,
+    cache_path: str | Path | None = None,
+    model: str | None = None,
 ) -> tuple[list[Node], list[Edge], LLMBuildStats]:
     """Ask the model for triples chunk by chunk and collect one graph.
 
@@ -256,13 +365,26 @@ def extract(
     n_skipped = 0
     n_triples = 0
     n_dropped_items = 0
+    n_cache_hits = 0
+    n_model_calls = 0
+    resolved_model = _model_name(llm, model)
+    cached = _read_cache(cache_path) if cache_path is not None else {}
+    cache_rows: list[dict[str, Any]] = []
 
     for chunk in chunks:
-        answer = llm.generate(build_prompt(chunk, max_triples), system=SYSTEM_PROMPT)
-        parsed = parse_triples(answer)
+        parsed = _cached_answer(cached.get(chunk.chunk_id), chunk, resolved_model, max_triples)
+        if parsed is None:
+            n_model_calls += 1
+            answer = llm.generate(build_prompt(chunk, max_triples), system=SYSTEM_PROMPT)
+            parsed = parse_triples(answer)
+        else:
+            n_cache_hits += 1
         if parsed.triples is None:
             n_skipped += 1
             continue
+
+        if cache_path is not None:
+            cache_rows.append(_cache_row(chunk, resolved_model, max_triples, parsed))
 
         n_parsed += 1
         n_triples += len(parsed.triples)
@@ -277,7 +399,12 @@ def extract(
         n_skipped=n_skipped,
         n_triples=n_triples,
         n_dropped_items=n_dropped_items,
+        n_cache_hits=n_cache_hits,
+        n_model_calls=n_model_calls,
+        model=resolved_model,
     )
+    if cache_path is not None:
+        _write_cache(cache_path, cache_rows)
     return dedupe_nodes(nodes), dedupe_edges(edges), stats
 
 
@@ -286,13 +413,22 @@ def build_and_push(
     chunks: Sequence[Chunk],
     store: GraphStore,
     max_triples: int = DEFAULT_MAX_TRIPLES,
+    cache_path: str | Path | None = None,
+    model: str | None = None,
 ) -> tuple[GraphCounts, LLMBuildStats]:
     """Extract the LLM graph and write it on its own, replacing the namespace.
 
     For the real build the caller usually wants the structural lists added to
-    these before one write, so the two graphs live together; see docs/r5_wiring.md.
+    these before one write, so the two graphs live together; see
+    docs/architecture.md.
     Any object with `generate(prompt, system)` works here, so the Vertex backend
     goes in the same slot the FakeLLM occupies in the tests.
     """
-    nodes, edges, stats = extract(llm, chunks, max_triples)
+    nodes, edges, stats = extract(
+        llm,
+        chunks,
+        max_triples,
+        cache_path=cache_path,
+        model=model,
+    )
     return store.write_graph(nodes, edges), stats

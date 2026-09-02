@@ -46,11 +46,14 @@ def test_health_reports_the_corpus_size_and_the_backend(micro_corpus) -> None:
     assert body["llm"] == "fake"
 
 
-def test_the_mode_list_comes_from_the_retrieval_registry(micro_corpus) -> None:
+def test_the_strategy_catalog_comes_from_the_three_registries(micro_corpus) -> None:
     client = make_client(micro_corpus)
-    body = client.get("/modes").json()
-    assert "bm25" in body["modes"]
-    assert body["default"] in body["modes"]
+    body = client.get("/strategies").json()
+    assert set(body) == {"retrieval", "query", "reranking"}
+    assert body["retrieval"]["default"] == "bm25"
+    assert body["query"]["default"] == "direct"
+    assert body["reranking"]["default"] == "none"
+    assert "requirements" in body["query"]["items"][0]
 
 
 def test_the_role_list_comes_from_the_policy_file(micro_corpus, policy_path) -> None:
@@ -69,7 +72,7 @@ def test_a_permitted_role_gets_an_answer_with_citations(micro_corpus, policy_pat
     client = make_client(micro_corpus, policy_path=policy_path)
     response = client.post(
         "/ask",
-        json={"question": SPEND_QUESTION, "role": "marketing", "mode": "bm25", "k": 5},
+        json={"question": SPEND_QUESTION, "role": "marketing", "k": 5},
     )
     assert response.status_code == 200
     body = response.json()
@@ -78,29 +81,32 @@ def test_a_permitted_role_gets_an_answer_with_citations(micro_corpus, policy_pat
     assert body["citations"]
 
 
-def test_the_react_mode_answers_with_the_agents_own_words_and_citations(
+def test_react_selects_evidence_and_the_shared_generator_answers(
     micro_corpus, policy_path
 ) -> None:
-    # A scripted backend, so the loop really runs offline: one search, then a
-    # finish citing observation 1. The answer in the body is the agent's, and no
-    # second generation call was made to produce it.
     llm = ScriptedLLM(
         [
-            json.dumps({"thought": "find the spend", "action": "search", "argument": "spend"}),
+            json.dumps({"thought": "find the spend", "action": "search", "query": "spend"}),
             json.dumps(
                 {
                     "thought": "that is enough",
                     "action": "finish",
-                    "argument": "Spend was 2.0 million dollars [1].",
+                    "evidence": [1],
                 }
             ),
+            "Spend was 2.0 million dollars [1].",
         ]
     )
     client = make_client(micro_corpus, policy_path=policy_path, llm=llm)
 
     response = client.post(
         "/ask",
-        json={"question": SPEND_QUESTION, "role": "marketing", "mode": "react", "k": 5},
+        json={
+            "question": SPEND_QUESTION,
+            "role": "marketing",
+            "query_strategy": "react",
+            "k": 5,
+        },
     )
 
     assert response.status_code == 200
@@ -108,7 +114,9 @@ def test_the_react_mode_answers_with_the_agents_own_words_and_citations(
     assert body["reason"] == "ok"
     assert body["answer"] == "Spend was 2.0 million dollars [1]."
     assert body["citations"] == [body["hits"][0]["chunk_id"]]
-    assert len(llm.calls) == 2
+    assert body["query_strategy"] == "react"
+    assert body["query_trace"][0]["query"] == "spend"
+    assert len(llm.calls) == 3
     assert DENIED_FINANCE_CHUNK not in json.dumps(body)
 
 
@@ -118,7 +126,7 @@ def test_a_role_the_policy_gives_nothing_is_refused_with_the_rule(
     client = make_client(micro_corpus, policy_path=policy_path)
     response = client.post(
         "/ask",
-        json={"question": SPEND_QUESTION, "role": "employee", "mode": "bm25"},
+        json={"question": SPEND_QUESTION, "role": "employee"},
     )
     assert response.status_code == 403
     detail = response.json()["detail"]
@@ -136,27 +144,44 @@ def test_an_unknown_role_is_refused(micro_corpus, policy_path) -> None:
     assert response.json()["detail"]["reason"] == "unknown_role"
 
 
-def test_an_unknown_mode_is_refused(micro_corpus, policy_path) -> None:
+def test_an_unknown_strategy_is_refused(micro_corpus, policy_path) -> None:
     client = make_client(micro_corpus, policy_path=policy_path)
     response = client.post(
         "/ask",
-        json={"question": SPEND_QUESTION, "role": "marketing", "mode": "telepathy"},
+        json={
+            "question": SPEND_QUESTION,
+            "role": "marketing",
+            "query_strategy": "telepathy",
+        },
     )
     assert response.status_code == 422
-    assert response.json()["detail"]["reason"] == "unknown_mode"
+    assert response.json()["detail"]["reason"] == "unknown_query_strategy"
 
 
-def test_graphrag_with_the_server_down_is_a_503_not_a_bare_500(
-    micro_corpus, policy_path, monkeypatch
-) -> None:
-    monkeypatch.setattr("finrag.graph.store.bolt_is_open", lambda *a, **kw: False)
+def test_old_mode_field_is_not_a_compatibility_alias(micro_corpus, policy_path) -> None:
     client = make_client(micro_corpus, policy_path=policy_path)
     response = client.post(
         "/ask",
-        json={"question": SPEND_QUESTION, "role": "marketing", "mode": "graphrag"},
+        json={"question": SPEND_QUESTION, "role": "marketing", "mode": "bm25"},
+    )
+    assert response.status_code == 422
+
+
+def test_graph_retriever_with_the_server_down_is_a_503_not_a_bare_500(
+    micro_corpus, policy_path, monkeypatch
+) -> None:
+    monkeypatch.setattr("finrag.pipeline.bolt_is_open", lambda: False)
+    client = make_client(micro_corpus, policy_path=policy_path)
+    response = client.post(
+        "/ask",
+        json={
+            "question": SPEND_QUESTION,
+            "role": "marketing",
+            "retrieval_strategy": "graph_keyword",
+        },
     )
     assert response.status_code == 503
-    assert response.json()["detail"]["reason"] == "graph_unavailable"
+    assert response.json()["detail"]["reason"] == "strategy_unavailable"
     assert "docker start finrag-neo4j" in response.json()["detail"]["message"]
 
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 
 from finrag.graph.build_structural import extract
-from finrag.graph.schema import Edge, Node
+from finrag.graph.schema import Edge, LAYER_ENTITY, Node
 from finrag.graph.store import DEFAULT_NAMESPACE, GraphStore, check_namespace
 from finrag.models import Chunk
 
@@ -48,6 +48,17 @@ def test_every_relationship_keeps_the_chunk_it_came_from(
         "RETURN count(r) AS total, count(r.source_chunk_id) AS with_chunk"
     )
     assert rows[0]["total"] == rows[0]["with_chunk"]
+
+
+def test_relationship_layers_are_stored_and_counted(
+    graph_store: GraphStore, micro_corpus: list[Chunk]
+) -> None:
+    nodes, edges = extract(micro_corpus)
+    graph_store.write_graph(nodes, edges)
+    assert graph_store.layer_counts() == {
+        "structural": sum(edge.layer == "structural" for edge in edges),
+        "temporal": sum(edge.layer == "temporal" for edge in edges),
+    }
 
 
 def test_a_node_keeps_a_folded_label_for_the_seed_match(
@@ -100,6 +111,7 @@ def test_an_edge_pointing_at_a_missing_node_stops_the_write(
             source="entity:revenue",
             target="entity:ghost",
             relation="reported_in",
+            layer=LAYER_ENTITY,
             source_chunk_id="finance/report#q4",
         )
     ]
@@ -128,12 +140,14 @@ def test_the_same_relation_from_two_chunks_stays_two_relationships(
             source="entity:revenue",
             target="entity:q4",
             relation="reported_in",
+            layer=LAYER_ENTITY,
             source_chunk_id="finance/report#q4",
         ),
         Edge(
             source="entity:revenue",
             target="entity:q4",
             relation="reported_in",
+            layer=LAYER_ENTITY,
             source_chunk_id="marketing/report#q4",
         ),
     ]

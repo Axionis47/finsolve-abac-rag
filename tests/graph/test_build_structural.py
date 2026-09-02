@@ -11,7 +11,12 @@ from finrag.graph.build_structural import (
     mentioned_quarters,
     metrics_in_heading,
 )
-from finrag.graph.schema import chunk_edges_are_self_labelled, missing_endpoints
+from finrag.graph.schema import (
+    LAYER_STRUCTURAL,
+    LAYER_TEMPORAL,
+    chunk_edges_are_self_labelled,
+    missing_endpoints,
+)
 from finrag.models import Chunk
 
 
@@ -86,6 +91,17 @@ def test_every_edge_names_the_chunk_it_came_from(micro_corpus: list[Chunk]) -> N
     _nodes, edges = extract(micro_corpus)
     for edge in edges:
         assert edge.source_chunk_id
+
+
+def test_structural_and_temporal_edges_are_separate_layers(
+    micro_corpus: list[Chunk],
+) -> None:
+    _nodes, edges = extract(micro_corpus)
+    layers_by_relation = {edge.relation: edge.layer for edge in edges}
+    assert layers_by_relation["contains"] == LAYER_STRUCTURAL
+    assert layers_by_relation["owned_by"] == LAYER_STRUCTURAL
+    assert layers_by_relation["mentions"] == LAYER_TEMPORAL
+    assert layers_by_relation["reports"] == LAYER_TEMPORAL
 
 
 def test_no_edge_touching_a_chunk_carries_another_chunk_s_id(

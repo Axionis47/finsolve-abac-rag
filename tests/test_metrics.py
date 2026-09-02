@@ -142,6 +142,8 @@ def test_empty_gold_scores_zero_everywhere() -> None:
     assert metrics.f1_at_k(RANKED, [], 5) == 0.0
     assert metrics.reciprocal_rank(RANKED, []) == 0.0
     assert metrics.both_sources_hit(RANKED, [], 5) is False
+    assert metrics.section_recall_at_k(RANKED, [], 5) == 0.0
+    assert metrics.all_sections_hit_at_k(RANKED, [], 5) is False
 
 
 def test_empty_hit_list_scores_zero_everywhere() -> None:
@@ -153,6 +155,8 @@ def test_empty_hit_list_scores_zero_everywhere() -> None:
     assert metrics.reciprocal_rank([], gold) == 0.0
     assert metrics.section_hit([], [f"{DOC_A}#one"]) is False
     assert metrics.section_rr([], [f"{DOC_A}#one"]) == 0.0
+    assert metrics.section_recall_at_k([], [f"{DOC_A}#one"], 5) == 0.0
+    assert metrics.all_sections_hit_at_k([], [f"{DOC_A}#one"], 5) is False
     assert metrics.both_sources_hit([], gold, 5) is False
 
 
@@ -230,6 +234,14 @@ def test_section_rr_uses_the_same_tight_match_as_section_hit() -> None:
     assert metrics.section_rr(hits, [f"{DOC_A}#q4-revenue"]) == 1.0
 
 
+def test_section_coverage_requires_every_labelled_section() -> None:
+    gold = [f"{DOC_A}#one", f"{DOC_B}#one", f"{DOC_D}#one"]
+    assert metrics.section_recall_at_k(RANKED, gold, 3) == pytest.approx(2 / 3)
+    assert metrics.all_sections_hit_at_k(RANKED, gold, 3) is False
+    assert metrics.section_recall_at_k(RANKED, gold, 5) == 1.0
+    assert metrics.all_sections_hit_at_k(RANKED, gold, 5) is True
+
+
 def test_both_sources_hit_needs_every_gold_document() -> None:
     """The ambiguous questions want both conflicting sources or nothing."""
     gold = [DOC_B, DOC_C]
@@ -255,9 +267,13 @@ def test_score_question_returns_every_metric_for_both_cut_offs() -> None:
         "recall@3": 0.5,
         "precision@3": 0.5,
         "f1@3": 0.5,
+        "section_recall@3": 1.0,
+        "all_sections@3": True,
         "recall@5": 1.0,
         "precision@5": 0.5,
         "f1@5": pytest.approx(2 / 3),
+        "section_recall@5": 1.0,
+        "all_sections@5": True,
         "rr": 0.5,
         "section_hit": True,
         "section_rr": pytest.approx(1 / 3),

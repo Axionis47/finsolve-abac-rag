@@ -1,56 +1,39 @@
-"""Mode name to retriever: the one place that knows what "naive" means.
-
-The CLI, the eval harness and the API all pick a retriever by a short string
-("naive", "bm25", "dense", "hybrid", "hybrid_rerank", "graphrag", "react"). They should not import
-retriever classes directly, or every new mode would mean edits in three places.
-Instead they load the artifacts once into an `IndexBundle`, then call a factory
-from `FACTORIES`.
-
-Adding a mode is two lines here: write the factory, put it in the dict.
-"""
+"""Explicit registry for independently selectable retrieval strategies."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from finrag.graph.retriever import GraphRetriever
+from finrag.graph.schema import LAYER_ENTITY, LAYER_TEMPORAL
+from finrag.graph.seeded import SeededGraphRetriever
 from finrag.graph.store import GraphStore
-from finrag.llm.base import LLMBackend
 from finrag.models import Chunk
-from finrag.react import REACT_BASE_MODE, ReactAgent
-from finrag.react_retriever import ReactRetriever
 from finrag.retrieval.base import Retriever
 from finrag.retrieval.bm25 import BM25Retriever
 from finrag.retrieval.dense import DenseRetriever
 from finrag.retrieval.embed import Embedder
 from finrag.retrieval.hybrid import HybridRetriever
 from finrag.retrieval.naive import NaiveRetriever
-from finrag.retrieval.rerank import LLMReranker, RerankRetriever
+from finrag.strategy import Requirement, StrategySpec
+
+DEFAULT_RETRIEVER = "bm25"
 
 
 @dataclass
 class IndexBundle:
     """Everything a retriever might need, loaded from `artifacts/` once.
 
-    `chunks`, `bm25_dir`, `dense_path`, `embedder` and `llm` are the ones anything
-    reads. `graph_path` is not: the graph ended up in Neo4j rather than in a file,
-    so `make_graphrag` opens a `GraphStore` instead. The field stays because
-    removing it would edit every caller for nothing.
-
-    `embedder` and `llm` are objects rather than paths because building either
-    may open a Vertex client, and only the modes that need one should pay for
-    that. The caller sets them when it asks for such a mode; the rest leave them
-    None.
+    Optional dependency objects are injected only when registry metadata says
+    the selected pipeline needs them.
     """
 
     chunks: list[Chunk] = field(default_factory=list)
     bm25_dir: Path | None = None
     dense_path: Path | None = None
-    graph_path: Path | None = None
     embedder: Embedder | None = None
-    llm: LLMBackend | None = None
+    graph_store: GraphStore | None = None
 
 
 def make_naive(bundle: IndexBundle) -> Retriever:
@@ -77,7 +60,7 @@ def make_dense(bundle: IndexBundle) -> Retriever:
     """
     if bundle.embedder is None:
         raise ValueError(
-            "dense mode needs an embedder in the bundle. Build one with "
+            "dense retrieval needs an embedder in the bundle. Build one with "
             "finrag.retrieval.embed.build_embedder(settings)."
         )
     return DenseRetriever(bundle.chunks, bundle.embedder, dense_path=bundle.dense_path)
@@ -93,63 +76,89 @@ def make_hybrid(bundle: IndexBundle) -> Retriever:
     return HybridRetriever(bundle.chunks, make_bm25(bundle), make_dense(bundle))
 
 
-def make_graphrag(bundle: IndexBundle) -> Retriever:
+def make_graph_keyword(bundle: IndexBundle) -> Retriever:
     """Two-hop traversal over the Neo4j graph `finrag graph` built.
 
-    The graph lives in Neo4j rather than in `artifacts/`, so `graph_path` stays
-    unused and there is nothing to load here. `GraphStore()` opens a driver, not a
-    connection, so a caller that never asks for this mode pays nothing for the
-    import; the first search is what needs the container up.
+    The graph lives in Neo4j rather than in `artifacts/`. The runtime normally
+    injects one lazily-created store when this retriever is selected.
     """
-    return GraphRetriever(bundle.chunks, GraphStore())
+    return GraphRetriever(bundle.chunks, bundle.graph_store or GraphStore())
 
 
-def make_hybrid_rerank(bundle: IndexBundle) -> Retriever:
-    """Hybrid, then one Gemini call to reorder the top twenty."""
-    if bundle.llm is None:
-        raise ValueError(
-            "hybrid_rerank mode needs an llm in the bundle. Build one with "
-            "finrag.llm.vertex.build_llm(settings)."
-        )
-    return RerankRetriever(bundle.chunks, make_hybrid(bundle), LLMReranker(bundle.llm))
+def _make_seeded_graph(bundle: IndexBundle, name: str, layer: str) -> Retriever:
+    """Dense entry followed by traversal over one explicit graph layer."""
+    store = bundle.graph_store or GraphStore()
+    return SeededGraphRetriever(
+        name=name,
+        layer=layer,
+        chunks=bundle.chunks,
+        dense=make_dense(bundle),
+        store=store,
+    )
 
 
-def make_react(bundle: IndexBundle) -> Retriever:
-    """The ReAct agent, searching with whichever mode `REACT_BASE_MODE` names.
-
-    The base retriever is built HERE, from the registry, rather than inside the
-    agent. That is the ABAC guarantee: the agent's only way to reach a chunk is a
-    retriever this file built, which masks before it ranks, so the agent inherits
-    the invariant instead of restating it.
-    """
-    if bundle.llm is None:
-        raise ValueError(
-            "react mode needs an llm in the bundle. Build one with "
-            "finrag.llm.vertex.build_agent_llm(settings)."
-        )
-    base = build_retriever(REACT_BASE_MODE, bundle)
-    return ReactRetriever(bundle.chunks, ReactAgent(bundle.chunks, base, bundle.llm))
+def make_graph_entity(bundle: IndexBundle) -> Retriever:
+    return _make_seeded_graph(bundle, "graph_entity", LAYER_ENTITY)
 
 
-FACTORIES: dict[str, Callable[[IndexBundle], Retriever]] = {
-    "bm25": make_bm25,
-    "dense": make_dense,
-    "graphrag": make_graphrag,
-    "hybrid": make_hybrid,
-    "hybrid_rerank": make_hybrid_rerank,
-    "naive": make_naive,
-    "react": make_react,
+def make_graph_temporal(bundle: IndexBundle) -> Retriever:
+    return _make_seeded_graph(bundle, "graph_temporal", LAYER_TEMPORAL)
+
+
+RETRIEVERS: dict[str, StrategySpec[Retriever, IndexBundle]] = {
+    "naive": StrategySpec("naive", "Simple word-overlap baseline.", make_naive),
+    "bm25": StrategySpec("bm25", "Lexical BM25 over the saved index.", make_bm25),
+    "dense": StrategySpec(
+        "dense",
+        "Cosine similarity over text embeddings.",
+        make_dense,
+        frozenset({Requirement.EMBEDDER}),
+    ),
+    "hybrid": StrategySpec(
+        "hybrid",
+        "Reciprocal Rank Fusion of BM25 and dense retrieval.",
+        make_hybrid,
+        frozenset({Requirement.EMBEDDER}),
+    ),
+    "graph_keyword": StrategySpec(
+        "graph_keyword",
+        "Keyword-seeded path-count traversal over all graph layers.",
+        make_graph_keyword,
+        frozenset({Requirement.GRAPH}),
+    ),
+    "graph_entity": StrategySpec(
+        "graph_entity",
+        "Dense seeds expanded through entity and claim relationships.",
+        make_graph_entity,
+        frozenset({Requirement.EMBEDDER, Requirement.GRAPH}),
+    ),
+    "graph_temporal": StrategySpec(
+        "graph_temporal",
+        "Dense seeds expanded through quarter and metric relationships.",
+        make_graph_temporal,
+        frozenset({Requirement.EMBEDDER, Requirement.GRAPH}),
+    ),
 }
 
 
-def available_modes() -> list[str]:
-    """Mode names a caller may ask for, in a stable order for menus and help."""
-    return sorted(FACTORIES)
+def available_retrievers() -> list[str]:
+    return sorted(RETRIEVERS)
 
 
-def build_retriever(mode: str, bundle: IndexBundle) -> Retriever:
-    """Build the retriever for `mode`, or say plainly which modes exist."""
-    if mode not in FACTORIES:
-        known = ", ".join(available_modes())
-        raise KeyError(f"unknown retrieval mode '{mode}'. Known modes: {known}")
-    return FACTORIES[mode](bundle)
+def retriever_catalog() -> list[dict[str, object]]:
+    return [RETRIEVERS[name].public_view() for name in available_retrievers()]
+
+
+def retriever_requirements(name: str) -> frozenset[Requirement]:
+    return _spec(name).requirements
+
+
+def build_retriever(name: str, bundle: IndexBundle) -> Retriever:
+    return _spec(name).factory(bundle)
+
+
+def _spec(name: str) -> StrategySpec[Retriever, IndexBundle]:
+    if name not in RETRIEVERS:
+        known = ", ".join(available_retrievers())
+        raise KeyError(f"unknown retrieval strategy '{name}'. Known strategies: {known}")
+    return RETRIEVERS[name]

@@ -24,8 +24,8 @@ from collections.abc import Sequence
 from typing import Any
 
 from finrag.eval import metrics
+from finrag.pipeline import SearchPipeline
 from finrag.policy.engine import PolicyEngine
-from finrag.retrieval.base import Retriever
 
 # Question kinds, derived from the gold set's `expected_behavior` field.
 POLICY_BEHAVIORS = ("refuse_role", "no_answer")
@@ -50,15 +50,15 @@ def scoring_kind(expected_behavior: str) -> str:
 
 
 class EvalHarness:
-    """Runs the gold set against one retriever and reports the numbers."""
+    """Runs the gold set against one composed search pipeline."""
 
     def __init__(
         self,
-        retriever: Retriever,
+        pipeline: SearchPipeline,
         policy: PolicyEngine,
         gold: Sequence[dict[str, Any]],
     ) -> None:
-        self.retriever = retriever
+        self.pipeline = pipeline
         self.policy = policy
         self.gold = list(gold)
 
@@ -71,8 +71,12 @@ class EvalHarness:
         for entry in self.gold:
             rows.append(self._score_one(entry, k_values, max_k))
 
+        selection = self.pipeline.selection
         return {
-            "mode": getattr(self.retriever, "name", "unknown"),
+            "pipeline_id": selection.pipeline_id,
+            "retrieval_strategy": selection.retrieval_strategy,
+            "query_strategy": selection.query_strategy,
+            "reranking_strategy": selection.reranking_strategy,
             "k_values": list(k_values),
             "n_questions": len(rows),
             "overall": summarise(rows, k_values),
@@ -90,7 +94,8 @@ class EvalHarness:
     ) -> dict[str, Any]:
         """Retrieve for one question and turn the result into a report row."""
         role = entry["role"]
-        hits = self.retriever.search(entry["question"], role, k=max_k)
+        query_result = self.pipeline.search(entry["question"], role, k=max_k)
+        hits = query_result.hits
 
         leaked = metrics.leaked_chunk_ids(self.policy, role, hits)
         scores = metrics.score_question(hits, entry, k_values)
@@ -106,6 +111,9 @@ class EvalHarness:
             "leakage": len(leaked),
             "leaked_chunk_ids": leaked,
             "policy_pass": len(leaked) == 0,
+            "generated_queries": list(query_result.generated_queries),
+            "query_trace": [item.to_dict() for item in query_result.trace],
+            "query_stats": dict(query_result.stats),
             f"both_sources@{max_k}": metrics.both_sources_hit(
                 hits, entry.get("gold_docs") or [], max_k
             ),
@@ -201,6 +209,13 @@ def summarise(rows: Sequence[dict[str, Any]], k_values: Sequence[int]) -> dict[s
     summary["n_section_scored"] = len(section_rows)
     summary["section_hit_rate"] = _mean_or_none(_column(section_rows, "section_hit"))
     summary["section_mrr"] = _mean_or_none(_column(section_rows, "section_rr"))
+    for k in k_values:
+        summary[f"section_recall@{k}"] = _mean_or_none(
+            _column(section_rows, f"section_recall@{k}")
+        )
+        summary[f"all_sections@{k}"] = _mean_or_none(
+            _column(section_rows, f"all_sections@{k}")
+        )
 
     leakage = 0
     leaking_questions = 0

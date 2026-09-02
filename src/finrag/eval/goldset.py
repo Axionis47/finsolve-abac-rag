@@ -48,6 +48,11 @@ AMBIGUOUS_TAG = "ambiguous"
 # that must not reach the answer, so the role-visibility check skips it.
 POLICY_TIER = "T6"
 
+# The chunker the gold set's section prefixes were written against. The literal
+# is repeated rather than imported, for the same reason as config.py's
+# DEFAULT_CHUNKER: see finrag.ingest.registry.DEFAULT_CHUNKER.
+DEFAULT_CHUNKER = "heading"
+
 
 class GoldSetError(ValueError):
     """The gold set is malformed or no longer matches the corpus or policy."""
@@ -162,15 +167,30 @@ def _check_shape(entry: dict[str, Any], where: str, problems: list[str]) -> None
 
 
 def _check_labels(
-    entry: dict[str, Any], where: str, facts: _CorpusFacts, problems: list[str]
+    entry: dict[str, Any],
+    where: str,
+    facts: _CorpusFacts,
+    problems: list[str],
+    check_sections: bool,
 ) -> None:
-    """Gold documents exist and gold sections still name real chunks."""
+    """Gold documents exist and, on the default chunker, gold sections still
+    name real chunks.
+
+    `check_sections` is False for any other chunker: `gold_sections` and
+    `answer_source` are chunk-id prefixes written against the heading chunker's
+    ids, and a different strategy produces different ids for the same text. The
+    doc-level checks below stay on regardless, since doc ids do not depend on
+    how a document was cut.
+    """
     for doc_id in entry.get("gold_docs") or []:
         if doc_id not in facts.doc_ids:
             problems.append(f"{where}: gold doc '{doc_id}' is not in the chunks file")
     for doc_id in entry.get("distractor_docs") or []:
         if doc_id not in facts.doc_ids:
             problems.append(f"{where}: distractor doc '{doc_id}' is not in the chunks file")
+
+    if not check_sections:
+        return
 
     # answer_source is checked the same way as gold_sections: both are chunk-id
     # prefixes, and a typo in either points a later reader at nothing.
@@ -228,13 +248,24 @@ def _check_tier_counts(entries: Sequence[dict[str, Any]], problems: list[str]) -
             problems.append(f"tier {tier}: expected {TIER_COUNTS[tier]} questions, found {found}")
 
 
-def validate(gold: GoldSet, chunks_path: str | Path, policy: PolicyEngine) -> None:
+def validate(
+    gold: GoldSet,
+    chunks_path: str | Path,
+    policy: PolicyEngine,
+    chunker: str = DEFAULT_CHUNKER,
+) -> None:
     """Check the gold set against the built chunks and the policy engine.
+
+    `chunker` names the strategy `chunks_path` was built with. Off the default
+    chunker, the section-prefix checks in `_check_labels` are skipped, because
+    those prefixes are chunk ids from the heading chunker; the caller should
+    print a one-line reason, the way `sweep.py` names a mode it dropped.
 
     Raises `GoldSetError` listing every problem found, so one run tells you
     everything to fix instead of one thing at a time. Returns None when clean.
     """
     facts = _read_corpus_facts(chunks_path)
+    check_sections = chunker == DEFAULT_CHUNKER
     problems: list[str] = []
     seen_ids: set[str] = set()
     for position, entry in enumerate(gold.entries):
@@ -246,7 +277,7 @@ def validate(gold: GoldSet, chunks_path: str | Path, policy: PolicyEngine) -> No
         seen_ids.add(entry_id)
 
         _check_shape(entry, where, problems)
-        _check_labels(entry, where, facts, problems)
+        _check_labels(entry, where, facts, problems, check_sections)
         _check_role_access(entry, where, facts, policy, problems)
         _check_ambiguous(entry, where, problems)
 

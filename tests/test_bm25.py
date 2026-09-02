@@ -47,7 +47,7 @@ from finrag.retrieval.bm25 import (
     tokenize,
 )
 from finrag.retrieval.naive import NaiveRetriever
-from finrag.retrieval.registry import IndexBundle, available_modes, build_retriever
+from finrag.retrieval.registry import IndexBundle, available_retrievers, build_retriever
 
 # The bait: the top scoring chunk for the query, readable only by c_level. It
 # holds both query words and repeats the rare one.
@@ -416,9 +416,9 @@ def test_save_index_creates_the_folder_if_it_is_not_there(tmp_path: Path) -> Non
 # --- the registry -----------------------------------------------------------
 
 
-def test_available_modes_still_lists_bm25() -> None:
+def test_available_retrievers_still_lists_bm25() -> None:
     """The full list is pinned in test_dense.py, which owns the newest mode."""
-    assert "bm25" in available_modes()
+    assert "bm25" in available_retrievers()
 
 
 def test_build_retriever_builds_the_bm25_mode_in_memory() -> None:

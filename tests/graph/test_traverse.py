@@ -22,7 +22,13 @@ import pytest
 
 from finrag.graph import traverse as traverse_module
 from finrag.graph.build_structural import extract
-from finrag.graph.schema import Edge, Node, chunk_id_from_node_id, chunk_node_id
+from finrag.graph.schema import (
+    Edge,
+    LAYER_TEMPORAL,
+    Node,
+    chunk_id_from_node_id,
+    chunk_node_id,
+)
 from finrag.graph.store import RELATIONSHIP_TYPE, GraphStore
 from finrag.graph.traverse import matches_terms, seed_terms, traverse
 from finrag.models import Chunk
@@ -46,7 +52,7 @@ def reference_walk(
     query: str,
     visible: frozenset[str],
     max_hops: int = 2,
-) -> tuple[dict[str, int], set[tuple[str, str, str, str]]]:
+) -> tuple[dict[str, int], set[tuple[str, str, str, str, str]]]:
     """What the traversal should do, worked out in Python from the same lists.
 
     Deliberately written from the definition rather than from the Cypher: seeds
@@ -67,12 +73,14 @@ def reference_walk(
         neighbours.setdefault(edge.target, []).append(edge)
 
     counts: dict[str, int] = {}
-    walked: set[tuple[str, str, str, str]] = set()
+    walked: set[tuple[str, str, str, str, str]] = set()
 
     for seed_id in sorted(kinds):
         if not matches_terms(labels[seed_id], terms):
             continue
-        stack: list[tuple[str, tuple[tuple[str, str, str, str], ...]]] = [(seed_id, ())]
+        stack: list[tuple[str, tuple[tuple[str, str, str, str, str], ...]]] = [
+            (seed_id, ())
+        ]
         while stack:
             current, used = stack.pop()
             if used and kinds[current] == "chunk":
@@ -209,7 +217,8 @@ def test_what_the_walk_touches_is_exactly_what_the_role_may_walk(
     expected_counts, expected_walked = reference_walk(nodes, edges, WIDE_QUERY, visible)
 
     walked = {
-        (edge.source, edge.target, edge.relation, edge.source_chunk_id) for edge in result.walked
+        (edge.source, edge.target, edge.relation, edge.layer, edge.source_chunk_id)
+        for edge in result.walked
     }
     counts = {candidate.chunk_id: candidate.n_paths for candidate in result.candidates}
 
@@ -244,6 +253,7 @@ def test_a_planted_edge_into_a_chunk_the_role_cannot_see_is_not_walked(
         source="entity:spend",
         target=chunk_node_id(FINANCE_REVENUE_CHUNK),
         relation="planted_leak",
+        layer=LAYER_TEMPORAL,
         source_chunk_id=FINANCE_REVENUE_CHUNK,
     )
     graph_store.write_graph(nodes, list(edges) + [leak])
@@ -271,6 +281,7 @@ def test_a_planted_edge_mislabelled_with_a_visible_chunk_is_caught_by_the_double
         source="entity:spend",
         target=chunk_node_id(FINANCE_REVENUE_CHUNK),
         relation="planted_mislabelled_leak",
+        layer=LAYER_TEMPORAL,
         source_chunk_id="marketing/market_report_q1_2024#campaign-spend",
     )
     graph_store.write_graph(nodes, list(edges) + [mislabelled])
@@ -292,6 +303,7 @@ def test_removing_the_mask_from_the_cypher_lets_the_planted_leak_be_walked(
         source="entity:spend",
         target=chunk_node_id(FINANCE_REVENUE_CHUNK),
         relation="planted_leak",
+        layer=LAYER_TEMPORAL,
         source_chunk_id=FINANCE_REVENUE_CHUNK,
     )
     graph_store.write_graph(nodes, list(edges) + [leak])
