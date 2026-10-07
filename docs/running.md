@@ -121,6 +121,12 @@ FINRAG_LLM=vertex
 
 Shell variables override `.env` values.
 
+In a Claude Code cloud session there is no gcloud login and no `.env`. Put the credential JSON
+(a service-account key, or the contents of `~/.config/gcloud/application_default_credentials.json`)
+in `GOOGLE_SERVICE_ACCOUNT_JSON` in the environment's settings, with the other variables above
+beside it. `.claude/hooks/session-start.sh` writes it to `artifacts/gcp-key.json`, points
+`GOOGLE_APPLICATION_CREDENTIALS` at it, installs the groups above and builds the offline indexes.
+
 Rebuild the dense matrix with Vertex embeddings:
 
 ```bash
